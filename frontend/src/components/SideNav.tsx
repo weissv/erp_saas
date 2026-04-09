@@ -2,15 +2,17 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import clsx from "clsx";
-import { Facebook, Instagram, Send, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "../hooks/useAuth";
+import { useTenant } from "../contexts/TenantContext";
 import { usePermissions } from "../contexts/PermissionsContext";
 import { getLinksWithPermissions, FULL_ACCESS_ROLES } from "../lib/modules";
 import { ROLE_LABELS, type UserRole } from "../types/auth";
 
 export default function SideNav() {
   const { user, logout } = useAuth();
+  const { tenant } = useTenant();
   const { permissions, isLoading: permissionsLoading } = usePermissions();
   const loc = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -54,12 +56,6 @@ export default function SideNav() {
     }
   };
 
-  const socialLinks = [
-    { icon: Facebook, href: "https://www.facebook.com/MezonSchool/" },
-    { icon: Instagram, href: "https://instagram.com/mezonschool" },
-    { icon: Send, href: "http://t.me/mezon_school" },
-  ];
-
   return (
     <>
       {/* Mobile overlay */}
@@ -73,8 +69,8 @@ export default function SideNav() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 cursor-pointer" onClick={handleLogoClick}>
               <img
-                src="/logo.png"
-                alt="Mezon"
+                src={tenant.logoUrl}
+                alt={tenant.name}
                 className={clsx(
                   "transition-transform",
                   isLogoSpinning && "animate-spin-flip"
@@ -135,15 +131,12 @@ export default function SideNav() {
 
         {/* Footer */}
         <div className="mezon-sidenav__footer">
-          <p>Есть вопрос? Свяжитесь:</p>
-          <p className="font-semibold text-macos-blue text-[12px]">+ 71 // 207 17 30</p>
-          <div className="mt-1.5 mezon-top-bar__social">
-            {socialLinks.map(({ icon: Icon, href }) => (
-              <a key={href} href={href} target="_blank" rel="noreferrer">
-                <Icon className="h-3.5 w-3.5" />
-              </a>
-            ))}
-          </div>
+          {tenant.supportPhone && (
+            <>
+              <p>Есть вопрос? Свяжитесь:</p>
+              <p className="font-semibold text-macos-blue text-[12px]">{tenant.supportPhone}</p>
+            </>
+          )}
           <Button type="button" className="mt-3 w-full" variant="outline" size="sm" onClick={logout}>
             Выйти
           </Button>

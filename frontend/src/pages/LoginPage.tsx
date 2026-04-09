@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useTenant } from '../contexts/TenantContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { FormError } from '../components/ui/FormError';
@@ -19,6 +20,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { tenant } = useTenant();
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
@@ -47,15 +49,15 @@ export default function LoginPage() {
         {/* Left — Brand */}
         <div className="relative flex flex-col justify-between">
           <div>
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-[0.01em] uppercase bg-tint-blue text-macos-blue">Mezon // inspired.School</span>
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-[0.01em] uppercase bg-tint-blue text-macos-blue">{tenant.name}</span>
             <h1 className="mt-4 text-[28px] lg:text-[34px] font-bold tracking-[-0.03em] text-primary leading-tight">
               Управляйте школой{' '}
               <span className="bg-gradient-to-r from-macos-blue to-macos-purple bg-clip-text text-transparent">
-                в стиле Mezon
+                эффективно
               </span>
             </h1>
             <p className="mt-3 text-[15px] text-tertiary max-w-md leading-relaxed">
-              Админ-панель с эстетикой macOS: чистые поверхности, продуманная типографика и внимание к каждой детали.
+              Единая платформа управления: чистые поверхности, продуманная типографика и внимание к каждой детали.
             </p>
           </div>
           <ul className="mt-8 space-y-3">

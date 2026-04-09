@@ -1,17 +1,19 @@
 // src/layouts/MainLayout.tsx
 import { useState } from "react";
 import { Link, Outlet } from "react-router-dom";
-import { Phone, Mail, Facebook, Instagram, Send, Menu, GraduationCap } from "lucide-react";
+import { Menu, GraduationCap } from "lucide-react";
 import SideNav from "../components/SideNav";
 import DoomGame from "../components/DoomGame";
 import { Toaster } from "sonner";
 import { useKonamiCode } from "../hooks/useKonamiCode";
 import { useAuth } from "../hooks/useAuth";
+import { useTenant } from "../contexts/TenantContext";
 import { ROLE_LABELS } from "../types/auth";
 import { Spinner } from "../components/ui/LoadingState";
 
 export default function MainLayout() {
   const { user, isLoading } = useAuth();
+  const { tenant } = useTenant();
   const [showDoom, setShowDoom] = useState(false);
   const userName = user?.employee
     ? [user.employee.firstName, user.employee.lastName].filter(Boolean).join(" ")
@@ -21,18 +23,6 @@ export default function MainLayout() {
   useKonamiCode(() => {
     if (user) setShowDoom(true);
   });
-
-  const contacts = [
-    { icon: Phone, label: "+ 71 // 207 17 30" },
-    { icon: Phone, label: "+ 90 // 006 31 37" },
-    { icon: Mail, label: "info@mezon.uz" },
-  ];
-
-  const socials = [
-    { icon: Facebook, href: "https://www.facebook.com/MezonSchool/" },
-    { icon: Instagram, href: "https://instagram.com/mezonschool" },
-    { icon: Send, href: "http://t.me/mezon_school" },
-  ];
 
   if (isLoading) {
     return (
@@ -95,18 +85,18 @@ export default function MainLayout() {
             <span />
           </div>
           <div className="mezon-top-bar__title">
-            <span>Mezon Admin</span>
+            <span>{tenant.name}</span>
             <strong>Единое рабочее пространство</strong>
           </div>
         </div>
 
         <div className="mezon-top-bar__cluster mezon-top-bar__cluster--compact">
-          {contacts.map(({ icon: Icon, label }) => (
-            <span key={label} className="mezon-chip">
-              <Icon className="h-3.5 w-3.5" />
-              {label}
-            </span>
-          ))}
+          {tenant.supportPhone && (
+            <span className="mezon-chip">{tenant.supportPhone}</span>
+          )}
+          {tenant.supportEmail && (
+            <span className="mezon-chip">{tenant.supportEmail}</span>
+          )}
         </div>
 
         <div className="mezon-top-bar__cluster">
@@ -124,13 +114,6 @@ export default function MainLayout() {
             <GraduationCap className="h-3.5 w-3.5" />
             Школьная LMS
           </Link>
-          <div className="mezon-top-bar__social">
-            {socials.map(({ icon: Icon, href }) => (
-              <a key={href} href={href} target="_blank" rel="noreferrer">
-                <Icon className="h-4 w-4" />
-              </a>
-            ))}
-          </div>
         </div>
       </header>
 
