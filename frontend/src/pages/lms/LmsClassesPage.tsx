@@ -12,6 +12,10 @@ import { useAuth} from"../../hooks/useAuth";
 import type { LmsSchoolClass} from"../../types/lms";
 import { toast} from"sonner";
 import { useLmsClasses} from"../../hooks/lms/useLmsClasses";
+import { Skeleton} from"../../components/ui/LoadingState";
+import { EmptyState} from"../../components/ui/EmptyState";
+import { MacosAlertDialog} from"../../components/MacosAlertDialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter} from"../../components/ui/sheet";
 
 export default function LmsClassesPage() {
  const { user} = useAuth();
@@ -48,8 +52,30 @@ export default function LmsClassesPage() {
 
  if (loading) {
  return (
- <div className="flex items-center justify-center min-h-[400px]">
- <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+ <div className="space-y-6">
+ <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+ <div>
+ <Skeleton height={28} width="35%" className="mb-2" />
+ <Skeleton height={16} width="55%" />
+ </div>
+ <Skeleton height={36} width={140} />
+ </div>
+ <Skeleton height={56} rounded="lg" />
+ <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+ {Array.from({ length: 6 }).map((_, i) => (
+ <div key={i} className="border border-border rounded-xl p-5 space-y-3">
+ <div className="flex items-center justify-between">
+ <Skeleton height={20} width="50%" />
+ <Skeleton height={20} width={60} rounded="full" />
+ </div>
+ <Skeleton height={14} width="35%" />
+ <div className="flex justify-between pt-2 border-t border-border">
+ <Skeleton height={12} width={80} />
+ <Skeleton height={12} width={60} />
+ </div>
+ </div>
+ ))}
+ </div>
  </div>
  );
 }
@@ -187,20 +213,19 @@ export default function LmsClassesPage() {
  </div>
  )}
 
- {/* Create Class Modal */}
- {showCreateModal && (
+ {/* Create Class Sheet */}
  <CreateClassModal
+ isOpen={showCreateModal}
  onClose={() => setShowCreateModal(false)}
  onCreated={() => {
  setShowCreateModal(false);
  refetch();
 }}
  />
- )}
 
- {/* Edit Class Modal */}
- {editingClass && (
+ {/* Edit Class Sheet */}
  <EditClassModal
+ isOpen={editingClass !== null}
  classData={editingClass}
  onClose={() => setEditingClass(null)}
  onUpdated={() => {
@@ -212,22 +237,23 @@ export default function LmsClassesPage() {
  refetch();
 }}
  />
- )}
  </div>
  );
 }
 
 function CreateClassModal({
+ isOpen,
  onClose,
  onCreated,
 }: {
+ isOpen: boolean;
  onClose: () => void;
  onCreated: () => void;
 }) {
  const [formData, setFormData] = useState({
- name:"",
+ name: "",
  grade: 1,
- section:"",
+ section: "",
  academicYear: `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`,
  teacherId: undefined as number | undefined,
 });
@@ -238,7 +264,7 @@ function CreateClassModal({
  setLoading(true);
  try {
  await lmsApi.createClass({
- name: formData.section ? `${formData.grade}${formData.section}`: `${formData.grade}`,
+ name: formData.section ? `${formData.grade}${formData.section}` : `${formData.grade}`,
  grade: formData.grade,
  academicYear: formData.academicYear,
  teacherId: formData.teacherId,
@@ -254,13 +280,16 @@ function CreateClassModal({
 };
 
  return (
- <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
- <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
- <h2 className="text-[24px] font-bold tracking-[-0.025em] leading-tight text-primary mb-4">Добавить класс</h2>
+ <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+ <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+ <SheetHeader className="mb-6">
+ <SheetTitle>Добавить класс</SheetTitle>
+ <SheetDescription>Создайте новый школьный класс</SheetDescription>
+ </SheetHeader>
  <form onSubmit={handleSubmit} className="space-y-4">
  <div className="grid grid-cols-2 gap-4">
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-1">
+ <label className="block text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-1">
  Класс
  </label>
  <select
@@ -276,7 +305,7 @@ function CreateClassModal({
  </select>
  </div>
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-1">
+ <label className="block text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-1">
  Буква
  </label>
  <select
@@ -285,7 +314,7 @@ function CreateClassModal({
  className="w-full px-3 py-2 mezon-field rounded-lg focus:outline-none focus-visible:ring-4 focus-visible:ring-macos-blue/30"
  >
  <option value="">Без буквы</option>
- {["А","Б","В","Г","Д"].map((s) => (
+ {["А", "Б", "В", "Г", "Д"].map((s) => (
  <option key={s} value={s}>
  {s}
  </option>
@@ -294,7 +323,7 @@ function CreateClassModal({
  </div>
  </div>
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-1">
+ <label className="block text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-1">
  Учебный год
  </label>
  <input
@@ -305,63 +334,68 @@ function CreateClassModal({
  placeholder="2024-2025"
  />
  </div>
- <div className="flex gap-3 pt-4">
+ <SheetFooter className="pt-4">
  <button
  type="button"
  onClick={onClose}
- className="flex-1 px-4 py-2 mezon-field rounded-lg text-primary hover:bg-fill-quaternary macos-transition"
+ className="flex-1 px-4 py-2 border border-border rounded-lg text-foreground hover:bg-muted/50 transition-colors duration-200"
  >
  Отмена
  </button>
  <button
  type="submit"
  disabled={loading}
- className="flex-1 px-4 py-2 bg-macos-blue text-white rounded-lg font-medium hover:bg-macos-blue macos-transition disabled:opacity-50"
+ className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50"
  >
- {loading ?"Создание...":"Создать"}
+ {loading ? "Создание..." : "Создать"}
  </button>
- </div>
+ </SheetFooter>
  </form>
- </div>
- </div>
+ </SheetContent>
+ </Sheet>
  );
 }
 
 function EditClassModal({
+ isOpen,
  classData,
  onClose,
  onUpdated,
  onDeleted,
 }: {
- classData: LmsSchoolClass;
+ isOpen: boolean;
+ classData: LmsSchoolClass | null;
  onClose: () => void;
  onUpdated: () => void;
  onDeleted: () => void;
 }) {
+ const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+
  // Извлекаем букву из названия класса (например"2А"->"А")
  const extractSection = (name: string) => {
  const match = name.match(/\d+([А-Я])/i);
- return match ? match[1].toUpperCase() :"";
+ return match ? match[1].toUpperCase() : "";
 };
 
  const [formData, setFormData] = useState({
- name: classData.name,
- grade: classData.grade || 1,
- section: extractSection(classData.name),
- academicYear: classData.academicYear || `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`,
- teacherId: classData.teacherId || undefined as number | undefined,
- capacity: classData.capacity || undefined as number | undefined,
- description: classData.description ||"",
+ name: classData?.name || "",
+ grade: classData?.grade || 1,
+ section: extractSection(classData?.name || ""),
+ academicYear: classData?.academicYear || `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`,
+ teacherId: classData?.teacherId || undefined as number | undefined,
+ capacity: classData?.capacity || undefined as number | undefined,
+ description: classData?.description || "",
 });
  const [loading, setLoading] = useState(false);
  const [deleting, setDeleting] = useState(false);
 
  const handleSubmit = async (e: React.FormEvent) => {
  e.preventDefault();
+ if (!classData) return;
  setLoading(true);
  try {
  await lmsApi.updateClass(classData.id, {
- name: formData.section ? `${formData.grade}${formData.section}`: `${formData.grade}`,
+ name: formData.section ? `${formData.grade}${formData.section}` : `${formData.grade}`,
  grade: formData.grade,
  academicYear: formData.academicYear,
  teacherId: formData.teacherId,
@@ -379,12 +413,12 @@ function EditClassModal({
 };
 
  const handleDelete = async () => {
- if (!confirm(`Удалить класс ${classData.name}? Это действие нельзя отменить.`)) return;
- 
+ if (!classData) return;
  setDeleting(true);
  try {
  await lmsApi.deleteClass(classData.id);
  toast.success("Класс удалён");
+ setIsConfirmDeleteOpen(false);
  onDeleted();
 } catch (error) {
  console.error("Failed to delete class:", error);
@@ -395,18 +429,17 @@ function EditClassModal({
 };
 
  return (
- <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
- <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
- <div className="flex items-center justify-between mb-4">
- <h2 className="text-[24px] font-bold tracking-[-0.025em] leading-tight text-primary">Редактировать класс</h2>
- <button onClick={onClose} className="p-1 hover:bg-fill-tertiary rounded-lg macos-transition">
- <X className="h-5 w-5 text-secondary"/>
- </button>
- </div>
+ <>
+ <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+ <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+ <SheetHeader className="mb-6">
+ <SheetTitle>Редактировать класс</SheetTitle>
+ <SheetDescription>{classData?.name}</SheetDescription>
+ </SheetHeader>
  <form onSubmit={handleSubmit} className="space-y-4">
  <div className="grid grid-cols-2 gap-4">
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-1">
+ <label className="block text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-1">
  Класс
  </label>
  <select
@@ -422,7 +455,7 @@ function EditClassModal({
  </select>
  </div>
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-1">
+ <label className="block text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-1">
  Буква
  </label>
  <select
@@ -431,7 +464,7 @@ function EditClassModal({
  className="w-full px-3 py-2 mezon-field rounded-lg focus:outline-none focus-visible:ring-4 focus-visible:ring-macos-blue/30"
  >
  <option value="">Без буквы</option>
- {["А","Б","В","Г","Д","Е","Ж","З"].map((s) => (
+ {["А", "Б", "В", "Г", "Д", "Е", "Ж", "З"].map((s) => (
  <option key={s} value={s}>
  {s}
  </option>
@@ -440,7 +473,7 @@ function EditClassModal({
  </div>
  </div>
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-1">
+ <label className="block text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-1">
  Учебный год
  </label>
  <input
@@ -452,19 +485,19 @@ function EditClassModal({
  />
  </div>
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-1">
+ <label className="block text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-1">
  Вместимость
  </label>
  <input
  type="number"
- value={formData.capacity ||""}
+ value={formData.capacity || ""}
  onChange={(e) => setFormData({ ...formData, capacity: e.target.value ? Number(e.target.value) : undefined})}
  className="w-full px-3 py-2 mezon-field rounded-lg focus:outline-none focus-visible:ring-4 focus-visible:ring-macos-blue/30"
  placeholder="30"
  />
  </div>
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-1">
+ <label className="block text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-1">
  Описание
  </label>
  <textarea
@@ -475,46 +508,58 @@ function EditClassModal({
  placeholder="Дополнительная информация о классе"
  />
  </div>
- 
+
  {/* Информация о классе */}
- <div className="bg-fill-quaternary rounded-lg p-3 text-sm">
- <div className="flex items-center gap-2 text-secondary">
+ {classData && (
+ <div className="bg-muted/40 rounded-lg p-3 text-sm">
+ <div className="flex items-center gap-2 text-muted-foreground">
  <Users className="h-4 w-4"/>
- <span>{classData.studentsCount || 0} учеников в классе</span>
+ <span className="tabular-nums">{classData.studentsCount || 0} учеников в классе</span>
  </div>
  {classData.teacher && (
- <p className="text-secondary mt-1">
+ <p className="text-muted-foreground mt-1">
  Классный рук.: {classData.teacher.lastName} {classData.teacher.firstName}
  </p>
  )}
  </div>
+ )}
 
- <div className="flex gap-3 pt-4">
+ <SheetFooter className="pt-4 flex gap-2">
  <button
  type="button"
- onClick={handleDelete}
+ onClick={() => setIsConfirmDeleteOpen(true)}
  disabled={deleting}
- className="px-4 py-2 border border-red-200 text-macos-red rounded-lg hover:bg-[rgba(255,59,48,0.06)] macos-transition disabled:opacity-50"
+ className="px-4 py-2 border border-destructive/30 text-destructive rounded-lg hover:bg-destructive/5 transition-colors duration-200 disabled:opacity-50"
  >
- {deleting ?"...":"Удалить"}
+ {deleting ? "..." : "Удалить"}
  </button>
  <button
  type="button"
  onClick={onClose}
- className="flex-1 px-4 py-2 mezon-field rounded-lg text-primary hover:bg-fill-quaternary macos-transition"
+ className="flex-1 px-4 py-2 border border-border rounded-lg text-foreground hover:bg-muted/50 transition-colors duration-200"
  >
  Отмена
  </button>
  <button
  type="submit"
  disabled={loading}
- className="flex-1 px-4 py-2 bg-macos-blue text-white rounded-lg font-medium hover:bg-macos-blue macos-transition disabled:opacity-50"
+ className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50"
  >
- {loading ?"Сохранение...":"Сохранить"}
+ {loading ? "Сохранение..." : "Сохранить"}
  </button>
- </div>
+ </SheetFooter>
  </form>
- </div>
- </div>
+ </SheetContent>
+ </Sheet>
+
+ <MacosAlertDialog
+ isOpen={isConfirmDeleteOpen}
+ title={`Удалить класс ${classData?.name}?`}
+ description="Это действие нельзя отменить. Все данные класса будут удалены."
+ onClose={() => setIsConfirmDeleteOpen(false)}
+ cancelAction={{ label: "Отмена", onClick: () => setIsConfirmDeleteOpen(false) }}
+ primaryAction={{ label: "Удалить", onClick: handleDelete }}
+ />
+ </>
  );
 }

@@ -26,6 +26,8 @@ import { Card} from"../components/ui/Card";
 import { Button} from"../components/ui/button";
 import { Input} from"../components/ui/input";
 import { Modal} from"../components/Modal";
+import { MacosAlertDialog } from"../components/MacosAlertDialog";
+import { Skeleton } from"../components/ui/LoadingState";
 
 // ========== TYPES ==========
 
@@ -156,6 +158,9 @@ export default function SchedulePage() {
 });
  const [formConflicts, setFormConflicts] = useState<Conflict[]>([]);
  const [isSaving, setIsSaving] = useState(false);
+ const [subjectToDelete, setSubjectToDelete] = useState<Subject | null>(null);
+ const [roomToDelete, setRoomToDelete] = useState<Room | null>(null);
+ const [timeSlotToDelete, setTimeSlotToDelete] = useState<TimeSlot | null>(null);
  const [deleteConfirm, setDeleteConfirm] = useState<ScheduleSlot | null>(null);
  const [isDeleting, setIsDeleting] = useState(false);
 
@@ -416,10 +421,10 @@ export default function SchedulePage() {
 };
 
  const handleDeleteSubject = async (subject: Subject) => {
- if (!confirm(`Удалить предмет"${subject.name}"?`)) return;
  try {
  await api.delete(`/api/schedule/subjects/${subject.id}`);
  toast.success("Предмет удалён");
+ setSubjectToDelete(null);
  loadAllData();
 } catch (error: any) {
  toast.error("Ошибка удаления", { description: error?.message});
@@ -471,10 +476,10 @@ export default function SchedulePage() {
 };
 
  const handleDeleteRoom = async (room: Room) => {
- if (!confirm(`Удалить кабинет"${room.name}"?`)) return;
  try {
  await api.delete(`/api/schedule/rooms/${room.id}`);
  toast.success("Кабинет удалён");
+ setRoomToDelete(null);
  loadAllData();
 } catch (error: any) {
  toast.error("Ошибка удаления", { description: error?.message});
@@ -532,10 +537,10 @@ export default function SchedulePage() {
 };
 
  const handleDeleteTimeSlot = async (slot: TimeSlot) => {
- if (!confirm(`Удалить ${slot.number}-й урок?`)) return;
  try {
  await api.delete(`/api/schedule/timeslots/${slot.id}`);
  toast.success("Урок удалён");
+ setTimeSlotToDelete(null);
  loadAllData();
 } catch (error: any) {
  toast.error("Ошибка удаления", { description: error?.message});
@@ -909,7 +914,7 @@ export default function SchedulePage() {
  <Button
  variant="ghost"
  size="sm"
- onClick={() => handleDeleteSubject(subject)}
+ onClick={() => setSubjectToDelete(subject)}
  className="text-macos-red hover:text-macos-red hover:bg-[rgba(255,59,48,0.06)]"
  >
  <Trash2 className="h-4 w-4"/>
@@ -958,7 +963,7 @@ export default function SchedulePage() {
  <Button
  variant="ghost"
  size="sm"
- onClick={() => handleDeleteRoom(room)}
+ onClick={() => setRoomToDelete(room)}
  className="text-macos-red hover:text-macos-red hover:bg-[rgba(255,59,48,0.06)]"
  >
  <Trash2 className="h-4 w-4"/>
@@ -1014,7 +1019,7 @@ export default function SchedulePage() {
  <Button
  variant="ghost"
  size="sm"
- onClick={() => handleDeleteTimeSlot(slot)}
+ onClick={() => setTimeSlotToDelete(slot)}
  className="text-macos-red hover:text-macos-red hover:bg-[rgba(255,59,48,0.06)]"
  >
  <Trash2 className="h-4 w-4"/>
@@ -1363,6 +1368,34 @@ export default function SchedulePage() {
  </div>
  </div>
  </Modal>
+
+ {/* Delete confirm dialogs */}
+ <MacosAlertDialog
+ isOpen={subjectToDelete !== null}
+ title={`Удалить предмет?`}
+ description={`Предмет «${subjectToDelete?.name}» будет удалён.`}
+ onClose={() => setSubjectToDelete(null)}
+ cancelAction={{ label: 'Отмена', onClick: () => setSubjectToDelete(null) }}
+ primaryAction={{ label: 'Удалить', onClick: () => subjectToDelete && handleDeleteSubject(subjectToDelete) }}
+ />
+
+ <MacosAlertDialog
+ isOpen={roomToDelete !== null}
+ title={`Удалить кабинет?`}
+ description={`Кабинет «${roomToDelete?.name}» будет удалён.`}
+ onClose={() => setRoomToDelete(null)}
+ cancelAction={{ label: 'Отмена', onClick: () => setRoomToDelete(null) }}
+ primaryAction={{ label: 'Удалить', onClick: () => roomToDelete && handleDeleteRoom(roomToDelete) }}
+ />
+
+ <MacosAlertDialog
+ isOpen={timeSlotToDelete !== null}
+ title={`Удалить урок из расписания?`}
+ description={`${timeSlotToDelete?.number}-й урок (${timeSlotToDelete?.startTime}–${timeSlotToDelete?.endTime}) будет удалён.`}
+ onClose={() => setTimeSlotToDelete(null)}
+ cancelAction={{ label: 'Отмена', onClick: () => setTimeSlotToDelete(null) }}
+ primaryAction={{ label: 'Удалить', onClick: () => timeSlotToDelete && handleDeleteTimeSlot(timeSlotToDelete) }}
+ />
  </div>
  );
 }

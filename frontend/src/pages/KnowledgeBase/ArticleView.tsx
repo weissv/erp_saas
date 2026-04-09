@@ -20,6 +20,8 @@ import { knowledgeBaseApi} from"../../lib/api";
 import { useAuth} from"../../hooks/useAuth";
 import type { KnowledgeBaseArticle, UpdateArticleInput} from"../../types/knowledge-base";
 import { Button} from"../../components/ui/button";
+import { Skeleton} from"../../components/ui/LoadingState";
+import { MacosAlertDialog} from"../../components/MacosAlertDialog";
 
 // ============================================================================
 // Простой рендерер Markdown (без внешних зависимостей)
@@ -72,6 +74,7 @@ export default function ArticleView() {
  const [editForm, setEditForm] = useState<UpdateArticleInput>({});
  const [saving, setSaving] = useState(false);
  const [editTagInput, setEditTagInput] = useState("");
+ const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
  const canEdit = user && ["ADMIN","DEPUTY","DIRECTOR","DEVELOPER"].includes(user.role);
 
@@ -137,10 +140,11 @@ export default function ArticleView() {
 };
 
  const handleDelete = async () => {
- if (!article || !confirm("Удалить статью? Это действие необратимо.")) return;
+ if (!article) return;
  try {
  await knowledgeBaseApi.delete(article.id);
  toast.success("Статья удалена");
+ setIsDeleteOpen(false);
  navigate("/knowledge-base");
 } catch {
  toast.error("Не удалось удалить статью");
@@ -162,8 +166,33 @@ export default function ArticleView() {
  // ========== Рендер ==========
  if (loading) {
  return (
- <div className="flex justify-center py-20">
- <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"/>
+ <div className="flex flex-col lg:flex-row gap-6">
+ <div className="flex-1 space-y-4">
+ <div className="rounded-xl border border-border p-6 lg:p-8 space-y-4">
+ <Skeleton height={36} width="70%" />
+ <div className="flex gap-4 pb-4 border-b border-border">
+ <Skeleton height={14} width={120} />
+ <Skeleton height={14} width={100} />
+ </div>
+ <div className="space-y-2">
+ <Skeleton height={16} />
+ <Skeleton height={16} />
+ <Skeleton height={16} width="85%" />
+ <Skeleton height={16} width="60%" />
+ </div>
+ </div>
+ </div>
+ <div className="lg:w-80 flex-shrink-0">
+ <div className="rounded-xl border border-border p-5 space-y-3">
+ <Skeleton height={16} width="50%" />
+ {Array.from({ length: 3 }).map((_, i) => (
+ <div key={i} className="p-3 rounded-lg border border-border space-y-1">
+ <Skeleton height={14} width="80%" />
+ <Skeleton height={12} width="60%" />
+ </div>
+ ))}
+ </div>
+ </div>
  </div>
  );
 }
@@ -171,7 +200,8 @@ export default function ArticleView() {
  if (!article) return null;
 
  return (
- <div>
+    <>
+    <div>
  {/* Навигация и действия */}
  <div className="flex items-center justify-between mb-6">
  <button
@@ -342,5 +372,15 @@ export default function ArticleView() {
  )}
  </div>
  </div>
+
+ <MacosAlertDialog
+ isOpen={isDeleteOpen}
+ title="Удалить статью?"
+ description="Статья будет безвозвратно удалена. Это действие нельзя отменить."
+ onClose={() => setIsDeleteOpen(false)}
+ cancelAction={{ label: "Отмена", onClick: () => setIsDeleteOpen(false) }}
+ primaryAction={{ label: "Удалить", onClick: handleDelete }}
+ />
+ </>
  );
 }
