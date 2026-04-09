@@ -1,0 +1,1662 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Роли пользователей. Права описаны в middleware checkRole.
+enum Role {
+  DEVELOPER
+  DIRECTOR
+  DEPUTY
+  ADMIN
+  TEACHER
+  ACCOUNTANT
+  ZAVHOZ
+}
+
+// Права доступа для каждой роли
+model RolePermission {
+  id         Int      @id @default(autoincrement())
+  role       Role     @unique
+  modules    String[] // Список доступных модулей ["dashboard", "children", "employees", ...]
+  canCreate  Boolean  @default(true)
+  canEdit    Boolean  @default(true)
+  canDelete  Boolean  @default(true)
+  canExport  Boolean  @default(false)
+  customPermissions Json? // Дополнительные права в формате JSON
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+enum ChildStatus {
+  ACTIVE
+  LEFT
+  ARCHIVED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum ClubEnrollmentStatus {
+  ACTIVE
+  WAITING_LIST
+  CANCELLED
+}
+
+enum FinanceType {
+  INCOME
+  EXPENSE
+}
+
+enum FinanceCategory {
+  NUTRITION
+  CLUBS
+  MAINTENANCE
+  SALARY
+  OTHER       // Прочее (автоимпорт из 1С)
+}
+
+/// Канал финансовой операции (1С)
+enum TransactionChannel {
+  CASH   // Кассовые операции (ПКО / РКО)
+  BANK   // Банковские операции (Поступление / Списание РС)
+}
+
+/// Направление товарного документа
+enum InvoiceDirection {
+  INCOMING  // Поступление (Document_ПоступлениеТоваровУслуг)
+  OUTGOING  // Реализация (Document_РеализацияТоваровУслуг)
+}
+
+/// Тип агрегированного остатка
+enum BalanceType {
+  CASH              // Остаток в кассе
+  BANK              // Остаток на расчётном счёте
+  CONTRACTOR_DEBT   // Сальдо с контрагентом
+}
+
+enum InventoryType {
+  FOOD       // Продукты питания
+  HOUSEHOLD  // Хоз. товары
+  STATIONERY // Канц. товары
+}
+
+/// Категория товара для заявок на выдачу
+enum ItemCategory {
+  STATIONERY  // Канц.товары
+  HOUSEHOLD   // Хоз.товары
+  OTHER       // Прочее
+}
+
+enum MaintenanceStatus {
+  PENDING      // Ожидает одобрения (показывается Директору/Завучу)
+  APPROVED     // Одобрена (показывается Завхозу)
+  REJECTED     // Отклонена
+  IN_PROGRESS  // В работе (у Завхоза)
+  DONE         // Выполнена
+}
+
+enum MaintenanceType {
+  REPAIR // Ремонт
+  ISSUE  // Выдача
+}
+
+/// Тип складской операции
+enum InventoryTransactionType {
+  IN           // Приход (закупка, поступление)
+  OUT          // Расход (выдача по заявке)
+  ADJUSTMENT   // Корректировка (ручная)
+  WRITE_OFF    // Списание (просрочка и т.п.)
+}
+
+/// Тип закупки
+enum PurchaseOrderType {
+  PLANNED      // Плановая
+  OPERATIONAL  // Оперативная (срочная)
+}
+
+/// Статус закупки
+enum PurchaseOrderStatus {
+  DRAFT           // Черновик
+  PENDING         // На рассмотрении (ожидает одобрения)
+  APPROVED        // Одобрена директором
+  REJECTED        // Отклонена
+  ORDERED         // Заказано у поставщика
+  PARTIALLY_DELIVERED // Частично доставлено
+  DELIVERED       // Полностью доставлено
+  RECEIVED        // Принято на склад
+  CANCELLED       // Отменена
+}
+
+enum FinanceSource {
+  BUDGET
+  EXTRA_BUDGET
+}
+
+enum SecurityEventType {
+  INCIDENT // Журнал происшествий
+  FIRE_CHECK // Проверка ПБ
+  VISITOR_LOG // Учёт посторонних
+  DOCUMENT // Документы по охране труда
+}
+
+enum EmployeeAttendanceStatus {
+  PRESENT
+  SICK_LEAVE
+  VACATION
+  ABSENT
+}
+
+enum AgeGroup {
+  INFANT // Ясли (0-3)
+  PRESCHOOL // Дошкольники (3-7)
+  ELEMENTARY // Младшая школа (7-11)
+}
+
+model User {
+  id             Int      @id @default(autoincrement())
+  email          String   @unique
+  passwordHash   String
+  role           Role
+  employeeId     Int      @unique
+  employee       Employee @relation(fields: [employeeId], references: [id])
+  telegramChatId String?  @unique // Telegram Chat ID для уведомлений
+  deletedAt      DateTime?
+
+  actionLogs ActionLog[]
+  knowledgeBaseArticles KnowledgeBaseArticle[] @relation("ArticleAuthor")
+  dashboardPreference DashboardPreference?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@index([deletedAt])
+}
+
+model Employee {
+  id                 Int       @id @default(autoincrement())
+  firstName          String
+  lastName           String
+  middleName         String?
+  birthDate          DateTime?
+  position           String
+  rate               Float // ставка (можно Decimal, если нужна точность)
+  hireDate           DateTime
+  fireDate           DateTime?
+  contractEndDate    DateTime?
+  medicalCheckupDate DateTime?
+  attestationDate    DateTime?
+
+  user                        User?
+  clubs                       Club[]               @relation("TeacherClubs")
+  classGroups                 Group[]              @relation("ClassTeacher")
+  maintenanceRequests         MaintenanceRequest[] @relation("Requester")
+  approvedMaintenanceRequests MaintenanceRequest[] @relation("Approver")
+  inventoryTransactions       InventoryTransaction[]
+  createdPurchaseOrders       PurchaseOrder[]       @relation("PurchaseOrderCreator")
+  approvedPurchaseOrders      PurchaseOrder[]       @relation("PurchaseOrderApprover")
+  receivedPurchaseOrders      PurchaseOrder[]       @relation("PurchaseOrderReceiver")
+  documents                   Document[]
+  attendance                  EmployeeAttendance[]
+  cleaningSchedules           CleaningSchedule[]
+  // LMS School relations
+  lmsScheduleItems            LmsScheduleItem[]
+  lmsGrades                   LmsGrade[]
+  lmsHomework                 LmsHomework[]
+  createdAt                   DateTime             @default(now())
+  updatedAt                   DateTime             @updatedAt
+}
+
+model Child {
+  id                     Int         @id @default(autoincrement())
+  firstName              String
+  lastName               String
+  middleName             String?     // Отчество
+  birthDate              DateTime
+  groupId                Int
+  group                  Group       @relation(fields: [groupId], references: [id])
+  healthInfo             Json?       // { allergies: string[], specialConditions: string[], medications: string[], notes: string }
+  status                 ChildStatus @default(ACTIVE)
+  address                String?     // Адрес проживания
+  nationality            String?     // Национальность
+  gender                 Gender?     // Пол
+  birthCertificateNumber String?     // Номер метрики
+  contractNumber         String?     // Номер договора
+  contractDate           DateTime?   // Дата договора
+
+  // Legacy parent fields (kept for backward compat, prefer Parent relation)
+  fatherName             String?     // @deprecated — use parents relation
+  motherName             String?     // @deprecated — use parents relation
+  parentPhone            String?     // @deprecated — use parents relation
+
+  parents           Parent[]
+  enrollments       ClubEnrollment[]
+  attendance        Attendance[]
+  documents         Document[]
+  temporaryAbsences TemporaryAbsence[]
+  clubRatings       ClubRating[]
+  // LMS School relations
+  lmsSchoolStudents LmsSchoolStudent[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@index([groupId])
+  @@index([lastName, firstName])
+  @@index([status])
+}
+
+model Parent {
+  id         Int      @id @default(autoincrement())
+  childId    Int
+  child      Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  fullName   String   // ФИО родителя
+  relation   String   // "отец", "мать", "опекун"
+  phone      String?  // Телефон
+  email      String?  // Email
+  workplace  String?  // Место работы
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([childId])
+}
+
+model Group {
+  id           Int       @id @default(autoincrement())
+  name         String    @unique // "1А", "2Б", "11В"
+  grade        Int? // 1-11 класс (null для совместимости с дошкольными группами)
+  academicYear String? // "2024-2025"
+  teacherId    Int? // Классный руководитель (Employee)
+  teacher      Employee? @relation("ClassTeacher", fields: [teacherId], references: [id])
+  capacity     Int       @default(30)
+  description  String?
+
+  children         Child[]
+  notifications    Notification[]
+  events           Event[]
+  // LMS relations
+  lmsStudents      LmsSchoolStudent[]
+  lmsScheduleItems LmsScheduleItem[]
+  lmsGrades        LmsGrade[]
+  lmsHomework      LmsHomework[]
+  lmsAttendance    LmsStudentAttendance[]
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  @@index([teacherId])
+}
+
+model Club {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  teacherId   Int
+  teacher     Employee @relation("TeacherClubs", fields: [teacherId], references: [id])
+  schedule    Json? // [{day: "Monday", time: "16:00"}]
+  cost        Decimal  @db.Decimal(12, 2)
+  maxStudents Int
+
+  enrollments         ClubEnrollment[]
+  attendance          Attendance[]
+  ratings             ClubRating[]
+  financeTransactions FinanceTransaction[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  @@unique([name, teacherId]) // Уникальность кружка по имени у конкретного педагога
+  @@index([teacherId])
+}
+
+model ClubEnrollment {
+  id      Int                  @id @default(autoincrement())
+  childId Int
+  clubId  Int
+  status  ClubEnrollmentStatus @default(ACTIVE)
+
+  child     Child    @relation(fields: [childId], references: [id])
+  club      Club     @relation(fields: [clubId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([childId, clubId]) // Один ребёнок — одна активная запись в кружок
+  @@index([clubId])
+  @@index([childId])
+}
+
+model Attendance {
+  id        Int      @id @default(autoincrement())
+  date      DateTime
+  childId   Int
+  clubId    Int? // null — посещаемость по основной группе (не кружок)
+  isPresent Boolean
+
+  child Child @relation(fields: [childId], references: [id])
+  club  Club? @relation(fields: [clubId], references: [id])
+
+  @@unique([date, childId, clubId]) // Уникальная отметка на дату/ребёнка/кружок
+  @@index([childId])
+  @@index([clubId])
+}
+
+model FinanceTransaction {
+  id          Int             @id @default(autoincrement())
+  externalId  String?         @unique // Ref_Key из 1С
+  amount      Decimal         @db.Decimal(14, 2) // + приход, − расход
+  type        FinanceType
+  category    FinanceCategory @default(OTHER)
+  source      FinanceSource   @default(BUDGET)
+  description String?
+  date        DateTime
+  documentUrl String?
+  clubId      Int?
+  club        Club?           @relation(fields: [clubId], references: [id])
+
+  // ── 1С Integration ──
+  channel             TransactionChannel?   // CASH / BANK
+  documentNumber      String?               // Номер документа в 1С
+  operationType       String?               // ВидОперации из 1С
+  posted              Boolean?              // Проведён в 1С
+  counterpartyType    String?               // Catalog_Контрагенты | Catalog_ФизическиеЛица | …
+  counterpartyRefKey  String?               // Raw Ref_Key контрагента в 1С
+  contractorId        Int?
+  contractor          Contractor?           @relation(fields: [contractorId], references: [id])
+  personId            Int?
+  person              Person?               @relation(fields: [personId], references: [id])
+  cashFlowArticleId   Int?
+  cashFlowArticle     CashFlowArticle?      @relation(fields: [cashFlowArticleId], references: [id])
+  purpose             String?               // НазначениеПлатежа / Основание
+
+  createdAt DateTime @default(now())
+
+  @@index([type, category, date])
+  @@index([clubId])
+  @@index([channel, date])
+  @@index([contractorId])
+  @@index([personId])
+  @@index([cashFlowArticleId])
+}
+
+model InventoryItem {
+  id           Int           @id @default(autoincrement())
+  externalId   String?       @unique // Ref_Key из 1С (Catalog_Номенклатура)
+  name         String
+  quantity     Float
+  unit         String // "кг", "шт", "л"
+  minQuantity  Float         @default(0) // Минимальный остаток (для уведомлений)
+  expiryDate   DateTime?
+  type         InventoryType
+  ingredientId Int?
+  ingredient   Ingredient?   @relation(fields: [ingredientId], references: [id])
+
+  // Связи
+  transactions      InventoryTransaction[]
+  maintenanceItems  MaintenanceItem[]
+  purchaseOrderItems PurchaseOrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type, expiryDate])
+  @@index([ingredientId])
+  @@index([name, unit])
+}
+
+model Menu {
+  id       Int        @id @default(autoincrement())
+  date     DateTime
+  ageGroup AgeGroup
+  meals    MenuDish[] @relation("MenuMeals")
+
+  @@unique([date, ageGroup])
+  @@index([date])
+}
+
+model MaintenanceRequest {
+  id               Int               @id @default(autoincrement())
+  title            String            // Наименование
+  description      String?           // Описание (необязательно)
+  requesterId      Int
+  requester        Employee          @relation(fields: [requesterId], references: [id], name: "Requester")
+  status           MaintenanceStatus @default(PENDING)
+  type             MaintenanceType
+  
+  // Связь с позициями заявки (Master-Detail)
+  items            MaintenanceItem[]
+  
+  // Поля для workflow одобрения
+  approvedById     Int?
+  approvedBy       Employee?         @relation(fields: [approvedById], references: [id], name: "Approver")
+  approvedAt       DateTime?
+  rejectionReason  String?
+
+  // Связь с транзакциями склада
+  inventoryTransactions InventoryTransaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([requesterId, status, type])
+  @@index([approvedById])
+}
+
+// Позиции заявки на выдачу (Detail таблица)
+model MaintenanceItem {
+  id              Int                @id @default(autoincrement())
+  requestId       Int
+  request         MaintenanceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  name            String             // Наименование товара
+  quantity        Float              // Запрашиваемое количество
+  issuedQuantity  Float?             // Фактически выданное количество
+  unit            String             // Единица измерения (шт, кг, л)
+  category        ItemCategory       // Категория товара
+  
+  // Связь с конкретным товаром на складе
+  inventoryItemId Int?
+  inventoryItem   InventoryItem?     @relation(fields: [inventoryItemId], references: [id])
+
+  createdAt  DateTime           @default(now())
+
+  @@index([requestId])
+  @@index([inventoryItemId])
+}
+
+/// Журнал движений склада
+model InventoryTransaction {
+  id              Int                      @id @default(autoincrement())
+  inventoryItemId Int
+  inventoryItem   InventoryItem            @relation(fields: [inventoryItemId], references: [id])
+  type            InventoryTransactionType
+  quantity        Float                    // Количество (всегда положительное)
+  quantityBefore  Float                    // Остаток до операции
+  quantityAfter   Float                    // Остаток после операции
+  reason          String?                  // Причина / комментарий
+  
+  // Связь с заявкой (если списание по заявке)
+  maintenanceRequestId Int?
+  maintenanceRequest   MaintenanceRequest?  @relation(fields: [maintenanceRequestId], references: [id])
+  
+  // Связь с закупкой (если приход по закупке)
+  purchaseOrderId      Int?
+  purchaseOrder        PurchaseOrder?       @relation(fields: [purchaseOrderId], references: [id])
+  
+  // Кто выполнил операцию
+  performedById   Int?
+  performedBy     Employee?                @relation(fields: [performedById], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([inventoryItemId, createdAt])
+  @@index([maintenanceRequestId])
+  @@index([type, createdAt])
+}
+
+model SecurityLog {
+  id          Int               @id @default(autoincrement())
+  eventType   SecurityEventType
+  description String?
+  date        DateTime
+  documentUrl String?
+
+  createdAt DateTime @default(now())
+
+  @@index([date, eventType])
+}
+
+model ActionLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  action    String // "CREATE_CHILD" и т.п.
+  details   Json?
+  timestamp DateTime @default(now())
+
+  @@index([userId, action, timestamp])
+}
+
+// ============================================================================
+// НОВЫЕ МОДЕЛИ - Расширение функционала
+// ============================================================================
+
+// --- 1. КОНТИНГЕНТ ДЕТЕЙ ---
+model TemporaryAbsence {
+  id        Int      @id @default(autoincrement())
+  child     Child    @relation(fields: [childId], references: [id])
+  childId   Int
+  startDate DateTime
+  endDate   DateTime
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([childId])
+}
+
+// --- 2. УПРАВЛЕНИЕ ПЕРСОНАЛОМ ---
+model EmployeeAttendance {
+  id          Int                      @id @default(autoincrement())
+  employee    Employee                 @relation(fields: [employeeId], references: [id])
+  employeeId  Int
+  date        DateTime                 @db.Date
+  status      EmployeeAttendanceStatus
+  hoursWorked Float?
+  notes       String?
+
+  @@unique([employeeId, date])
+  @@index([employeeId, date])
+}
+
+model StaffingTable {
+  id           Int    @id @default(autoincrement())
+  position     String @unique // "Воспитатель", "Педагог"
+  requiredRate Float // Required staff rate (e.g., 1.5 воспитателя)
+}
+
+// --- 3. ПИТАНИЕ И ЗАКУПКИ ---
+model Ingredient {
+  id                 Int                 @id @default(autoincrement())
+  name               String              @unique
+  unit               String // "кг", "л", "шт"
+  calories           Float               @default(0) // per unit
+  protein            Float               @default(0) // per unit
+  fat                Float               @default(0) // per unit
+  carbs              Float               @default(0) // per unit
+  inventoryItems     InventoryItem[]
+  dishIngredients    DishIngredient[]
+  purchaseOrderItems PurchaseOrderItem[]
+}
+
+model Dish {
+  id              Int              @id @default(autoincrement())
+  name            String           @unique
+  category        String?
+  preparationTime Int? // minutes
+  ingredients     DishIngredient[]
+  menus           MenuDish[]
+}
+
+model DishIngredient {
+  dish         Dish       @relation(fields: [dishId], references: [id])
+  dishId       Int
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  ingredientId Int
+  quantity     Float // Кол-во на 1 порцию
+
+  @@id([dishId, ingredientId])
+}
+
+model MenuDish {
+  menu     Menu   @relation("MenuMeals", fields: [menuId], references: [id])
+  menuId   Int
+  dish     Dish   @relation(fields: [dishId], references: [id])
+  dishId   Int
+  mealType String // "Завтрак", "Обед", "Полдник", "Ужин"
+
+  @@id([menuId, dishId, mealType])
+}
+
+model Supplier {
+  id          Int             @id @default(autoincrement())
+  externalId  String?         @unique // Ref_Key из 1С (Catalog_Контрагенты)
+  name        String          @unique
+  contactInfo String?
+  phone       String?
+  email       String?
+  address     String?
+  inn         String?          // ИНН поставщика
+  isActive    Boolean         @default(true)
+  pricelist   Json?           // { ingredientId: price }
+  orders      PurchaseOrder[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model PurchaseOrder {
+  id              Int                 @id @default(autoincrement())
+  orderNumber     String              @unique // Номер заказа (авто-генерация)
+  type            PurchaseOrderType   @default(PLANNED)
+  status          PurchaseOrderStatus @default(DRAFT)
+  
+  // Поставщик (опционально)
+  supplier        Supplier?           @relation(fields: [supplierId], references: [id])
+  supplierId      Int?
+  
+  // Описание и даты
+  title           String              // Название/описание закупки
+  description     String?             // Обоснование закупки
+  priority        Int                 @default(0) // 0=обычный, 1=срочный, 2=критический
+  orderDate       DateTime            // Дата создания заказа
+  expectedDeliveryDate DateTime?       // Ожидаемая дата доставки
+  actualDeliveryDate   DateTime?       // Фактическая дата доставки
+  
+  // Финансы
+  totalAmount     Decimal             @db.Decimal(12, 2) @default(0)
+  budgetSource    String?             // Источник финансирования
+  
+  // Workflow: Одобрение директором
+  createdById     Int
+  createdBy       Employee            @relation("PurchaseOrderCreator", fields: [createdById], references: [id])
+  approvedById    Int?
+  approvedBy      Employee?           @relation("PurchaseOrderApprover", fields: [approvedById], references: [id])
+  approvedAt      DateTime?
+  rejectionReason String?             // Причина отклонения
+  
+  // Приёмка на склад
+  receivedById    Int?
+  receivedBy      Employee?           @relation("PurchaseOrderReceiver", fields: [receivedById], references: [id])
+  receivedAt      DateTime?
+  receiveNote     String?             // Примечание при приёмке
+  
+  // Связи
+  items           PurchaseOrderItem[]
+  inventoryTransactions InventoryTransaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([supplierId])
+  @@index([status, type])
+  @@index([createdById])
+  @@index([approvedById])
+  @@index([orderDate])
+}
+
+model PurchaseOrderItem {
+  id              Int              @id @default(autoincrement())
+  order           PurchaseOrder    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId         Int
+  
+  // Привязка к ингредиенту (опционально)
+  ingredient      Ingredient?      @relation(fields: [ingredientId], references: [id])
+  ingredientId    Int?
+  
+  // Привязка к складскому товару (для синхронизации)
+  inventoryItem   InventoryItem?   @relation(fields: [inventoryItemId], references: [id])
+  inventoryItemId Int?
+  
+  // Описание позиции
+  name            String           // Наименование товара
+  quantity        Float            // Заказанное количество
+  receivedQuantity Float?          // Фактически принятое количество
+  unit            String           // Единица измерения
+  price           Decimal          @db.Decimal(12, 2) // Цена за единицу
+  totalPrice      Decimal          @db.Decimal(12, 2) @default(0) // quantity * price
+
+  @@index([orderId])
+  @@index([inventoryItemId])
+}
+
+// --- 4. КРУЖКИ ---
+model ClubRating {
+  id      Int     @id @default(autoincrement())
+  club    Club    @relation(fields: [clubId], references: [id])
+  clubId  Int
+  child   Child   @relation(fields: [childId], references: [id])
+  childId Int
+  rating  Int // 1-5
+  comment String?
+
+  @@unique([clubId, childId])
+}
+
+// --- 5. ХОЗЯЙСТВЕННЫЕ НУЖДЫ ---
+model CleaningSchedule {
+  id           Int           @id @default(autoincrement())
+  area         String // "Группа 1", "Кухня"
+  frequency    String // "Ежедневно", "Раз в неделю"
+  assignedTo   Employee?     @relation(fields: [assignedToId], references: [id])
+  assignedToId Int?
+  logs         CleaningLog[]
+}
+
+model CleaningLog {
+  id         Int              @id @default(autoincrement())
+  schedule   CleaningSchedule @relation(fields: [scheduleId], references: [id])
+  scheduleId Int
+  timestamp  DateTime         @default(now())
+
+  @@index([scheduleId])
+}
+
+model Equipment {
+  id          Int      @id @default(autoincrement())
+  name        String // "Огнетушитель #1"
+  location    String?
+  lastCheckup DateTime
+  nextCheckup DateTime
+
+  @@index([nextCheckup])
+}
+
+// --- 6. ДОКУМЕНТООБОРОТ ---
+model DocumentTemplate {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  content   String // Template content/URL
+  documents Document[]
+}
+
+model Document {
+  id         Int               @id @default(autoincrement())
+  name       String
+  fileUrl    String // URL/путь к скану
+  template   DocumentTemplate? @relation(fields: [templateId], references: [id])
+  templateId Int?
+  employee   Employee?         @relation(fields: [employeeId], references: [id])
+  employeeId Int?
+  child      Child?            @relation(fields: [childId], references: [id])
+  childId    Int?
+  createdAt  DateTime          @default(now())
+
+  @@index([employeeId])
+  @@index([childId])
+  @@index([templateId])
+}
+
+// --- 7. КОММУНИКАЦИИ ---
+model Notification {
+  id            Int      @id @default(autoincrement())
+  title         String
+  content       String
+  targetRole    Role? // Массовая рассылка по ролям
+  targetGroup   Group?   @relation(fields: [targetGroupId], references: [id])
+  targetGroupId Int? // Массовая рассылка по группам
+  createdAt     DateTime @default(now())
+
+  @@index([targetGroupId])
+}
+
+model Event {
+  id         Int      @id @default(autoincrement())
+  title      String   // Тема/название события
+  date       DateTime // Дата события
+  groupId    Int?     // Класс (опционально)
+  group      Group?   @relation(fields: [groupId], references: [id])
+  organizer  String   // Организатор
+  performers String[] // Исполнители (массив строк)
+  createdAt  DateTime @default(now())
+
+  @@index([date])
+  @@index([groupId])
+}
+
+model Feedback {
+  id          Int       @id @default(autoincrement())
+  parentName  String
+  contactInfo String
+  type        String // "Жалоба", "Предложение", "Обращение"
+  message     String
+  status      String // "NEW", "IN_PROGRESS", "RESOLVED"
+  response    String?
+  resolvedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, createdAt])
+}
+
+// --- 8. RAG / AI ASSISTANT ---
+model KnowledgeBaseDocument {
+  id        Int                         @id @default(autoincrement())
+  content   String                      @db.Text
+  metadata  Json? // { title, subject, grade, tags, source }
+  embedding Unsupported("vector(768)")?
+  createdAt DateTime                    @default(now())
+  updatedAt DateTime                    @updatedAt
+}
+
+// --- 8.1. БАЗА ЗНАНИЙ (СТАТЬИ) ---
+model KnowledgeBaseArticle {
+  id        Int      @id @default(autoincrement())
+  title     String
+  slug      String   @unique
+  content   String   @db.Text // Markdown контент
+  summary   String   // Автогенерируемое краткое описание
+  tags      String[] // Теги для фильтрации
+  roles     Role[]   // Роли, которым доступна статья (пустой = всем)
+
+  // Вектор для семантического поиска (Gemini text-embedding-004 = 768 dims)
+  embedding Unsupported("vector(768)")?
+
+  // Автор
+  authorId  Int
+  author    User     @relation("ArticleAuthor", fields: [authorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([authorId])
+  @@index([tags])
+}
+
+// --- 9. СИСТЕМНЫЕ НАСТРОЙКИ ---
+// Персистентное хранение конфигураций (промты, API ключи, флаги)
+model SystemSetting {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique // "ai_system_prompt", "maintenance_mode", etc.
+  value       String   @db.Text // Значение настройки (может быть JSON строкой)
+  description String? // Описание настройки
+  category    String   @default("general") // "ai", "security", "maintenance", "general"
+  isSecret    Boolean  @default(false) // Скрывать ли значение в API ответах
+  updatedBy   Int? // ID пользователя, изменившего настройку
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([key])
+}
+
+// --- 9. РАСПИСАНИЕ УРОКОВ ---
+
+// Предметы (дисциплины)
+model Subject {
+  id        Int            @id @default(autoincrement())
+  name      String         @unique // "Математика", "Русский язык"
+  shortName String? // "Мат", "Рус"
+  color     String? // Цвет для отображения в расписании "#4CAF50"
+  schedules ScheduleSlot[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+// Учебные кабинеты/помещения
+model Room {
+  id        Int            @id @default(autoincrement())
+  name      String         @unique // "Кабинет 101", "Спортзал"
+  capacity  Int? // Вместимость
+  schedules ScheduleSlot[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+// Временные слоты (звонки)
+model TimeSlot {
+  id        Int            @id @default(autoincrement())
+  number    Int // Номер урока (1, 2, 3...)
+  startTime String // "08:30"
+  endTime   String // "09:15"
+  schedules ScheduleSlot[]
+
+  @@unique([number])
+}
+
+// Привязка учителя к предмету (кто какие предметы ведёт)
+model TeacherSubject {
+  id         Int     @id @default(autoincrement())
+  employeeId Int
+  subjectId  Int
+  isPrimary  Boolean @default(false) // Основной предмет учителя
+
+  @@unique([employeeId, subjectId])
+  @@index([employeeId])
+  @@index([subjectId])
+}
+
+// Слоты расписания (конкретные уроки)
+model ScheduleSlot {
+  id         Int      @id @default(autoincrement())
+  dayOfWeek  Int // 1-7 (Пн-Вс)
+  timeSlotId Int
+  timeSlot   TimeSlot @relation(fields: [timeSlotId], references: [id])
+  groupId    Int // Класс
+  subjectId  Int
+  subject    Subject  @relation(fields: [subjectId], references: [id])
+  teacherId  Int // Учитель (employeeId)
+  roomId     Int?
+  room       Room?    @relation(fields: [roomId], references: [id])
+  isActive   Boolean  @default(true)
+  notes      String? // Примечания
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([dayOfWeek, timeSlotId, groupId]) // Один урок на слот для класса
+  @@index([teacherId])
+  @@index([groupId])
+  @@index([dayOfWeek])
+}
+
+// ============================================================================
+// ШКОЛЬНАЯ LMS - Расширенные модели
+// ============================================================================
+
+// Ученики школы (связь ребенка с классом для LMS)
+model LmsSchoolStudent {
+  id             String   @id @default(cuid())
+  studentId      Int // Child id
+  student        Child    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classId        Int // Group id (ERP класс)
+  class          Group    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  enrollmentDate DateTime @default(now())
+  status         String   @default("active") // active, graduated, transferred
+
+  grades              LmsGrade[]
+  attendance          LmsStudentAttendance[]
+  homeworkSubmissions LmsHomeworkSubmission[]
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+
+  @@unique([studentId, classId])
+}
+
+// Школьные предметы
+model LmsSubject {
+  id           String  @id @default(cuid())
+  erpSubjectId Int?    @unique // Связь с ERP Subject.id для синхронизации
+  name         String // "Математика", "Русский язык"
+  description  String?
+  grade        Int? // Для какого класса (null = для всех)
+  hoursPerWeek Int     @default(1)
+
+  schedules LmsScheduleItem[]
+  grades    LmsGrade[]
+  homework  LmsHomework[]
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+// Расписание уроков
+model LmsScheduleItem {
+  id        String     @id @default(cuid())
+  classId   Int // Group id (ERP класс)
+  class     Group      @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   LmsSubject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacherId Int? // Employee id
+  teacher   Employee?  @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+  dayOfWeek Int // 1-7 (понедельник-воскресенье)
+  startTime String // "08:30"
+  endTime   String // "09:15"
+  room      String? // "Кабинет 101"
+
+  attendance LmsStudentAttendance[]
+  createdAt  DateTime               @default(now())
+  updatedAt  DateTime               @updatedAt
+}
+
+// Журнал оценок
+model LmsGrade {
+  id        String           @id @default(cuid())
+  studentId String
+  student   LmsSchoolStudent @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   LmsSubject       @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  classId   Int // Group id (ERP класс)
+  class     Group            @relation(fields: [classId], references: [id], onDelete: Cascade)
+  teacherId Int? // Employee id
+  teacher   Employee?        @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+  value     Int // Оценка 1-5
+  maxValue  Int              @default(5)
+  gradeType String           @default("regular") // "regular", "test", "exam", "quarterly"
+  comment   String?
+  date      DateTime         @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studentId])
+  @@index([subjectId])
+}
+
+// Домашние задания
+model LmsHomework {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  subjectId   String
+  subject     LmsSubject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  classId     Int // Group id (ERP класс)
+  class       Group      @relation(fields: [classId], references: [id], onDelete: Cascade)
+  teacherId   Int // Employee id
+  teacher     Employee   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  dueDate     DateTime
+  maxPoints   Int        @default(10)
+  status      String     @default("active") // active, archived
+
+  submissions LmsHomeworkSubmission[]
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+}
+
+// Сдача домашних заданий
+model LmsHomeworkSubmission {
+  id            String           @id @default(cuid())
+  homeworkId    String
+  homework      LmsHomework      @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
+  studentId     String
+  student       LmsSchoolStudent @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  content       String?
+  attachmentUrl String?
+  submittedAt   DateTime         @default(now())
+  points        Int?
+  feedback      String?
+  gradedAt      DateTime?
+  gradedBy      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Посещаемость учеников
+model LmsStudentAttendance {
+  id             String           @id @default(cuid())
+  studentId      String
+  student        LmsSchoolStudent @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classId        Int // Group id (ERP класс)
+  class          Group            @relation(fields: [classId], references: [id], onDelete: Cascade)
+  scheduleItemId String?
+  scheduleItem   LmsScheduleItem? @relation(fields: [scheduleItemId], references: [id], onDelete: SetNull)
+  date           DateTime
+  status         String           @default("present") // present, absent, late, excused
+  note           String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studentId])
+  @@index([date])
+}
+
+// Объявления для класса
+model LmsClassAnnouncement {
+  id        Int       @id @default(autoincrement())
+  classId   Int? // null = для всей школы
+  title     String
+  content   String    @db.Text
+  authorId  Int // userId
+  isPinned  Boolean   @default(false)
+  expiresAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([classId])
+  @@index([authorId])
+}
+
+// ============================================================================
+// ПЛАТФОРМА ДЛЯ КОНТРОЛЬНЫХ РАБОТ (EXAMS)
+// ============================================================================
+
+// Тип вопроса в контрольной
+enum ExamQuestionType {
+  MULTIPLE_CHOICE    // Выбор из вариантов
+  SINGLE_CHOICE      // Выбор одного варианта
+  TEXT_SHORT         // Короткий текстовый ответ
+  TEXT_LONG          // Развёрнутый ответ (проверяется AI)
+  PROBLEM            // Задача с решением (проверяется AI)
+  TRUE_FALSE         // Верно/Неверно
+}
+
+// Статус контрольной
+enum ExamStatus {
+  DRAFT              // Черновик
+  PUBLISHED          // Опубликована
+  CLOSED             // Закрыта
+  ARCHIVED           // Архивирована
+}
+
+// Контрольная работа
+model Exam {
+  id           String    @id @default(cuid())
+  title        String    // "РУБЕЖНЫЙ КОНТРОЛЬ ПО ЭКОНОМИКЕ №1"
+  description  String?   @db.Text
+  subject      String    // "Экономика", "Математика"
+  
+  // Создатель контрольной (учитель/завуч/директор)
+  creatorId    Int       // Employee id
+  
+  // Уникальный токен для публичной ссылки (для студентов)
+  publicToken  String    @unique @default(cuid())
+  
+  // Настройки
+  timeLimit    Int?      // Лимит времени в минутах (null = без лимита)
+  passingScore Float     @default(60) // Процент для прохождения
+  shuffleQuestions Boolean @default(false)
+  shuffleOptions Boolean @default(false)
+  showResults  Boolean   @default(true) // Показывать результаты студентам
+  
+  // Период доступности
+  startDate    DateTime?
+  endDate      DateTime?
+  
+  status       ExamStatus @default(DRAFT)
+  
+  // Связи
+  questions    ExamQuestion[]
+  submissions  ExamSubmission[]
+  targetGroups ExamTargetGroup[]
+  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([creatorId])
+  @@index([publicToken])
+  @@index([status])
+}
+
+// Привязка контрольной к классам
+model ExamTargetGroup {
+  id      Int    @id @default(autoincrement())
+  examId  String
+  exam    Exam   @relation(fields: [examId], references: [id], onDelete: Cascade)
+  groupId Int    // Group id
+  
+  @@unique([examId, groupId])
+}
+
+// Вопрос контрольной
+model ExamQuestion {
+  id           String           @id @default(cuid())
+  examId       String
+  exam         Exam             @relation(fields: [examId], references: [id], onDelete: Cascade)
+  
+  orderIndex   Int              // Порядковый номер вопроса
+  type         ExamQuestionType
+  
+  // Содержание вопроса
+  content      String           @db.Text // Текст вопроса
+  explanation  String?          @db.Text // Пояснение к правильному ответу (для отображения после)
+  imageUrl     String?          // URL изображения (если нужно)
+  
+  // Для выбора (MULTIPLE_CHOICE, SINGLE_CHOICE)
+  options      Json?            // [{id: "a", text: "вариант А"}, ...]
+  correctAnswer Json?           // "a" или ["a", "c"] для множественного выбора
+  
+  // Для текстовых/задач - ключевые слова для AI проверки
+  keyPoints    Json?            // ["ключевое слово", "важный концепт"]
+  expectedAnswer String?        @db.Text // Ожидаемый ответ/решение для AI
+  
+  // Баллы
+  points       Float            @default(1)
+  partialCredit Boolean         @default(false) // Частичный зачёт
+  
+  answers      ExamAnswer[]
+  
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([examId])
+  @@index([orderIndex])
+}
+
+// Прохождение контрольной студентом
+model ExamSubmission {
+  id           String    @id @default(cuid())
+  examId       String
+  exam         Exam      @relation(fields: [examId], references: [id], onDelete: Cascade)
+  
+  // Студент (может быть не авторизован - только имя и класс)
+  studentName  String
+  studentClass String?   // "11Б"
+  studentEmail String?   // Email для получения результатов
+  
+  // Привязка к LMS студенту (если авторизован)
+  lmsStudentId String?
+  
+  // Время
+  startedAt    DateTime  @default(now())
+  submittedAt  DateTime?
+  
+  // Результаты
+  totalScore   Float?    // Общий балл
+  maxScore     Float?    // Максимально возможный балл
+  percentage   Float?    // Процент
+  passed       Boolean?  // Пройдено или нет
+  
+  // Статус проверки AI
+  aiReviewCompleted Boolean @default(false)
+  
+  answers      ExamAnswer[]
+  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([examId])
+  @@index([studentName])
+  @@index([lmsStudentId])
+}
+
+// Ответ на вопрос
+model ExamAnswer {
+  id           String         @id @default(cuid())
+  submissionId String
+  submission   ExamSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  questionId   String
+  question     ExamQuestion   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  // Ответ студента
+  answer       String?        @db.Text // Текст ответа или JSON выбранных вариантов
+  
+  // Оценка
+  score        Float?         // Полученные баллы
+  maxScore     Float          // Максимальные баллы за вопрос
+  isCorrect    Boolean?       // Верно/неверно (для авто-проверки)
+  
+  // AI проверка для открытых вопросов
+  aiScore      Float?         // Балл от AI (0-100%)
+  aiFeedback   String?        @db.Text // Комментарий AI
+  aiChecked    Boolean        @default(false)
+  
+  // Ручная проверка учителем
+  manualScore  Float?
+  manualFeedback String?      @db.Text
+  manualChecked Boolean       @default(false)
+  
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@unique([submissionId, questionId])
+  @@index([submissionId])
+  @@index([questionId])
+}
+
+// ===================== DASHBOARD CUSTOMIZATION =====================
+
+/// Пользовательские настройки дашборда
+model DashboardPreference {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Макет: массив объектов {widgetId, x, y, w, h}
+  layout Json @default("[]")
+
+  // Список включённых виджетов (по id)
+  enabledWidgets String[] @default([])
+
+  // Свёрнутые секции
+  collapsedSections String[] @default([])
+
+  // Закреплённые быстрые действия
+  pinnedActions String[] @default([])
+
+  // Фильтры и настройки на уровне виджетов {widgetId: {period, ...}}
+  widgetFilters Json @default("{}")
+
+  // Сохранённые представления [{name, layout, enabledWidgets, filters}]
+  savedViews Json @default("[]")
+
+  // Текущий активный preset/view (null = custom)
+  activeView String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// ──────────────────────────────────────
+// 1С Integration Models
+// ──────────────────────────────────────
+
+/// Контрагенты (Catalog_Контрагенты)
+model Contractor {
+  id         Int      @id @default(autoincrement())
+  externalId String   @unique              // Ref_Key
+  code       String?                       // Code
+  name       String                        // Description
+  fullName   String?                       // НаименованиеПолное
+  inn        String?                       // ИНН
+  kpp        String?                       // КПП
+  isFolder   Boolean  @default(false)      // IsFolder
+  isActive   Boolean  @default(true)       // !DeletionMark
+
+  transactions FinanceTransaction[]
+  invoices     Invoice[]
+
+  balanceSnapshots BalanceSnapshot[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([inn])
+  @@index([name])
+}
+
+/// Физические лица (Catalog_ФизическиеЛица)
+model Person {
+  id         Int      @id @default(autoincrement())
+  externalId String   @unique              // Ref_Key
+  code       String?                       // Code
+  name       String                        // Description
+  isActive   Boolean  @default(true)       // !DeletionMark
+
+  transactions FinanceTransaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+}
+
+/// Статьи движения денежных средств (Catalog_СтатьиДвиженияДенежныхСредств)
+model CashFlowArticle {
+  id         Int      @id @default(autoincrement())
+  externalId String   @unique              // Ref_Key
+  code       String?                       // Code
+  name       String                        // Description
+  isFolder   Boolean  @default(false)      // IsFolder
+
+  transactions FinanceTransaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Товарные документы (Поступление / Реализация товаров и услуг)
+model Invoice {
+  id              Int              @id @default(autoincrement())
+  externalId      String           @unique           // Ref_Key
+  direction       InvoiceDirection                    // INCOMING / OUTGOING
+  documentNumber  String?                             // Number
+  date            DateTime                            // Date
+  posted          Boolean          @default(false)    // Posted
+  operationType   String?                             // ВидОперации
+  contractorId    Int?
+  contractor      Contractor?      @relation(fields: [contractorId], references: [id])
+  totalAmount     Decimal          @db.Decimal(14, 2) // СуммаДокумента
+  comment         String?                             // Комментарий
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([direction, date])
+  @@index([contractorId])
+}
+
+/// Агрегированный остаток (рассчитывается из FinanceTransaction)
+model BalanceSnapshot {
+  id           Int         @id @default(autoincrement())
+  snapshotDate DateTime                            // Дата среза
+  balanceType  BalanceType                         // CASH / BANK / CONTRACTOR_DEBT
+  amount       Decimal     @db.Decimal(14, 2)      // Итоговое сальдо
+  contractorId Int?                                // Заполняется для CONTRACTOR_DEBT
+  contractor   Contractor? @relation(fields: [contractorId], references: [id])
+  label        String?                             // Подпись (имя контрагента, и т.д.)
+
+  createdAt DateTime @default(now())
+
+  @@index([snapshotDate, balanceType])
+  @@index([contractorId])
+}
+
+// ══════════════════════════════════════════════════════════════
+// 1С СИНХРОНИЗАЦИЯ — Справочники
+// ══════════════════════════════════════════════════════════════
+
+/// Catalog_Организации
+model OneCOrganization {
+  id          Int      @id @default(autoincrement())
+  externalId  String   @unique
+  code        String?
+  name        String
+  fullName    String?
+  inn         String?
+  kpp         String?
+  ogrn        String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+/// Catalog_Номенклатура
+model OneCNomenclature {
+  id          Int      @id @default(autoincrement())
+  externalId  String   @unique
+  code        String?
+  name        String
+  fullName    String?
+  isFolder    Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([name])
+}
+
+/// Catalog_БанковскиеСчета
+model OneCBankAccount {
+  id          Int      @id @default(autoincrement())
+  externalId  String   @unique
+  code        String?
+  name        String
+  accountNumber String?
+  bankName    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+/// Catalog_ДоговорыКонтрагентов
+model OneCContract {
+  id             Int      @id @default(autoincrement())
+  externalId     String   @unique
+  code           String?
+  name           String
+  contractorRefKey String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([contractorRefKey])
+}
+
+/// Catalog_Сотрудники (1С)
+model OneCEmployee {
+  id             Int      @id @default(autoincrement())
+  externalId     String   @unique
+  code           String?
+  name           String
+  personRefKey   String?  // ФизическоеЛицо_Key
+  positionRefKey String?  // Должность_Key
+  orgRefKey      String?  // Организация_Key
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([name])
+}
+
+/// Catalog_Должности
+model OneCPosition {
+  id          Int      @id @default(autoincrement())
+  externalId  String   @unique
+  code        String?
+  name        String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+/// Catalog_ОсновныеСредства
+model OneCFixedAsset {
+  id          Int      @id @default(autoincrement())
+  externalId  String   @unique
+  code        String?
+  name        String
+  fullName    String?
+  isFolder    Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+/// Catalog_Склады
+model OneCWarehouse {
+  id          Int      @id @default(autoincrement())
+  externalId  String   @unique
+  code        String?
+  name        String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+/// Catalog_Валюты
+model OneCCurrency {
+  id          Int      @id @default(autoincrement())
+  externalId  String   @unique
+  code        String?
+  name        String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+/// Catalog_ПодразделенияОрганизаций
+model OneCDepartment {
+  id          Int      @id @default(autoincrement())
+  externalId  String   @unique
+  code        String?
+  name        String
+  parentRefKey String?
+  orgRefKey    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ══════════════════════════════════════════════════════════════
+// 1С СИНХРОНИЗАЦИЯ — Документы
+// ══════════════════════════════════════════════════════════════
+
+/// Универсальная модель для документов 1С, которые не имеют отдельной модели
+/// (Счёт-фактуры, Авансовые отчёты, ОперацияБух, КорректировкаДолга,
+///  СписаниеТоваров, Инвентаризация, ТребованиеНакладная и т.д.)
+model OneCDocument {
+  id              Int      @id @default(autoincrement())
+  externalId      String   @unique
+  docType         String                            // "СчетФактураПолученный", "АвансовыйОтчет" и т.д.
+  documentNumber  String?
+  date            DateTime
+  posted          Boolean  @default(false)
+  amount          Decimal? @db.Decimal(14, 2)
+  contractorRefKey String?
+  contractorName  String?
+  personRefKey    String?
+  personName      String?
+  operationType   String?
+  comment         String?
+  meta            Json?                              // Дополнительные поля в JSON
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([docType, date])
+  @@index([docType])
+  @@index([contractorRefKey])
+}
+
+// ══════════════════════════════════════════════════════════════
+// 1С СИНХРОНИЗАЦИЯ — Кадровые документы
+// ══════════════════════════════════════════════════════════════
+
+/// Кадровые документы из 1С (Приём, Увольнение, Перевод, Отпуск, Больничный и т.д.)
+model OneCHRDocument {
+  id              Int      @id @default(autoincrement())
+  externalId      String   @unique
+  docType         String                            // "ПриемНаРаботу", "Увольнение", "Отпуск" и т.д.
+  documentNumber  String?
+  date            DateTime
+  posted          Boolean  @default(false)
+  employeeRefKey  String?
+  employeeName    String?
+  personRefKey    String?
+  personName      String?
+  orgRefKey       String?
+  departmentRefKey String?
+  positionRefKey  String?
+  dateStart       DateTime?
+  dateEnd         DateTime?
+  amount          Decimal? @db.Decimal(14, 2)
+  comment         String?
+  meta            Json?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([docType, date])
+  @@index([docType])
+  @@index([employeeRefKey])
+  @@index([personRefKey])
+}
+
+// ══════════════════════════════════════════════════════════════
+// 1С СИНХРОНИЗАЦИЯ — Зарплата
+// ══════════════════════════════════════════════════════════════
+
+/// Зарплатные документы (Начисление, Ведомости, Удержания)
+model OneCPayrollDocument {
+  id              Int      @id @default(autoincrement())
+  externalId      String   @unique
+  docType         String
+  documentNumber  String?
+  date            DateTime
+  posted          Boolean  @default(false)
+  orgRefKey       String?
+  departmentRefKey String?
+  period          DateTime?
+  amount          Decimal? @db.Decimal(14, 2)
+  comment         String?
+  meta            Json?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([docType, date])
+  @@index([docType])
+}
+
+// ══════════════════════════════════════════════════════════════
+// 1С СИНХРОНИЗАЦИЯ — Универсальный справочник
+// ══════════════════════════════════════════════════════════════
+
+/// Универсальная модель для справочников 1С, не имеющих отдельной модели
+/// (Банки, ВидыНоменклатуры, КонтактныеЛица, Календари и т.д.)
+model OneCCatalog {
+  id            Int      @id @default(autoincrement())
+  externalId    String
+  catalogType   String                            // "Банки", "ВидыНоменклатуры" и т.д.
+  code          String?
+  name          String
+  fullName      String?
+  isFolder      Boolean  @default(false)
+  parentRefKey  String?
+  ownerRefKey   String?
+  isActive      Boolean  @default(true)
+  meta          Json?                              // Все дополнительные поля
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([catalogType, externalId])
+  @@index([catalogType])
+  @@index([catalogType, name])
+}
+
+// ══════════════════════════════════════════════════════════════
+// 1С СИНХРОНИЗАЦИЯ — Регистры
+// ══════════════════════════════════════════════════════════════
+
+/// Универсальная модель для регистров 1С (накопления и сведения)
+model OneCRegister {
+  id              Int      @id @default(autoincrement())
+  externalId      String
+  registerType    String                            // "ГрафикиРаботыПоВидамВремени", "НДСРеестрВходящихСчетовФактур"
+  registerKind    String   @default("Information")  // "Information" | "Accumulation"
+  period          DateTime?
+  recorder        String?                           // Ref_Key регистратора-документа
+  recorderType    String?                           // Тип документа-регистратора
+  lineNumber      Int?
+  active          Boolean  @default(true)
+  data            Json                              // Все поля записи регистра
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([registerType, externalId])
+  @@index([registerType])
+  @@index([registerType, period])
+  @@index([recorder])
+}

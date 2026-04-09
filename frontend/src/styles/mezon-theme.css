@@ -1,0 +1,1692 @@
+/* ============================================================================
+   macOS Sequoia — Design System
+   Mezon ERP · Clean Surfaces, Warm Neutrals, Professional Depth
+   ============================================================================ */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   1. DESIGN TOKENS
+   ───────────────────────────────────────────────────────────────────────────── */
+:root {
+  /* ── macOS System Colors ── */
+  --color-blue:    #007AFF;
+  --color-green:   #34C759;
+  --color-red:     #FF3B30;
+  --color-orange:  #FF9500;
+  --color-yellow:  #FFCC00;
+  --color-purple:  #AF52DE;
+  --color-pink:    #FF2D55;
+  --color-teal:    #5AC8FA;
+  --color-indigo:  #5856D6;
+
+  /* Hover tints */
+  --color-blue-hover:   #0071EE;
+  --color-blue-active:  #005EC4;
+  --color-red-hover:    #E8342A;
+  --color-red-active:   #C5221F;
+
+  /* ── Neutrals (Warm Sequoia Palette) ── */
+  --gray-1: #8E8E93;
+  --gray-2: #AEAEB2;
+  --gray-3: #C7C7CC;
+  --gray-4: #D1D1D6;
+  --gray-5: #E5E5EA;
+  --gray-6: #F2F2F7;
+
+  /* ── Semantic Surfaces ── */
+  --bg-canvas:     #F5F5F7;
+  --bg-grouped:    #F2F2F7;
+  --bg-elevated:   #FFFFFF;
+  --bg-inset:      #F0F0F4;
+
+  --surface-primary:  #FFFFFF;
+  --surface-secondary: rgba(255, 255, 255, 0.92);
+  --surface-overlay:   rgba(255, 255, 255, 0.97);
+
+  /* ── Text Colors ── */
+  --text-primary:    #1D1D1F;
+  --text-secondary:  #6E6E73;
+  --text-tertiary:   #86868B;
+  --text-quaternary: #AEAEB2;
+  --text-on-accent:  #FFFFFF;
+
+  /* Legacy aliases (backward compat) */
+  --mezon-dark:           var(--text-primary);
+  --mezon-text-soft:      var(--text-tertiary);
+  --mezon-text-secondary: var(--text-secondary);
+  --mezon-accent:         var(--color-blue);
+  --mezon-teal:           var(--color-teal);
+  --mezon-bg:             var(--bg-canvas);
+  --mezon-panel-muted:    var(--surface-primary);
+  --mezon-separator:      var(--separator);
+  --macos-blue:   var(--color-blue);
+  --macos-green:  var(--color-green);
+  --macos-red:    var(--color-red);
+  --macos-orange: var(--color-orange);
+  --macos-yellow: var(--color-yellow);
+  --macos-purple: var(--color-purple);
+  --macos-pink:   var(--color-pink);
+  --macos-teal:   var(--color-teal);
+
+  /* ── Fill ── */
+  --fill-primary:    rgba(120, 120, 128, 0.20);
+  --fill-secondary:  rgba(120, 120, 128, 0.16);
+  --fill-tertiary:   rgba(120, 120, 128, 0.12);
+  --fill-quaternary: rgba(120, 120, 128, 0.08);
+
+  /* ── Accent tints ── */
+  --tint-blue:   rgba(0, 122, 255, 0.08);
+  --tint-green:  rgba(52, 199, 89, 0.08);
+  --tint-red:    rgba(255, 59, 48, 0.08);
+  --tint-orange: rgba(255, 149, 0, 0.08);
+  --tint-purple: rgba(175, 82, 222, 0.08);
+
+  /* ── Separators ── */
+  --separator:        rgba(60, 60, 67, 0.12);
+  --separator-opaque: #C6C6C8;
+  --border-card:      rgba(0, 0, 0, 0.06);
+  --border-field:     rgba(0, 0, 0, 0.12);
+
+  /* ── Shadows – 3-level depth system ── */
+  --shadow-subtle:   0 1px 2px rgba(0, 0, 0, 0.04), 0 0 0 0.5px rgba(0, 0, 0, 0.03);
+  --shadow-card:     0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.04);
+  --shadow-floating: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  /* Legacy shadow aliases */
+  --shadow-xs:      var(--shadow-subtle);
+  --shadow-sm:      var(--shadow-subtle);
+  --shadow-md:      var(--shadow-card);
+  --shadow-lg:      var(--shadow-floating);
+  --shadow-xl:      var(--shadow-floating);
+  --shadow-window:  var(--shadow-floating);
+  --glass-shadow:   0 0 0 0.5px rgba(0, 0, 0, 0.04);
+
+  /* Legacy glass aliases */
+  --glass-bg:      var(--surface-primary);
+  --glass-border:  var(--border-card);
+  --glass-blur:    blur(40px) saturate(180%);
+
+  /* ── Focus ring ── */
+  --ring-accent: 0 0 0 3px rgba(0, 122, 255, 0.25);
+  --ring-danger: 0 0 0 3px rgba(255, 59, 48, 0.25);
+
+  /* ── Border Radii ── */
+  --radius-xs:     4px;
+  --radius-sm:     6px;
+  --radius-md:     8px;
+  --radius-lg:     10px;
+  --radius-xl:     14px;
+  --radius-2xl:    18px;
+  --radius-3xl:    24px;
+  --radius-window: 16px;
+  --radius-sheet:  20px;
+  --radius-pill:   999px;
+
+  /* ── Typography ── */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Helvetica Neue", system-ui, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, sans-serif;
+  --font-mono: "SF Mono", "Fira Code", "JetBrains Mono", ui-monospace, monospace;
+
+  /* ── Spacing (4px grid) ── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ── Layout ── */
+  --top-bar-height:      52px;
+  --sidebar-w:           256px;
+  --sidebar-collapsed-w: 68px;
+  --shell-gap:           16px;
+  --content-max-width:   1600px;
+
+  /* ── Animations (HIG) ── */
+  --ease-spring:    cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out:       cubic-bezier(0.2, 0, 0, 1);
+  --ease-in-out:    cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast:   150ms;
+  --duration-normal: 250ms;
+  --duration-slow:   400ms;
+
+  /* Legacy animation aliases */
+  --macos-ease-spring:    var(--ease-spring);
+  --macos-ease-out:       var(--ease-out);
+  --macos-ease-in-out:    var(--ease-in-out);
+  --macos-duration-fast:  var(--duration-fast);
+  --macos-duration-normal: var(--duration-normal);
+  --macos-duration-slow:  var(--duration-slow);
+
+  /* ── Gradients ── */
+  --mezon-hero-glow: linear-gradient(135deg, rgba(10, 132, 255, 0.03) 0%, transparent 50%);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   2. BASE
+   ───────────────────────────────────────────────────────────────────────────── */
+html {
+  min-height: 100vh;
+  color-scheme: light;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  background: var(--bg-canvas);
+  color: var(--text-primary);
+  letter-spacing: -0.006em;
+  line-height: 1.5;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* macOS Scrollbars */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  background-color: rgba(0, 0, 0, 0.15);
+  background-clip: padding-box;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   3. APP SHELL
+   ───────────────────────────────────────────────────────────────────────────── */
+.mezon-app {
+  min-height: 100vh;
+  background: var(--bg-canvas);
+  position: relative;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   4. TOP BAR
+   ───────────────────────────────────────────────────────────────────────────── */
+.mezon-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: 0 var(--space-4);
+  min-height: var(--top-bar-height);
+  border-bottom: 0.5px solid var(--separator);
+  background: rgba(245, 245, 247, 0.8);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+          backdrop-filter: blur(40px) saturate(180%);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.mezon-top-bar__leading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  z-index: 10;
+}
+
+.mezon-window-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: var(--space-2);
+}
+.mezon-window-controls span {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-pill);
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.1);
+  display: inline-block;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+.mezon-window-controls span:nth-child(1) { background: #FF5F57; }
+.mezon-window-controls span:nth-child(2) { background: #FEBC2E; }
+.mezon-window-controls span:nth-child(3) { background: #28C840; }
+
+.mezon-top-bar__title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.mezon-top-bar__title span {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
+  font-weight: 500;
+  line-height: 1.3;
+}
+.mezon-top-bar__title strong {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.mezon-top-bar__cluster {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  align-items: center;
+}
+.mezon-top-bar__cluster--compact { gap: 6px; }
+
+/* Chips / Pills */
+.mezon-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--fill-quaternary);
+  border: 0.5px solid var(--separator);
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: -0.01em;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+.mezon-chip:hover {
+  background: var(--fill-tertiary);
+}
+.mezon-chip--teal {
+  background: var(--tint-blue);
+  color: var(--color-blue);
+  border-color: rgba(0, 122, 255, 0.12);
+}
+.mezon-chip--teal:hover {
+  background: rgba(0, 122, 255, 0.14);
+}
+
+.mezon-toolbar-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 34px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-primary);
+  border: 0.5px solid var(--separator);
+  box-shadow: var(--shadow-subtle);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.mezon-toolbar-pill__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-green);
+  box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.18);
+}
+
+.mezon-top-bar__social {
+  display: inline-flex;
+  gap: 2px;
+}
+.mezon-top-bar__social a {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+.mezon-top-bar__social a:hover {
+  background: var(--fill-quaternary);
+  color: var(--text-primary);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   5. SIDEBAR
+   ───────────────────────────────────────────────────────────────────────────── */
+.mezon-shell {
+  display: flex;
+  gap: var(--shell-gap);
+  width: min(100%, var(--content-max-width));
+  margin: 0 auto;
+  padding: var(--shell-gap);
+  position: relative;
+  z-index: 1;
+}
+
+.mezon-sidenav {
+  width: var(--sidebar-w);
+  min-height: calc(100vh - var(--top-bar-height) - var(--shell-gap) * 2);
+  background: var(--surface-primary);
+  border: 0.5px solid var(--border-card);
+  box-shadow: var(--shadow-card);
+  position: sticky;
+  top: calc(var(--top-bar-height) + var(--shell-gap));
+  padding: var(--space-4) var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+}
+
+.mezon-sidenav__brand {
+  position: relative;
+  z-index: 1;
+  padding: 6px 10px 14px;
+  border-bottom: 0.5px solid var(--separator);
+}
+.mezon-sidenav__brand img {
+  width: 120px;
+  object-fit: contain;
+}
+.mezon-sidenav__brand p {
+  margin-top: var(--space-1);
+  color: var(--text-tertiary);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.mezon-sidenav__user {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: var(--radius-xl);
+  background: var(--bg-inset);
+  border: 0.5px solid var(--border-card);
+}
+.mezon-sidenav__user strong {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+.mezon-sidenav__user span {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.mezon-sidenav__nav {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.mezon-nav-label {
+  text-transform: capitalize;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  padding: var(--space-2) 10px var(--space-1);
+}
+
+.mezon-nav-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 7px 10px;
+  margin: 1px 0;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--text-primary);
+  transition: all var(--duration-fast) var(--ease-out);
+  letter-spacing: -0.01em;
+}
+.mezon-nav-link:hover {
+  background: var(--fill-quaternary);
+}
+.mezon-nav-link--active {
+  background: var(--tint-blue);
+  color: var(--color-blue);
+  font-weight: 600;
+}
+.mezon-nav-link--active:hover {
+  background: rgba(0, 122, 255, 0.12);
+}
+
+.mezon-nav-link__icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+.mezon-nav-link--active .mezon-nav-link__icon {
+  opacity: 1;
+  color: var(--color-blue);
+}
+
+.mezon-sidenav__footer {
+  position: relative;
+  z-index: 1;
+  padding: 14px 10px var(--space-1);
+  border-top: 0.5px solid var(--separator);
+}
+.mezon-sidenav__footer p {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-1);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   6. MAIN CONTENT
+   ───────────────────────────────────────────────────────────────────────────── */
+.mezon-main {
+  flex: 1;
+  min-width: 0;
+}
+.mezon-main-inner {
+  min-height: calc(100vh - var(--top-bar-height) - var(--shell-gap) * 2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   7. TYPOGRAPHY (Semantic Scale)
+   ───────────────────────────────────────────────────────────────────────────── */
+.macos-text-title,
+.text-page-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.macos-text-subtitle,
+.text-section-subtitle {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+}
+
+.macos-text-body,
+.text-body {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-primary);
+  letter-spacing: -0.006em;
+  line-height: 1.5;
+}
+
+.macos-text-callout,
+.text-callout {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+}
+
+.macos-text-caption,
+.text-caption {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+.macos-text-footnote,
+.text-footnote {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-quaternary);
+  line-height: 1.4;
+}
+
+.text-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: -0.01em;
+}
+
+/* Legacy section title */
+.mezon-section-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+.mezon-section-title span {
+  background: linear-gradient(135deg, var(--color-blue), var(--color-purple));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.mezon-subtitle {
+  color: var(--text-tertiary);
+  max-width: 640px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* ── Page Header Pattern ── */
+.mezon-page-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+.mezon-page-header__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: var(--radius-lg);
+  background: var(--tint-blue);
+  color: var(--color-blue);
+}
+.mezon-page-header__content {
+  flex: 1;
+  min-width: 0;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   8. CARDS
+   ───────────────────────────────────────────────────────────────────────────── */
+.mezon-card {
+  background: var(--surface-primary);
+  border: 0.5px solid var(--border-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-5);
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out);
+}
+.mezon-card:hover {
+  box-shadow: var(--shadow-card);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+.mezon-card--accent {
+  background: linear-gradient(135deg, var(--color-blue), var(--color-indigo));
+  color: #fff;
+  border: none;
+  box-shadow: var(--shadow-card);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   9. FORM FIELDS
+   ───────────────────────────────────────────────────────────────────────────── */
+.mezon-field {
+  min-height: 36px;
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-field);
+  background: var(--surface-primary);
+  padding: 8px 12px;
+  font-size: 14px;
+  color: var(--text-primary);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: border-color var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out);
+}
+.mezon-field:focus-visible {
+  border-color: var(--color-blue);
+  background: var(--surface-primary);
+  outline: none;
+  box-shadow: var(--ring-accent);
+}
+.mezon-field:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: var(--bg-inset);
+}
+.mezon-field::placeholder {
+  color: var(--text-tertiary);
+}
+
+.mezon-form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.mezon-form-label--regular {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--text-secondary);
+}
+
+.mezon-form-helper {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  line-height: 1.45;
+}
+
+.mezon-textarea {
+  min-height: 108px;
+  resize: vertical;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   10. BUTTONS
+   ───────────────────────────────────────────────────────────────────────────── */
+.mezon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: 14px;
+  padding: 7px 16px;
+  border: none;
+  color: var(--text-on-accent);
+  background: var(--color-blue);
+  box-shadow: var(--shadow-subtle);
+  transition: all var(--duration-fast) var(--ease-out);
+  cursor: pointer;
+}
+.mezon-btn:hover {
+  background: var(--color-blue-hover);
+}
+.mezon-btn:active {
+  background: var(--color-blue-active);
+  transform: scale(0.97);
+  transition-duration: 80ms;
+}
+
+.mezon-btn--outline {
+  background: var(--surface-primary);
+  border: 0.5px solid var(--separator);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-subtle);
+}
+.mezon-btn--outline:hover {
+  background: var(--fill-quaternary);
+}
+.mezon-btn--outline:active {
+  background: var(--fill-tertiary);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   11. BADGES & LABELS
+   ───────────────────────────────────────────────────────────────────────────── */
+.mezon-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  background: var(--tint-blue);
+  color: var(--color-blue);
+}
+.macos-badge-success {
+  background: var(--tint-green);
+  color: #1B7A3D;
+}
+.macos-badge-warning {
+  background: var(--tint-orange);
+  color: #B25E00;
+}
+.macos-badge-danger {
+  background: var(--tint-red);
+  color: var(--color-red);
+}
+.macos-badge-neutral {
+  background: rgba(60, 60, 67, 0.07);
+  color: var(--text-secondary);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   12. GRID / HERO
+   ───────────────────────────────────────────────────────────────────────────── */
+.mezon-grid {
+  display: grid;
+  gap: var(--space-4);
+}
+.mezon-hero-panel {
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  border: 0.5px solid var(--border-card);
+  background: var(--surface-primary);
+  box-shadow: var(--shadow-card);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   13. ANIMATIONS
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Scale-in for modals, popovers */
+.macos-animate-scale-in {
+  animation: macos-scale-in var(--duration-slow) var(--ease-spring) forwards;
+}
+@keyframes macos-scale-in {
+  0%   { transform: scale(0.95); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Fade-in for page transitions */
+.macos-animate-fade-in {
+  animation: macos-fade-in var(--duration-normal) var(--ease-out) forwards;
+}
+@keyframes macos-fade-in {
+  0%   { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Utility transition class */
+.macos-transition {
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+/* Hover scale (for interactive cards) */
+.macos-hover-scale {
+  transition: transform var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.macos-hover-scale:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-floating);
+}
+
+/* ── Modals ── */
+.mezon-modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+}
+
+.mezon-modal-frame {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 4vw, 32px);
+}
+
+.mezon-modal-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 120% at 50% 18%, rgba(255, 255, 255, 0.22), transparent 42%),
+    linear-gradient(145deg, rgba(9, 18, 31, 0.82), rgba(11, 24, 39, 0.68));
+  backdrop-filter: blur(20px) saturate(1.18);
+}
+
+.mezon-modal-surface {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-height: min(92vh, 960px);
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.52);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(247, 247, 249, 0.92)),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(242, 244, 248, 0.7));
+  box-shadow:
+    0 28px 80px rgba(7, 15, 25, 0.32),
+    0 14px 32px rgba(7, 15, 25, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.mezon-modal-surface::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.mezon-modal-surface--danger {
+  background:
+    linear-gradient(180deg, rgba(255, 250, 250, 0.96), rgba(248, 244, 244, 0.92)),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.84), rgba(249, 239, 239, 0.72));
+}
+
+.mezon-modal-accent {
+  position: absolute;
+  inset: -16% -12% auto -12%;
+  height: 42%;
+  background:
+    radial-gradient(circle at 16% 48%, rgba(0, 122, 255, 0.13), transparent 40%),
+    radial-gradient(circle at 84% 28%, rgba(90, 200, 250, 0.09), transparent 38%),
+    radial-gradient(circle at 58% 82%, rgba(52, 199, 89, 0.08), transparent 44%);
+  filter: blur(32px);
+  opacity: 0.95;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.mezon-modal-accent--warning {
+  background:
+    radial-gradient(circle at 16% 48%, rgba(255, 149, 0, 0.14), transparent 40%),
+    radial-gradient(circle at 84% 28%, rgba(255, 204, 0, 0.12), transparent 38%),
+    radial-gradient(circle at 58% 82%, rgba(255, 214, 10, 0.08), transparent 44%);
+}
+
+.mezon-modal-accent--danger {
+  background:
+    radial-gradient(circle at 18% 42%, rgba(255, 59, 48, 0.18), transparent 38%),
+    radial-gradient(circle at 82% 26%, rgba(255, 149, 0, 0.1), transparent 34%),
+    radial-gradient(circle at 52% 86%, rgba(255, 99, 92, 0.12), transparent 42%);
+}
+
+.mezon-modal-accent--success {
+  background:
+    radial-gradient(circle at 18% 42%, rgba(52, 199, 89, 0.18), transparent 38%),
+    radial-gradient(circle at 82% 26%, rgba(90, 200, 250, 0.08), transparent 34%),
+    radial-gradient(circle at 52% 86%, rgba(52, 199, 89, 0.12), transparent 42%);
+}
+
+.mezon-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 24px 18px;
+  border-bottom: 1px solid rgba(60, 60, 67, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.66), rgba(255, 255, 255, 0.42));
+  backdrop-filter: blur(18px);
+  position: relative;
+  z-index: 2;
+}
+
+.mezon-modal-header__main {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+}
+
+.mezon-modal-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 16px;
+  background: rgba(0, 122, 255, 0.1);
+  color: var(--color-blue);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.52);
+}
+
+.mezon-modal-icon--info {
+  background: rgba(0, 122, 255, 0.1);
+  color: var(--color-blue);
+}
+
+.mezon-modal-icon--success {
+  background: rgba(52, 199, 89, 0.12);
+  color: var(--color-green);
+}
+
+.mezon-modal-icon--warning {
+  background: rgba(255, 149, 0, 0.14);
+  color: var(--color-orange);
+}
+
+.mezon-modal-icon--danger {
+  background: rgba(255, 59, 48, 0.12);
+  color: var(--color-red);
+}
+
+.mezon-modal-title {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.mezon-modal-title__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mezon-modal-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+.mezon-modal-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mezon-modal-heading {
+  font-family: var(--font-display);
+  font-size: clamp(1.125rem, 2vw, 1.375rem);
+  letter-spacing: -0.025em;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.15;
+}
+
+.mezon-modal-description {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  max-width: 64ch;
+}
+
+.mezon-modal-close {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 0.5px solid rgba(60, 60, 67, 0.14);
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-subtle);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  line-height: 1;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.mezon-modal-close:hover {
+  background: rgba(255, 255, 255, 0.98);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.mezon-modal-close:active {
+  background: var(--fill-tertiary);
+  transform: scale(0.96);
+}
+
+.mezon-modal-close:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-accent), var(--shadow-subtle);
+}
+
+.mezon-modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 24px 24px;
+  scrollbar-gutter: stable both-edges;
+  position: relative;
+  z-index: 1;
+}
+
+.mezon-modal-content {
+  min-height: 100%;
+  padding-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.mezon-modal-content > .p-4,
+.mezon-modal-content > form.p-4 {
+  padding: 0 !important;
+}
+
+.mezon-modal-content > form,
+.mezon-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 100%;
+}
+
+.mezon-modal-surface .mezon-field {
+  min-height: 42px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.mezon-modal-surface .mezon-field:hover {
+  border-color: rgba(0, 0, 0, 0.16);
+}
+
+.mezon-modal-surface .mezon-textarea,
+.mezon-modal-surface textarea.mezon-field {
+  min-height: 108px;
+}
+
+.mezon-modal-footer {
+  position: relative;
+  z-index: 2;
+  padding: 16px 24px 20px;
+  border-top: 1px solid rgba(60, 60, 67, 0.12);
+  background: linear-gradient(180deg, rgba(252, 252, 253, 0.68), rgba(248, 248, 250, 0.94));
+  backdrop-filter: blur(18px);
+}
+
+.mezon-modal-actions,
+.mezon-modal-inline-actions {
+  display: flex;
+  width: 100%;
+  gap: 12px;
+  flex-wrap: wrap-reverse;
+  justify-content: flex-end;
+}
+
+.mezon-modal-actions--start {
+  justify-content: flex-start;
+}
+
+.mezon-modal-actions--center {
+  justify-content: center;
+}
+
+.mezon-modal-actions--between {
+  justify-content: space-between;
+}
+
+.mezon-modal-inline-actions {
+  padding-top: 16px;
+  border-top: 1px solid rgba(60, 60, 67, 0.12);
+}
+
+.mezon-modal-section {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+}
+
+.mezon-modal-section__header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mezon-modal-section__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--text-primary);
+}
+
+.mezon-modal-section__description {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.mezon-modal-section__content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mezon-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mezon-modal-grid--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mezon-modal-stat {
+  display: flex;
+  min-height: 120px;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.mezon-modal-stat--info {
+  background: rgba(0, 122, 255, 0.08);
+}
+
+.mezon-modal-stat--success {
+  background: rgba(52, 199, 89, 0.1);
+}
+
+.mezon-modal-stat--warning {
+  background: rgba(255, 149, 0, 0.12);
+}
+
+.mezon-modal-stat--danger {
+  background: rgba(255, 59, 48, 0.1);
+}
+
+.mezon-modal-stat__label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-secondary);
+}
+
+.mezon-modal-stat__value {
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 2vw, 1.85rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+
+.mezon-modal-stat__meta {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  line-height: 1.45;
+}
+
+.mezon-modal-notice {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(246, 249, 255, 0.82);
+}
+
+.mezon-modal-notice--success {
+  border-color: rgba(52, 199, 89, 0.16);
+  background: rgba(52, 199, 89, 0.1);
+}
+
+.mezon-modal-notice--warning {
+  border-color: rgba(255, 149, 0, 0.2);
+  background: rgba(255, 149, 0, 0.11);
+}
+
+.mezon-modal-notice--danger {
+  border-color: rgba(255, 59, 48, 0.2);
+  background: rgba(255, 59, 48, 0.1);
+}
+
+.mezon-modal-notice__title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.mezon-modal-notice__body {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.mezon-modal-facts {
+  display: grid;
+  gap: 10px;
+}
+
+.mezon-modal-fact {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.mezon-modal-fact__label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.mezon-modal-fact__value {
+  text-align: right;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Legacy sticky footer fallback for untouched forms */
+.mezon-modal-content > form > .flex.justify-end {
+  position: sticky;
+  bottom: -24px;
+  margin: auto 0 -24px;
+  padding-top: 16px;
+  background: linear-gradient(180deg, rgba(252, 252, 253, 0), rgba(248, 248, 250, 0.94) 32%);
+  z-index: 2;
+}
+
+.mezon-alert-dialog-frame {
+  align-items: center;
+}
+
+.mezon-alert-dialog-overlay {
+  background: rgba(244, 244, 246, 0.28);
+  backdrop-filter: blur(20px) saturate(1.18);
+}
+
+.mezon-alert-dialog {
+  width: min(100%, 292px);
+  max-height: none;
+  border-radius: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  background:
+    linear-gradient(180deg, rgba(245, 245, 245, 0.76), rgba(232, 232, 232, 0.74)),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(230, 230, 230, 0.62));
+  box-shadow:
+    0 36px 86px rgba(0, 0, 0, 0.22),
+    0 17px 45px rgba(0, 0, 0, 0.18),
+    0 0 1px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.mezon-alert-dialog::before {
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.mezon-alert-dialog .mezon-modal-accent {
+  display: none;
+}
+
+.mezon-alert-dialog .mezon-modal-header {
+  padding: 20px 16px 0;
+  border-bottom: 0;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.mezon-alert-dialog .mezon-modal-header__main {
+  display: block;
+}
+
+.mezon-alert-dialog .mezon-modal-title {
+  gap: 10px;
+}
+
+.mezon-alert-dialog .mezon-modal-heading {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 16px;
+  letter-spacing: -0.01em;
+  font-weight: 700;
+}
+
+.mezon-alert-dialog .mezon-modal-description {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  line-height: 14px;
+  color: rgba(29, 29, 31, 0.82);
+  max-width: none;
+}
+
+.mezon-alert-dialog__body {
+  padding: 0 16px 16px;
+  overflow: visible;
+  scrollbar-gutter: auto;
+}
+
+.mezon-alert-dialog__content {
+  padding-top: 16px;
+  gap: 0;
+}
+
+.mezon-alert-dialog__actions {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mezon-alert-dialog__action {
+  appearance: none;
+  width: 100%;
+  min-height: 28px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  padding: 6px 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-align: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.mezon-alert-dialog__action:hover {
+  transform: translateY(-1px);
+}
+
+.mezon-alert-dialog__action:active {
+  transform: scale(0.985);
+}
+
+.mezon-alert-dialog__action:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.mezon-alert-dialog__action--primary {
+  background: #0088ff;
+  color: white;
+}
+
+.mezon-alert-dialog__action--primary:hover {
+  background: #007be6;
+}
+
+.mezon-alert-dialog__action--primary:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-accent);
+}
+
+.mezon-alert-dialog__action--destructive {
+  background: rgba(255, 56, 60, 0.23);
+  color: #ff383c;
+}
+
+.mezon-alert-dialog__action--destructive:hover {
+  background: rgba(255, 56, 60, 0.3);
+}
+
+.mezon-alert-dialog__action--destructive:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-danger);
+}
+
+.mezon-alert-dialog__action--secondary {
+  background: rgba(118, 118, 128, 0.22);
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.mezon-alert-dialog__action--secondary:hover {
+  background: rgba(118, 118, 128, 0.28);
+}
+
+.mezon-alert-dialog__action--secondary:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-accent);
+}
+
+@media (max-width: 900px) {
+  .mezon-modal-grid,
+  .mezon-modal-grid--three {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .mezon-modal-frame {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .mezon-modal-surface {
+    max-height: min(94vh, 960px);
+    border-radius: 24px 24px 0 0;
+    margin-top: auto;
+  }
+
+  .mezon-modal-header {
+    padding: 18px 18px 14px;
+  }
+
+  .mezon-modal-body {
+    padding: 0 18px 18px;
+  }
+
+  .mezon-modal-content {
+    padding-top: 18px;
+  }
+
+  .mezon-modal-footer {
+    padding: 14px 18px 18px;
+  }
+
+  .mezon-modal-section {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .mezon-modal-fact {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .mezon-modal-fact__value {
+    text-align: left;
+  }
+
+  .mezon-modal-actions,
+  .mezon-modal-inline-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .mezon-modal-actions > *,
+  .mezon-modal-inline-actions > * {
+    width: 100%;
+  }
+
+  .mezon-alert-dialog-frame {
+    align-items: center;
+    padding: 16px;
+  }
+
+  .mezon-alert-dialog {
+    margin-top: 0;
+    border-radius: 26px;
+  }
+}
+
+/* Hover row (for table rows) */
+.macos-hover-row {
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+.macos-hover-row:hover {
+  background-color: var(--fill-quaternary);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   14. MOBILE
+   ───────────────────────────────────────────────────────────────────────────── */
+.mezon-mobile-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+.mezon-mobile-menu-btn:hover {
+  background: var(--fill-quaternary);
+}
+.mezon-mobile-menu-btn:active {
+  transform: scale(0.95);
+}
+
+.mezon-mobile-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  z-index: 998;
+  -webkit-backdrop-filter: blur(8px);
+          backdrop-filter: blur(8px);
+}
+
+.mezon-mobile-close {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+.mezon-mobile-close:hover {
+  background: var(--fill-quaternary);
+  color: var(--text-primary);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   15. RESPONSIVE
+   ───────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .mezon-top-bar {
+    min-height: auto;
+    padding: var(--space-2) var(--space-3);
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .mezon-shell {
+    padding: 14px;
+    gap: 14px;
+  }
+  .mezon-sidenav {
+    width: 240px;
+  }
+}
+
+@media (max-width: 768px) {
+  .mezon-top-bar__title span { display: none; }
+  .mezon-mobile-menu-btn { display: flex; }
+  .mezon-mobile-overlay { display: block; }
+  .mezon-mobile-close { display: flex; }
+
+  .mezon-top-bar {
+    padding: var(--space-2) var(--space-3);
+    min-height: auto;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+  }
+  .mezon-top-bar__cluster {
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    width: 100%;
+    justify-content: center;
+  }
+  .mezon-top-bar__leading {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .mezon-window-controls { display: none; }
+
+  .mezon-shell { padding: var(--space-3); }
+
+  .mezon-sidenav {
+    position: fixed;
+    top: var(--space-3);
+    left: 0;
+    height: calc(100vh - var(--space-6));
+    width: 280px;
+    max-width: 85vw;
+    z-index: 999;
+    transform: translateX(-100%);
+    transition: transform 0.3s var(--ease-spring);
+    box-shadow: var(--shadow-floating);
+    overflow-y: auto;
+    border-radius: 0 var(--radius-2xl) var(--radius-2xl) 0;
+  }
+  .mezon-sidenav--mobile-open { transform: translateX(0); }
+
+  .mezon-main-inner { min-height: auto; }
+  .mezon-section-title { font-size: clamp(1.25rem, 5vw, 1.75rem); }
+  .mezon-card { padding: var(--space-4); border-radius: var(--radius-lg); }
+  .mezon-hero-panel { padding: var(--space-4); border-radius: var(--radius-lg); }
+}
+
+@media (max-width: 480px) {
+  .mezon-top-bar { padding: 6px var(--space-2); }
+  .mezon-shell { padding: var(--space-2); }
+  .mezon-section-title { font-size: 1.25rem; }
+  .mezon-card { padding: var(--space-3); }
+  .mezon-top-bar__cluster .mezon-chip:nth-child(n+2) { display: none; }
+}

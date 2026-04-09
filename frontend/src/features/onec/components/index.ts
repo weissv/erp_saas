@@ -1,0 +1,10 @@
+export { SearchInput, Pagination, FilterChips, SectionTable, formatDate, formatAmount } from "./shared";
+export type { TableColumn } from "./shared";
+export { OneCSummaryCards } from "./summary-cards";
+export { CatalogsTab, catalogTypes } from "./catalogs-tab";
+export { DocumentsTab } from "./documents-tab";
+export { HRTab } from "./hr-tab";
+export { PayrollTab } from "./payroll-tab";
+export { ExtraCatalogsTab } from "./extra-catalogs-tab";
+export { RegistersTab } from "./registers-tab";
+export { ScopedRegistersTab } from "./scoped-registers-tab";

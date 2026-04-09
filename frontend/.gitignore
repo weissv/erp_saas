@@ -1,0 +1,83 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+# Keep .env.production as reference (actual values come from Render)
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+backups/
+
+# Testing
+coverage/
+.nyc_output/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Prisma
+prisma/migrations/**/migration.sql.backup
+
+# OS
+Thumbs.db
+
+# Зависимости (Самое тяжелое)
+node_modules/
+.pnp
+.pnp.js
+
+# Сборки
+dist/
+build/
+out/
+.next/
+
+# Логи и бэкапы
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+backups/
+*.sql
+*.sqlite
+
+# Тесты (Главный генератор мусора)
+cypress/videos/
+cypress/screenshots/
+cypress/downloads/
+coverage/
+
+# Секреты
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Системный мусор
+.DS_Store
+Thumbs.db

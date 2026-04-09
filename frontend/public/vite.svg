@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title>Mezon ERP</title>
+  <rect width="64" height="64" rx="14" fill="#0f766e" />
+  <path d="M16 48V16h9.5l6.5 12 6.5-12H48v32h-8V29.5l-5.5 10h-5L24 29.5V48Z" fill="#ffffff" />
+</svg>
