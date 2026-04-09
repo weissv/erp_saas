@@ -21,6 +21,12 @@ export const config = {
   jwtExpiresIn: "12h",
   nodeEnv: process.env.NODE_ENV || "development",
   corsOrigins: resolveOrigins(),
+
+  // ── Multi-tenant / Control Plane ──────────────────────────────────
+  /** Connection string for the Control Plane (master) database. */
+  masterDatabaseUrl: process.env.MASTER_DATABASE_URL || "",
+  /** Base domain used to extract tenant subdomains (e.g. "mezon.app"). */
+  baseDomain: process.env.BASE_DOMAIN || "mezon.app",
   // Groq API для AI проверки контрольных
   groqApiKey: process.env.GROQ_API_KEY || "",
   groqModel: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
