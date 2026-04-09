@@ -5,6 +5,7 @@ import app from "./app";
 import { config } from "./config";
 import { AiService } from "./services/AiService";
 import { initTelegramBot } from "./services/TelegramService";
+import { setIntervalWithJitter } from "./services/CronJitterService";
 import { initSocketIO } from "./lib/socketio";
 import { startOneCWorker } from "./modules/onec/queue/onec-sync.worker";
 import { createIOServer } from "./io";
@@ -25,18 +26,18 @@ async function startGoogleDriveSync() {
     console.error("❌ Initial Google Drive sync failed:", error);
   }
 
-  // Запускаем периодическую синхронизацию
-  setInterval(async () => {
-    console.log("🔄 Running periodic Google Drive sync...");
-    try {
+  // Запускаем периодическую синхронизацию с jitter
+  setIntervalWithJitter(
+    SYNC_INTERVAL_MS,
+    async () => {
+      console.log("🔄 Running periodic Google Drive sync...");
       const result = await AiService.syncGoogleDriveDocuments();
       if (result.synced > 0 || result.updated > 0 || result.errors > 0) {
         console.log(`✅ Periodic sync: ${result.synced} new, ${result.updated} updated, ${result.errors} errors`);
       }
-    } catch (error) {
-      console.error("❌ Periodic Google Drive sync failed:", error);
-    }
-  }, SYNC_INTERVAL_MS);
+    },
+    { label: "GoogleDriveSync", maxJitterMs: 60_000 },
+  );
 }
 
 // Create an HTTP server so Socket.IO can share the same port

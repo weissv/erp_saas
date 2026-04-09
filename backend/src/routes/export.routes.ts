@@ -481,6 +481,19 @@ router.get(
     }
 
     const rows = await exporter();
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet(entity.toUpperCase());
+
+    if (rows.length > 0) {
+      // Use the keys of the first row as column headers
+      const headers = Object.keys(rows[0]);
+      worksheet.columns = headers.map((h) => ({ header: h, key: h }));
+      for (const row of rows) {
+        worksheet.addRow(row);
+      }
+    }
+
+    const buffer = await workbook.xlsx.writeBuffer();
     const buffer = await jsonToExcelBuffer(rows, entity.toUpperCase());
 
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
@@ -502,6 +515,17 @@ router.post(
 
     const fileBase64 = sanitizeBase64(req.body.fileBase64);
     const buffer = Buffer.from(fileBase64, "base64");
+    const workbook = new ExcelJS.Workbook();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await workbook.xlsx.load(buffer as any);
+
+    const sheet = workbook.worksheets[0];
+    if (!sheet) {
+      return res.status(400).json({ message: "Не удалось прочитать Excel-файл" });
+    }
+
+    let rows = excelSheetToJson(sheet);
+
 
     let { rows, worksheet } = await excelBufferToJson<ImportRow>(buffer);
 
@@ -516,6 +540,22 @@ router.post(
         (k) => k.includes("Ф.И.О.") || k.includes("ребенка") || k === "First Name" || k === "Класс"
       );
       if (!hasStandardHeaders) {
+        // Find the header row by scanning raw data (first 10 rows)
+        let headerRowIndex = -1;
+        const maxScanRows = Math.min(sheet.rowCount, 11);
+        for (let r = 1; r <= maxScanRows; r++) {
+          const row = sheet.getRow(r);
+          for (let c = 1; c <= (row.cellCount || 0); c++) {
+            const cellValue = String(row.getCell(c).value ?? "");
+            if (cellValue.includes("Ф.И.О.") || cellValue.includes("ребенка")) {
+              headerRowIndex = r;
+              break;
+            }
+          }
+          if (headerRowIndex >= 0) break;
+        }
+        if (headerRowIndex >= 0) {
+          rows = excelSheetToJson(sheet, headerRowIndex);
         const headerRowIndex = findHeaderRow(worksheet, ["Ф.И.О.", "ребенка"]);
         if (headerRowIndex >= 0) {
           const result = await excelBufferToJson<ImportRow>(buffer, headerRowIndex);
@@ -754,6 +794,47 @@ function fetchCsv(targetUrl: string, redirectCount = 0): Promise<string> {
     req.on("error", reject);
     req.end();
   });
+}
+
+/**
+ * Converts an ExcelJS worksheet to an array of key-value row objects,
+ * replicating the behaviour of the old `XLSX.utils.sheet_to_json()`.
+ *
+ * @param sheet       - ExcelJS Worksheet
+ * @param headerRow   - 1-based row number to use as headers (defaults to 1)
+ */
+function excelSheetToJson(sheet: ExcelJS.Worksheet, headerRow = 1): ImportRow[] {
+  const headers: string[] = [];
+  const hdrRow = sheet.getRow(headerRow);
+  hdrRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+    headers[colNumber] = cell.value != null ? String(cell.value).trim() : `Column${colNumber}`;
+  });
+
+  const rows: ImportRow[] = [];
+  for (let r = headerRow + 1; r <= sheet.rowCount; r++) {
+    const row = sheet.getRow(r);
+    // Skip completely empty rows
+    let empty = true;
+    const record: ImportRow = {};
+    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      const key = headers[colNumber] ?? `Column${colNumber}`;
+      const val = cell.value;
+      record[key] = val != null ? val : "";
+      if (val != null && String(val).trim() !== "") {
+        empty = false;
+      }
+    });
+    // Ensure every header key is present (defval: "")
+    for (const h of headers) {
+      if (h && !(h in record)) {
+        record[h] = "";
+      }
+    }
+    if (!empty) {
+      rows.push(record);
+    }
+  }
+  return rows;
 }
 
 export default router;
