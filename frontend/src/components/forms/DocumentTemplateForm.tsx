@@ -8,6 +8,7 @@ import { Button} from '../ui/button';
 import { Input} from '../ui/input';
 import { FormError} from '../ui/FormError';
 import { DocumentTemplate} from '../../types/document';
+import { Loader2} from 'lucide-react';
 
 const formSchema = z.object({
  name: z.string().min(2, 'Название обязательно'),
@@ -48,19 +49,21 @@ export function DocumentTemplateForm({ initialData, onSuccess, onCancel}: Docume
  <form onSubmit={handleSubmit(onSubmit)} className="mezon-modal-form">
  <ModalSection title="Параметры шаблона" description="Название и содержание должны быть понятными, чтобы сотрудники быстро выбирали нужный шаблон из списка.">
  <div>
- <label className="mezon-form-label">Название шаблона</label>
- <Input {...register('name')} placeholder="Договор стандартный"/>
- <FormError message={errors.name?.message} />
+ <label htmlFor="tpl-name" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Название шаблона</label>
+ <Input id="tpl-name" {...register('name')} placeholder="Договор стандартный" error={!!errors.name} aria-describedby={errors.name ? 'tpl-name-error' : undefined}/>
+ <FormError message={errors.name?.message} id="tpl-name-error" />
  </div>
 
  <div>
- <label className="mezon-form-label">Содержимое</label>
+ <label htmlFor="tpl-content" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Содержимое</label>
  <textarea
+ id="tpl-content"
  {...register('content')}
  placeholder="Шаблон документа..."
  className="mezon-field mezon-textarea"
+ aria-describedby={errors.content ? 'tpl-content-error' : undefined}
  />
- <FormError message={errors.content?.message} />
+ <FormError message={errors.content?.message} id="tpl-content-error" />
  </div>
 
  <ModalNotice title="Подсказка" tone="info">
@@ -69,8 +72,9 @@ export function DocumentTemplateForm({ initialData, onSuccess, onCancel}: Docume
  </ModalSection>
 
  <div className="mezon-modal-inline-actions">
- <Button type="button"variant="ghost"onClick={onCancel}>Отмена</Button>
+ <Button type="button"variant="ghost"onClick={onCancel} disabled={isSubmitting}>Отмена</Button>
  <Button type="submit"disabled={isSubmitting}>
+ {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
  {isSubmitting ? 'Сохранение...' : 'Сохранить'}
  </Button>
  </div>

@@ -1,7 +1,7 @@
 // src/layouts/MainLayout.tsx
 import { useState } from "react";
 import { Link, Outlet } from "react-router-dom";
-import { Menu, GraduationCap } from "lucide-react";
+import { Menu, GraduationCap, Lock } from "lucide-react";
 import SideNav from "../components/SideNav";
 import DoomGame from "../components/DoomGame";
 import { Toaster } from "sonner";
@@ -42,9 +42,7 @@ export default function MainLayout() {
       <div className="flex min-h-screen flex-col items-center justify-center bg-bg-canvas px-6 text-center">
         <div className="max-w-md space-y-4">
           <div className="mx-auto w-14 h-14 bg-tint-blue rounded-xl flex items-center justify-center mb-2">
-            <svg className="w-7 h-7 text-macos-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-            </svg>
+            <Lock className="w-7 h-7 text-macos-blue" strokeWidth={1.5} />
           </div>
           <p className="text-[18px] font-semibold text-text-primary tracking-[-0.02em]">
             Сессия потеряна
@@ -75,7 +73,7 @@ export default function MainLayout() {
             onClick={() => {
               window.dispatchEvent(new CustomEvent('toggle-mobile-menu'));
             }}
-            aria-label="Toggle menu"
+            aria-label="Открыть меню"
           >
             <Menu className="h-5 w-5" />
           </button>

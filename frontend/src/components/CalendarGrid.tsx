@@ -26,12 +26,12 @@ const DAY_NAMES_SHORT = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
  *  `dot` : slightly darkened shade for the dot, ensuring visible contrast
  *          even when the dot sits on the tinted `bg`. */
 const EVENT_COLORS = [
-  { bg: 'rgba(0, 122, 255, 0.10)',  text: '#007AFF', dot: '#005EC4' },
-  { bg: 'rgba(52, 199, 89, 0.12)',  text: '#1E8430', dot: '#166424' },
-  { bg: 'rgba(175, 82, 222, 0.10)', text: '#8944AB', dot: '#6B2F8B' },
-  { bg: 'rgba(255, 149, 0, 0.12)',  text: '#BE6100', dot: '#9E4F00' },
-  { bg: 'rgba(90, 200, 250, 0.14)', text: '#0071A4', dot: '#00567C' },
-  { bg: 'rgba(255, 45, 85, 0.10)',  text: '#C0143C', dot: '#960F2F' },
+  { bg: 'var(--tint-blue)',    text: 'var(--color-blue)',   dot: 'var(--color-blue-active)' },
+  { bg: 'var(--tint-green)',   text: 'var(--color-green)',  dot: 'var(--color-green)' },
+  { bg: 'var(--tint-purple)',  text: 'var(--color-purple)', dot: 'var(--color-purple)' },
+  { bg: 'var(--tint-orange)',  text: 'var(--color-orange)', dot: 'var(--color-orange)' },
+  { bg: 'var(--tint-blue)',    text: 'var(--color-teal)',   dot: 'var(--color-teal)' },
+  { bg: 'var(--tint-red)',     text: 'var(--color-pink)',   dot: 'var(--color-pink)' },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

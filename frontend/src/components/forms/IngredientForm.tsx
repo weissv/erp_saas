@@ -2,6 +2,7 @@ import { useForm} from 'react-hook-form';
 import { z} from 'zod';
 import { zodResolver} from '@hookform/resolvers/zod';
 import { toast} from 'sonner';
+import { Loader2} from 'lucide-react';
 import { api} from '../../lib/api';
 import { Button} from '../ui/button';
 import { Input} from '../ui/input';
@@ -54,15 +55,15 @@ export function IngredientForm({ initialData, onSuccess, onCancel}: IngredientFo
  return (
  <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest mb-1">Название ингредиента</label>
- <Input {...register('name')} placeholder="Картофель"/>
- <FormError message={errors.name?.message} />
+ <label htmlFor="ingr-name" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Название ингредиента</label>
+ <Input id="ingr-name" {...register('name')} placeholder="Картофель" error={!!errors.name} aria-describedby={errors.name ? 'ingr-name-error' : undefined}/>
+ <FormError message={errors.name?.message} id="ingr-name-error" />
  </div>
 
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest mb-1">Единица измерения</label>
- <Input {...register('unit')} placeholder="кг"/>
- <FormError message={errors.unit?.message} />
+ <label htmlFor="ingr-unit" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Единица измерения</label>
+ <Input id="ingr-unit" {...register('unit')} placeholder="кг" error={!!errors.unit} aria-describedby={errors.unit ? 'ingr-unit-error' : undefined}/>
+ <FormError message={errors.unit?.message} id="ingr-unit-error" />
  <p className="text-xs text-secondary mt-1">Например: кг, л, шт</p>
  </div>
 
@@ -70,34 +71,35 @@ export function IngredientForm({ initialData, onSuccess, onCancel}: IngredientFo
  <h3 className="font-medium mb-3">Пищевая ценность на 1 {initialData?.unit || 'единицу'}</h3>
  <div className="grid grid-cols-2 gap-4">
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest mb-1">Калорийность (ккал)</label>
- <Input type="number"step="0.1"{...register('calories')} placeholder="77"/>
- <FormError message={errors.calories?.message} />
+ <label htmlFor="ingr-calories" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Калорийность (ккал)</label>
+ <Input id="ingr-calories" type="number"step="0.1"{...register('calories')} placeholder="77" error={!!errors.calories} aria-describedby={errors.calories ? 'ingr-calories-error' : undefined}/>
+ <FormError message={errors.calories?.message} id="ingr-calories-error" />
  </div>
 
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest mb-1">Белки (г)</label>
- <Input type="number"step="0.1"{...register('protein')} placeholder="2.0"/>
- <FormError message={errors.protein?.message} />
+ <label htmlFor="ingr-protein" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Белки (г)</label>
+ <Input id="ingr-protein" type="number"step="0.1"{...register('protein')} placeholder="2.0" error={!!errors.protein} aria-describedby={errors.protein ? 'ingr-protein-error' : undefined}/>
+ <FormError message={errors.protein?.message} id="ingr-protein-error" />
  </div>
 
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest mb-1">Жиры (г)</label>
- <Input type="number"step="0.1"{...register('fat')} placeholder="0.1"/>
- <FormError message={errors.fat?.message} />
+ <label htmlFor="ingr-fat" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Жиры (г)</label>
+ <Input id="ingr-fat" type="number"step="0.1"{...register('fat')} placeholder="0.1" error={!!errors.fat} aria-describedby={errors.fat ? 'ingr-fat-error' : undefined}/>
+ <FormError message={errors.fat?.message} id="ingr-fat-error" />
  </div>
 
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest mb-1">Углеводы (г)</label>
- <Input type="number"step="0.1"{...register('carbs')} placeholder="17.0"/>
- <FormError message={errors.carbs?.message} />
+ <label htmlFor="ingr-carbs" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Углеводы (г)</label>
+ <Input id="ingr-carbs" type="number"step="0.1"{...register('carbs')} placeholder="17.0" error={!!errors.carbs} aria-describedby={errors.carbs ? 'ingr-carbs-error' : undefined}/>
+ <FormError message={errors.carbs?.message} id="ingr-carbs-error" />
  </div>
  </div>
  </div>
 
  <div className="flex justify-end gap-2 pt-4">
- <Button type="button"variant="ghost"onClick={onCancel}>Отмена</Button>
+ <Button type="button"variant="ghost"onClick={onCancel} disabled={isSubmitting}>Отмена</Button>
  <Button type="submit"disabled={isSubmitting}>
+ {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
  {isSubmitting ? 'Сохранение...' : 'Сохранить'}
  </Button>
  </div>

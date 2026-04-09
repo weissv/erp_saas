@@ -15,10 +15,10 @@ interface SecuritySummaryData {
 }
 
 const EVENT_CFG: Record<string, { icon: typeof Eye; bg: string; color: string }> = {
-  entry:   { icon: DoorOpen,       bg: '#ECFDF5', color: '#10B981' },
-  exit:    { icon: DoorOpen,       bg: '#EFF6FF', color: '#3B82F6' },
-  alert:   { icon: AlertTriangle,  bg: '#FEF2F2', color: '#EF4444' },
-  visitor: { icon: Eye,            bg: '#FFFBEB', color: '#D97706' },
+  entry:   { icon: DoorOpen,       bg: 'var(--tint-green)',  color: 'var(--color-green)' },
+  exit:    { icon: DoorOpen,       bg: 'var(--tint-blue)',   color: 'var(--color-blue)' },
+  alert:   { icon: AlertTriangle,  bg: 'var(--tint-red)',    color: 'var(--color-red)' },
+  visitor: { icon: Eye,            bg: 'var(--tint-orange)', color: 'var(--color-orange)' },
 };
 
 export default function SecuritySummaryWidget({ data }: { data: SecuritySummaryData | undefined }) {
@@ -30,7 +30,7 @@ export default function SecuritySummaryWidget({ data }: { data: SecuritySummaryD
   return (
     <div className="bento-security">
       <div className="bento-security__today">
-        <Shield className="h-5 w-5 text-blue-500 flex-shrink-0 self-center" />
+        <Shield className="h-5 w-5 text-macos-blue flex-shrink-0 self-center" />
         <div>
           <span className="bento-security__today-num">{data.todayCount ?? 0}</span>
           <span className="bento-security__today-lbl"> событий сегодня</span>
@@ -45,7 +45,7 @@ export default function SecuritySummaryWidget({ data }: { data: SecuritySummaryD
         ))}
       </div>
 
-      <div className="bento-list" style={{ gap: '5px' }}>
+      <div className="bento-list">
         {recentEvents.slice(0, 5).map(ev => {
           const cfg = EVENT_CFG[ev.type] ?? EVENT_CFG.entry;
           const Icon = cfg.icon;

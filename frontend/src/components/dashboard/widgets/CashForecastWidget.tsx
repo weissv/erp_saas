@@ -49,17 +49,17 @@ export default function CashForecastWidget({ data }: { data: CashForecastData | 
 
       <div className="bento-forecast__row">
         <div className="bento-forecast__cell">
-          <TrendingUp className="h-3 w-3 text-emerald-600 mx-auto mb-1" />
+          <TrendingUp className="h-3 w-3 text-macos-green mx-auto mb-1" />
           <p className="bento-forecast__cell-val">{fmt(data.totalIncome)}</p>
           <p className="bento-forecast__cell-lbl">Доход</p>
         </div>
         <div className="bento-forecast__cell">
-          <TrendingDown className="h-3 w-3 text-red-500 mx-auto mb-1" />
+          <TrendingDown className="h-3 w-3 text-macos-red mx-auto mb-1" />
           <p className="bento-forecast__cell-val">{fmt(data.totalExpense)}</p>
           <p className="bento-forecast__cell-lbl">Расход</p>
         </div>
         <div className="bento-forecast__cell">
-          <Minus className="h-3 w-3 text-blue-500 mx-auto mb-1" />
+          <Minus className="h-3 w-3 text-macos-blue mx-auto mb-1" />
           <p className="bento-forecast__cell-val">{fmt(data.netChange)}</p>
           <p className="bento-forecast__cell-lbl">Нетто</p>
         </div>

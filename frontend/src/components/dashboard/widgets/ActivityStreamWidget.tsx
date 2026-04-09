@@ -15,10 +15,10 @@ interface ActivityStreamData {
 }
 
 const ACTION_ICONS: Record<string, { icon: typeof Activity; bg: string; color: string }> = {
-  create:   { icon: Plus,     bg: '#ECFDF5', color: '#059669' },
-  update:   { icon: FileEdit, bg: '#EFF6FF', color: '#3B82F6' },
-  delete:   { icon: Trash2,   bg: '#FEF2F2', color: '#DC2626' },
-  settings: { icon: Settings, bg: '#F8FAFC', color: '#64748B' },
+  create:   { icon: Plus,     bg: 'var(--tint-green)',      color: 'var(--color-green)' },
+  update:   { icon: FileEdit, bg: 'var(--tint-blue)',       color: 'var(--color-blue)' },
+  delete:   { icon: Trash2,   bg: 'var(--tint-red)',        color: 'var(--color-red)' },
+  settings: { icon: Settings, bg: 'var(--fill-quaternary)', color: 'var(--text-secondary)' },
 };
 
 const ACTION_LABELS: Record<string, string> = {
@@ -49,8 +49,8 @@ export default function ActivityStreamWidget({ data }: { data: ActivityStreamDat
             <div className="bento-list-item__main">
               <p className="bento-list-item__title">
                 <span>{entry.userName}</span>{' '}
-                <span style={{ color: 'var(--text-tertiary)' }}>{ACTION_LABELS[entry.action] ?? entry.action}</span>{' '}
-                <span style={{ color: 'var(--text-secondary)' }}>{entry.entityName}</span>
+                <span className="text-tertiary">{ACTION_LABELS[entry.action] ?? entry.action}</span>{' '}
+                <span className="text-secondary">{entry.entityName}</span>
               </p>
               <p className="bento-list-item__sub">
                 <User className="h-2.5 w-2.5 inline mr-0.5" />

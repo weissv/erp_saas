@@ -8,7 +8,7 @@ import { Button} from '../ui/button';
 import { Input} from '../ui/input';
 import { FormError} from '../ui/FormError';
 import { Event} from '../../types/calendar';
-import { X} from 'lucide-react';
+import { X, Loader2} from 'lucide-react';
 
 interface GroupOption {
  id: number;
@@ -98,20 +98,21 @@ export function EventForm({ initialData, onSuccess, onCancel}: EventFormProps) {
  return (
  <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest mb-1">Тема (название)</label>
- <Input {...register('title')} placeholder="День открытых дверей"/>
- <FormError message={errors.title?.message} />
+ <label htmlFor="event-title" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Тема (название)</label>
+ <Input id="event-title" {...register('title')} placeholder="День открытых дверей" error={!!errors.title} aria-describedby={errors.title ? 'event-title-error' : undefined}/>
+ <FormError message={errors.title?.message} id="event-title-error" />
  </div>
 
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest mb-1">Дата</label>
- <Input type="datetime-local"{...register('date')} />
- <FormError message={errors.date?.message} />
+ <label htmlFor="event-date" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Дата</label>
+ <Input id="event-date" type="datetime-local"{...register('date')} error={!!errors.date} aria-describedby={errors.date ? 'event-date-error' : undefined} />
+ <FormError message={errors.date?.message} id="event-date-error" />
  </div>
 
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest mb-1">Класс</label>
+ <label htmlFor="event-groupId" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Класс</label>
  <select
+ id="event-groupId"
  {...register('groupId')}
  className="mezon-field"
  >
@@ -123,15 +124,16 @@ export function EventForm({ initialData, onSuccess, onCancel}: EventFormProps) {
  </div>
 
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest mb-1">Организатор</label>
- <Input {...register('organizer')} placeholder="Иванов И.И."/>
- <FormError message={errors.organizer?.message} />
+ <label htmlFor="event-organizer" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Организатор</label>
+ <Input id="event-organizer" {...register('organizer')} placeholder="Иванов И.И." error={!!errors.organizer} aria-describedby={errors.organizer ? 'event-organizer-error' : undefined}/>
+ <FormError message={errors.organizer?.message} id="event-organizer-error" />
  </div>
 
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest mb-1">Исполнители</label>
+ <label htmlFor="event-performers" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Исполнители</label>
  <div className="flex gap-2">
  <Input
+ id="event-performers"
  value={performerInput}
  onChange={(e) => setPerformerInput(e.target.value)}
  onKeyDown={handleKeyDown}
@@ -154,8 +156,9 @@ export function EventForm({ initialData, onSuccess, onCancel}: EventFormProps) {
  </div>
 
  <div className="flex justify-end gap-2 pt-4">
- <Button type="button"variant="ghost"onClick={onCancel}>Отмена</Button>
+ <Button type="button"variant="ghost"onClick={onCancel} disabled={isSubmitting}>Отмена</Button>
  <Button type="submit"disabled={isSubmitting}>
+ {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
  {isSubmitting ? 'Сохранение...' : 'Сохранить'}
  </Button>
  </div>

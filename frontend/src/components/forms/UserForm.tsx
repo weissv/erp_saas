@@ -8,7 +8,7 @@ import { Button} from '../ui/button';
 import { Input} from '../ui/input';
 import { FormError} from '../ui/FormError';
 import { User, AvailableEmployee} from '../../types/user';
-import { Eye, EyeOff, MessageCircle, ExternalLink} from 'lucide-react';
+import { Eye, EyeOff, Loader2, MessageCircle, ExternalLink} from 'lucide-react';
 
 // Имя бота для Telegram Deep Link (из Vite env переменных)
 const TELEGRAM_BOT_NAME = import.meta.env.VITE_TELEGRAM_BOT_NAME || 'erp_bot';
@@ -115,21 +115,24 @@ export function UserForm({ initialData, onSuccess, onCancel}: UserFormProps) {
  <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
  {/* Login/Email */}
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-1">Логин</label>
- <Input {...register('email')} placeholder="Введите логин для входа"/>
- <FormError message={errors.email?.message} />
+ <label htmlFor="user-email" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Логин</label>
+ <Input id="user-email" {...register('email')} placeholder="Введите логин для входа" error={!!errors.email} aria-describedby={errors.email ? 'user-email-error' : undefined} />
+ <FormError message={errors.email?.message} id="user-email-error" />
  </div>
 
  {/* Password */}
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-1">
+ <label htmlFor="user-password" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">
  Пароль {isEditing && <span className="text-secondary font-normal">(оставьте пустым, чтобы не менять)</span>}
  </label>
  <div className="relative">
  <Input
+ id="user-password"
  type={showPassword ? 'text' : 'password'}
  {...register('password')}
  placeholder={isEditing ? '••••••••' : 'Минимум 8 символов'}
+ error={!!errors.password}
+ aria-describedby={errors.password ? 'user-password-error' : undefined}
  />
  <button
  type="button"
@@ -139,15 +142,17 @@ export function UserForm({ initialData, onSuccess, onCancel}: UserFormProps) {
  {showPassword ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
  </button>
  </div>
- <FormError message={errors.password?.message} />
+ <FormError message={errors.password?.message} id="user-password-error" />
  </div>
 
  {/* Role */}
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-1">Роль</label>
+ <label htmlFor="user-role" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Роль</label>
  <select
+ id="user-role"
  {...register('role')}
  className="w-full px-3 py-2 border border-field rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+ aria-describedby={errors.role ? 'user-role-error' : undefined}
  >
  {ROLES.map((role) => (
  <option key={role.value} value={role.value}>
@@ -155,13 +160,13 @@ export function UserForm({ initialData, onSuccess, onCancel}: UserFormProps) {
  </option>
  ))}
  </select>
- <FormError message={errors.role?.message} />
+ <FormError message={errors.role?.message} id="user-role-error" />
  </div>
 
  {/* Employee Select - only for new users */}
  {!isEditing && (
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-1">Сотрудник</label>
+ <label htmlFor="user-employeeId" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Сотрудник</label>
  {isLoadingEmployees ? (
  <div className="text-sm text-secondary">Загрузка списка сотрудников...</div>
  ) : availableEmployees.length === 0 ? (
@@ -170,8 +175,10 @@ export function UserForm({ initialData, onSuccess, onCancel}: UserFormProps) {
  </div>
  ) : (
  <select
+ id="user-employeeId"
  {...register('employeeId' as any)}
  className="w-full px-3 py-2 border border-field rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+ aria-describedby={(errors as any).employeeId ? 'user-employeeId-error' : undefined}
  >
  <option value="">Выберите сотрудника</option>
  {availableEmployees.map((emp) => (
@@ -181,14 +188,14 @@ export function UserForm({ initialData, onSuccess, onCancel}: UserFormProps) {
  ))}
  </select>
  )}
- <FormError message={(errors as any).employeeId?.message} />
+ <FormError message={(errors as any).employeeId?.message} id="user-employeeId-error" />
  </div>
  )}
 
  {/* Current Employee Info - for editing */}
  {isEditing && initialData.employee && (
  <div className="bg-fill-quaternary p-3 rounded-md">
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-1">Привязанный сотрудник</label>
+ <label className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Привязанный сотрудник</label>
  <p className="text-sm text-secondary">
  {initialData.employee.lastName} {initialData.employee.firstName} — {initialData.employee.position}
  </p>
@@ -198,7 +205,7 @@ export function UserForm({ initialData, onSuccess, onCancel}: UserFormProps) {
  {/* Telegram Connect - for editing */}
  {isEditing && (
  <div className="border border-blue-200 bg-blue-50 p-4 rounded-md">
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-2">
+ <label className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-2">
  <MessageCircle className="inline-block w-4 h-4 mr-1 text-blue-500"/>
  Telegram уведомления
  </label>
@@ -228,10 +235,11 @@ export function UserForm({ initialData, onSuccess, onCancel}: UserFormProps) {
 
  {/* Actions */}
  <div className="flex justify-end gap-2 pt-4">
- <Button type="button"variant="ghost"onClick={onCancel}>
+ <Button type="button" variant="ghost" onClick={onCancel} disabled={isSubmitting}>
  Отмена
  </Button>
- <Button type="submit"disabled={isSubmitting || (!isEditing && availableEmployees.length === 0)}>
+ <Button type="submit" disabled={isSubmitting || (!isEditing && availableEmployees.length === 0)}>
+ {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
  {isSubmitting ? 'Сохранение...' : isEditing ? 'Сохранить' : 'Создать'}
  </Button>
  </div>

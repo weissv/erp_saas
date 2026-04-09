@@ -11,7 +11,14 @@ interface UnitEcon {
 const formatCompact = (n: number) =>
   new Intl.NumberFormat('ru-RU', { notation: 'compact', maximumFractionDigits: 1 }).format(n);
 
-const BAR_COLORS = ['#EC4899', '#3B82F6', '#F59E0B', '#6366F1', '#10B981', '#F43F5E'];
+const BAR_COLORS = [
+  'var(--color-pink)',
+  'var(--color-blue)',
+  'var(--color-orange)',
+  'var(--color-indigo)',
+  'var(--color-green)',
+  'var(--color-red)',
+];
 
 export default function UnitEconomicsWidget({ data }: { data: UnitEcon | undefined }) {
   if (!data) return null;
