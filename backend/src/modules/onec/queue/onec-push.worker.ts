@@ -2,7 +2,7 @@
 // BullMQ Worker that processes inbound 1C push data.
 //
 // Key guarantees:
-// 1. All-or-nothing writes via Prisma `$transaction`.
+// 1. Chunked writes via Prisma `$transaction` to avoid oversized batches.
 // 2. Idempotency — duplicate jobs (same jobId) are safely skipped.
 // 3. Observability — structured logs with tenantId context.
 // 4. Real-time UX — WebSocket events on completion/failure.
@@ -18,6 +18,8 @@ import {
   type OneCPushJobResult,
 } from "./onec-push.queue";
 import { logger } from "../../../utils/logger";
+
+const PUSH_TRANSACTION_CHUNK_SIZE = 1000;
 
 /**
  * Emit a Socket.IO event scoped to the tenant room.
@@ -100,58 +102,71 @@ export function startOneCPushWorker(): Worker<OneCPushJobData, OneCPushJobResult
       let errors = 0;
 
       try {
-        // ── All-or-nothing processing via $transaction ─────────────
-        await prisma.$transaction(async (tx) => {
-          for (const batch of payload.batches) {
-            totalRecords += batch.records.length;
+        for (const batch of payload.batches) {
+          for (
+            let startIndex = 0;
+            startIndex < batch.records.length;
+            startIndex += PUSH_TRANSACTION_CHUNK_SIZE
+          ) {
+            const chunk = batch.records.slice(
+              startIndex,
+              startIndex + PUSH_TRANSACTION_CHUNK_SIZE,
+            );
 
-            // Each batch.entity (e.g. "Catalog_Контрагенты") should be routed
-            // to the appropriate handler that maps the 1C record format to our
-            // Prisma models and performs an upsert.
-            //
-            // For now, we store raw records in the OneCRegister model as a
-            // generic catch-all. Entity-specific handlers will be added as
-            // the data mapping layer is implemented.
-            for (const record of batch.records) {
-              try {
-                const externalId =
-                  typeof record["Ref_Key"] === "string" && record["Ref_Key"]
-                    ? String(record["Ref_Key"])
-                    : `${batch.entity}_${crypto.randomUUID()}`;
+            await prisma.$transaction(async (tx) => {
+              // Each batch.entity (e.g. "Catalog_Контрагенты") should be routed
+              // to the appropriate handler that maps the 1C record format to our
+              // Prisma models and performs an upsert for this chunk.
+              //
+              // For now, we store raw records in the OneCRegister model as a
+              // generic catch-all. Entity-specific handlers will be added as
+              // the data mapping layer is implemented.
+              for (const record of chunk) {
+                try {
+                  const externalId =
+                    typeof record["Ref_Key"] === "string" && record["Ref_Key"]
+                      ? String(record["Ref_Key"])
+                      : `${batch.entity}_${crypto.randomUUID()}`;
 
-                await tx.oneCRegister.upsert({
-                  where: {
-                    registerType_externalId: {
+                  await tx.oneCRegister.upsert({
+                    where: {
+                      registerType_externalId: {
+                        registerType: batch.entity,
+                        externalId,
+                      },
+                    },
+                    update: {
+                      data: record as object,
+                      active: true,
+                      updatedAt: new Date(),
+                    },
+                    create: {
                       registerType: batch.entity,
                       externalId,
+                      data: record as object,
+                      active: true,
                     },
-                  },
-                  update: {
-                    data: record as object,
-                    active: true,
-                    updatedAt: new Date(),
-                  },
-                  create: {
-                    registerType: batch.entity,
-                    externalId,
-                    data: record as object,
-                    active: true,
-                  },
-                });
-              } catch (recordError) {
-                errors++;
-                logger.error(
-                  `[1C-Push-Worker] Job ${jobId}: upsert error for entity=${batch.entity}:`,
-                  recordError instanceof Error ? recordError.message : String(recordError),
-                );
+                  });
+                } catch (recordError) {
+                  errors++;
+                  logger.error(
+                    `[1C-Push-Worker] Job ${jobId}: upsert error for entity=${batch.entity}:`,
+                    recordError instanceof Error ? recordError.message : String(recordError),
+                  );
+                }
               }
-            }
+            });
 
+            totalRecords += chunk.length;
             logger.info(
-              `[1C-Push-Worker] Job ${jobId}: entity=${batch.entity}, records=${batch.records.length}`,
+              `[1C-Push-Worker] Job ${jobId}: entity=${batch.entity}, chunk=${startIndex / PUSH_TRANSACTION_CHUNK_SIZE + 1}, chunkRecords=${chunk.length}`,
             );
           }
-        });
+
+          logger.info(
+            `[1C-Push-Worker] Job ${jobId}: entity=${batch.entity}, records=${batch.records.length}`,
+          );
+        }
 
         const processedAt = new Date();
         const result: OneCPushJobResult = {
