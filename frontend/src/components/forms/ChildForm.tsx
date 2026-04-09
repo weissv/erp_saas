@@ -5,7 +5,7 @@ import { useForm, useFieldArray} from 'react-hook-form';
 import { z} from 'zod';
 import { zodResolver} from '@hookform/resolvers/zod';
 import { toast} from 'sonner';
-import { PlusCircle, Trash2} from 'lucide-react';
+import { Loader2, PlusCircle, Trash2} from 'lucide-react';
 import { api} from '../../lib/api';
 import { Button} from '../ui/button';
 import { Input} from '../ui/input';
@@ -171,24 +171,26 @@ export function ChildForm({ initialData, onSuccess, onCancel}: ChildFormProps) {
  <legend className="px-1 text-[15px] font-semibold tracking-[-0.015em] text-primary">Основные данные</legend>
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
  <div>
- <label className="mezon-form-label mezon-form-label--regular">Фамилия *</label>
- <Input {...register('lastName')} />
- <FormError message={errors.lastName?.message} />
+ <label htmlFor="child-lastName" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Фамилия *</label>
+ <Input id="child-lastName" {...register('lastName')} error={!!errors.lastName} aria-describedby={errors.lastName ? 'child-lastName-error' : undefined} />
+ <FormError message={errors.lastName?.message} id="child-lastName-error" />
  </div>
  <div>
- <label className="mezon-form-label mezon-form-label--regular">Имя *</label>
- <Input {...register('firstName')} />
- <FormError message={errors.firstName?.message} />
+ <label htmlFor="child-firstName" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Имя *</label>
+ <Input id="child-firstName" {...register('firstName')} error={!!errors.firstName} aria-describedby={errors.firstName ? 'child-firstName-error' : undefined} />
+ <FormError message={errors.firstName?.message} id="child-firstName-error" />
  </div>
  <div>
- <label className="mezon-form-label mezon-form-label--regular">Отчество</label>
- <Input {...register('middleName')} />
+ <label htmlFor="child-middleName" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Отчество</label>
+ <Input id="child-middleName" {...register('middleName')} />
  </div>
  <div>
- <label className="mezon-form-label mezon-form-label--regular">Класс *</label>
+ <label htmlFor="child-groupId" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Класс *</label>
  <select
+ id="child-groupId"
  className="mezon-field"
  disabled={isLoadingGroups}
+ aria-describedby={errors.groupId ? 'child-groupId-error' : undefined}
  {...register('groupId', { valueAsNumber: true})}
  >
  <option value="">{isLoadingGroups ? 'Загружаем...' : 'Выберите класс'}</option>
@@ -196,16 +198,17 @@ export function ChildForm({ initialData, onSuccess, onCancel}: ChildFormProps) {
  <option key={g.id} value={g.id}>{g.name}</option>
  ))}
  </select>
- <FormError message={errors.groupId?.message} />
+ <FormError message={errors.groupId?.message} id="child-groupId-error" />
  </div>
  <div>
- <label className="mezon-form-label mezon-form-label--regular">Дата рождения *</label>
- <Input type="date"{...register('birthDate')} />
- <FormError message={errors.birthDate?.message} />
+ <label htmlFor="child-birthDate" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Дата рождения *</label>
+ <Input id="child-birthDate" type="date" {...register('birthDate')} error={!!errors.birthDate} aria-describedby={errors.birthDate ? 'child-birthDate-error' : undefined} />
+ <FormError message={errors.birthDate?.message} id="child-birthDate-error" />
  </div>
  <div>
- <label className="mezon-form-label mezon-form-label--regular">Пол</label>
+ <label htmlFor="child-gender" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Пол</label>
  <select
+ id="child-gender"
  className="mezon-field"
  {...register('gender')}
  >
@@ -215,17 +218,17 @@ export function ChildForm({ initialData, onSuccess, onCancel}: ChildFormProps) {
  </select>
  </div>
  <div>
- <label className="mezon-form-label mezon-form-label--regular">Национальность</label>
- <Input {...register('nationality')} placeholder="узбек, русский и т.д."/>
+ <label htmlFor="child-nationality" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Национальность</label>
+ <Input id="child-nationality" {...register('nationality')} placeholder="узбек, русский и т.д."/>
  </div>
  <div>
- <label className="mezon-form-label mezon-form-label--regular">Номер метрики</label>
- <Input {...register('birthCertificateNumber')} placeholder="I-TN № 0000000"/>
+ <label htmlFor="child-birthCertificateNumber" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Номер метрики</label>
+ <Input id="child-birthCertificateNumber" {...register('birthCertificateNumber')} placeholder="I-TN № 0000000"/>
  </div>
  </div>
  <div className="mt-3">
- <label className="mezon-form-label mezon-form-label--regular">Адрес проживания</label>
- <Input {...register('address')} placeholder="Район, улица, дом, квартира"/>
+ <label htmlFor="child-address" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Адрес проживания</label>
+ <Input id="child-address" {...register('address')} placeholder="Район, улица, дом, квартира"/>
  </div>
  </fieldset>
 
@@ -245,14 +248,16 @@ export function ChildForm({ initialData, onSuccess, onCancel}: ChildFormProps) {
  </Button>
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
  <div>
- <label className="mezon-form-label mezon-form-label--regular">ФИО *</label>
- <Input {...register(`parents.${index}.fullName`)} />
- <FormError message={errors.parents?.[index]?.fullName?.message} />
+ <label htmlFor={`child-parent-${index}-fullName`} className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">ФИО *</label>
+ <Input id={`child-parent-${index}-fullName`} {...register(`parents.${index}.fullName`)} error={!!errors.parents?.[index]?.fullName} aria-describedby={errors.parents?.[index]?.fullName ? `child-parent-${index}-fullName-error` : undefined} />
+ <FormError message={errors.parents?.[index]?.fullName?.message} id={`child-parent-${index}-fullName-error`} />
  </div>
  <div>
- <label className="mezon-form-label mezon-form-label--regular">Отношение *</label>
+ <label htmlFor={`child-parent-${index}-relation`} className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Отношение *</label>
  <select
+ id={`child-parent-${index}-relation`}
  className="mezon-field"
+ aria-describedby={errors.parents?.[index]?.relation ? `child-parent-${index}-relation-error` : undefined}
  {...register(`parents.${index}.relation`)}
  >
  <option value="">Выберите</option>
@@ -261,20 +266,20 @@ export function ChildForm({ initialData, onSuccess, onCancel}: ChildFormProps) {
  <option value="опекун">Опекун</option>
  <option value="другое">Другое</option>
  </select>
- <FormError message={errors.parents?.[index]?.relation?.message} />
+ <FormError message={errors.parents?.[index]?.relation?.message} id={`child-parent-${index}-relation-error`} />
  </div>
  <div>
- <label className="mezon-form-label mezon-form-label--regular">Телефон</label>
- <Input {...register(`parents.${index}.phone`)} placeholder="+998 90 000 00 00"/>
+ <label htmlFor={`child-parent-${index}-phone`} className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Телефон</label>
+ <Input id={`child-parent-${index}-phone`} {...register(`parents.${index}.phone`)} placeholder="+998 90 000 00 00"/>
  </div>
  <div>
- <label className="mezon-form-label mezon-form-label--regular">Email</label>
- <Input type="email"{...register(`parents.${index}.email`)} />
- <FormError message={errors.parents?.[index]?.email?.message} />
+ <label htmlFor={`child-parent-${index}-email`} className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Email</label>
+ <Input id={`child-parent-${index}-email`} type="email" {...register(`parents.${index}.email`)} error={!!errors.parents?.[index]?.email} aria-describedby={errors.parents?.[index]?.email ? `child-parent-${index}-email-error` : undefined} />
+ <FormError message={errors.parents?.[index]?.email?.message} id={`child-parent-${index}-email-error`} />
  </div>
  <div className="sm:col-span-2">
- <label className="mezon-form-label mezon-form-label--regular">Место работы</label>
- <Input {...register(`parents.${index}.workplace`)} />
+ <label htmlFor={`child-parent-${index}-workplace`} className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Место работы</label>
+ <Input id={`child-parent-${index}-workplace`} {...register(`parents.${index}.workplace`)} />
  </div>
  </div>
  </div>
@@ -294,12 +299,12 @@ export function ChildForm({ initialData, onSuccess, onCancel}: ChildFormProps) {
  <legend className="px-1 text-[15px] font-semibold tracking-[-0.015em] text-primary">Договор</legend>
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
  <div>
- <label className="mezon-form-label mezon-form-label--regular">№ Договора</label>
- <Input {...register('contractNumber')} />
+ <label htmlFor="child-contractNumber" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">№ Договора</label>
+ <Input id="child-contractNumber" {...register('contractNumber')} />
  </div>
  <div>
- <label className="mezon-form-label mezon-form-label--regular">Дата договора</label>
- <Input type="date"{...register('contractDate')} />
+ <label htmlFor="child-contractDate" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Дата договора</label>
+ <Input id="child-contractDate" type="date" {...register('contractDate')} />
  </div>
  </div>
  </fieldset>
@@ -309,28 +314,31 @@ export function ChildForm({ initialData, onSuccess, onCancel}: ChildFormProps) {
  <legend className="px-1 text-[15px] font-semibold tracking-[-0.015em] text-primary">Медицинские сведения</legend>
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
  <div>
- <label className="mezon-form-label mezon-form-label--regular">Аллергии (через запятую)</label>
- <Input {...register('healthAllergies')} placeholder="молоко, орехи"/>
+ <label htmlFor="child-healthAllergies" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Аллергии (через запятую)</label>
+ <Input id="child-healthAllergies" {...register('healthAllergies')} placeholder="молоко, орехи"/>
  </div>
  <div>
- <label className="mezon-form-label mezon-form-label--regular">Особые условия</label>
- <Input {...register('healthConditions')} placeholder="астма, диабет"/>
+ <label htmlFor="child-healthConditions" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Особые условия</label>
+ <Input id="child-healthConditions" {...register('healthConditions')} placeholder="астма, диабет"/>
  </div>
  <div>
- <label className="mezon-form-label mezon-form-label--regular">Медикаменты</label>
- <Input {...register('healthMedications')} placeholder="ингалятор"/>
+ <label htmlFor="child-healthMedications" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Медикаменты</label>
+ <Input id="child-healthMedications" {...register('healthMedications')} placeholder="ингалятор"/>
  </div>
  <div>
- <label className="mezon-form-label mezon-form-label--regular">Примечания</label>
- <Input {...register('healthNotes')} />
+ <label htmlFor="child-healthNotes" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Примечания</label>
+ <Input id="child-healthNotes" {...register('healthNotes')} />
  </div>
  </div>
  </fieldset>
 
  {/* ===== Кнопки ===== */}
  <div className="mezon-modal-inline-actions">
- <Button type="button"variant="ghost"onClick={onCancel}>Отмена</Button>
- <Button type="submit"disabled={isSubmitting}>{isSubmitting ? 'Сохранение...' : 'Сохранить'}</Button>
+ <Button type="button" variant="ghost" onClick={onCancel} disabled={isSubmitting}>Отмена</Button>
+ <Button type="submit" disabled={isSubmitting}>
+ {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+ {isSubmitting ? 'Сохранение...' : 'Сохранить'}
+ </Button>
  </div>
  </form>
  );
