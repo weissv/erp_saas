@@ -10,6 +10,7 @@ import { getMasterPrisma } from "../../../lib/masterPrisma";
 import { PRICING_TIERS } from "../../saas/constants";
 import { logger } from "../../../utils/logger";
 import { invalidateCache } from "../../../services/TenantIntegrationsService";
+import { hashApiKey } from "../middleware/requireIntegrationToken";
 
 const router = Router();
 
@@ -32,7 +33,12 @@ router.get(
     try {
       const integration = await prisma.tenantIntegrations.findUnique({
         where: { tenantId },
-        select: { oneCPushApiKey: true },
+        select: {
+          oneCPushApiKeyHash: true,
+          oneCPushApiKeyHint: true,
+          oneCPushIsActive: true,
+          oneCPushLastSyncAt: true,
+        },
       });
 
       // Resolve tier from master DB
@@ -50,9 +56,42 @@ router.get(
         // Master DB unavailable — fall back to pro (legacy mode)
       }
 
+      // Fetch recent sync logs for the history table
+      let recentSyncs: Array<{
+        id: number;
+        jobId: string;
+        status: string;
+        totalRecords: number;
+        errors: number;
+        receivedAt: Date;
+        processedAt: Date | null;
+      }> = [];
+      try {
+        recentSyncs = await prisma.oneCPushSyncLog.findMany({
+          where: { tenantId },
+          orderBy: { createdAt: "desc" },
+          take: 50,
+          select: {
+            id: true,
+            jobId: true,
+            status: true,
+            totalRecords: true,
+            errors: true,
+            receivedAt: true,
+            processedAt: true,
+          },
+        });
+      } catch {
+        // Table may not exist yet
+      }
+
       return res.json({
-        hasApiKey: !!integration?.oneCPushApiKey,
+        hasApiKey: !!integration?.oneCPushApiKeyHash,
+        apiKeyHint: integration?.oneCPushApiKeyHint ?? null,
+        isActive: integration?.oneCPushIsActive ?? false,
+        lastSyncAt: integration?.oneCPushLastSyncAt ?? null,
         tier,
+        recentSyncs,
       });
     } catch (error) {
       logger.error("[1C-Settings] Error fetching settings:", error);
@@ -67,7 +106,7 @@ router.get(
  * POST /api/integrations/1c/settings/generate-key
  *
  * Generates a new API key for the 1C Push Integration.
- * The key is returned ONCE in the response and stored in the DB.
+ * The key is returned ONCE in the response; only its SHA-256 hash is stored.
  * Subsequent calls will overwrite the previous key.
  */
 router.post(
@@ -99,11 +138,22 @@ router.post(
     try {
       // Generate a cryptographically secure API key
       const apiKey = `1c_${crypto.randomBytes(32).toString("hex")}`;
+      const apiKeyHash = hashApiKey(apiKey);
+      const apiKeyHint = apiKey.slice(0, 8) + "...****";
 
       await prisma.tenantIntegrations.upsert({
         where: { tenantId },
-        update: { oneCPushApiKey: apiKey },
-        create: { tenantId, oneCPushApiKey: apiKey },
+        update: {
+          oneCPushApiKeyHash: apiKeyHash,
+          oneCPushApiKeyHint: apiKeyHint,
+          oneCPushIsActive: true,
+        },
+        create: {
+          tenantId,
+          oneCPushApiKeyHash: apiKeyHash,
+          oneCPushApiKeyHint: apiKeyHint,
+          oneCPushIsActive: true,
+        },
       });
 
       // Invalidate the cached credentials for this tenant
@@ -112,7 +162,8 @@ router.post(
       logger.info(`[1C-Settings] API key generated for tenant=${tenantId}`);
 
       return res.status(201).json({
-        apiKey, // Shown ONCE to the user
+        apiKey, // Shown ONCE to the user — never stored in plain text
+        apiKeyHint,
         message: "API key generated successfully. Store it securely — it will not be shown again.",
       });
     } catch (error) {
@@ -138,7 +189,11 @@ router.delete(
     try {
       await prisma.tenantIntegrations.update({
         where: { tenantId },
-        data: { oneCPushApiKey: null },
+        data: {
+          oneCPushApiKeyHash: null,
+          oneCPushApiKeyHint: null,
+          oneCPushIsActive: false,
+        },
       });
 
       invalidateCache(tenantId);

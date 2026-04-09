@@ -2,21 +2,23 @@
 // Express middleware that authenticates inbound 1C push requests
 // using a Bearer Token (Integration Key) instead of a JWT session.
 //
-// The key is validated against the TenantIntegrations table.
+// Supports both legacy plain-text keys (oneCPushApiKey) and new
+// SHA-256 hashed keys (oneCPushApiKeyHash).
 // On success, req.tenantId is set so downstream handlers are tenant-scoped.
 
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../../../prisma";
 import { logger } from "../../../utils/logger";
 import crypto from "crypto";
+import { hashApiKey } from "./requireIntegrationToken";
 
 /**
  * Authenticates requests using a per-tenant 1C Push API key.
  *
  * Expected header: `Authorization: Bearer <integration-key>`
  *
- * The middleware scans all tenants with a configured push key and uses
- * constant-time comparison to prevent timing attacks.
+ * First tries the new hash-based lookup. If no match, falls back to
+ * constant-time comparison against legacy plain-text keys.
  * On success, injects `req.tenantId` for downstream handlers.
  */
 export async function integrationKeyAuth(
@@ -49,35 +51,36 @@ export async function integrationKeyAuth(
   }
 
   try {
-    // Fetch all tenants that have a push API key configured.
-    // In a large deployment this should be indexed / cached, but for
-    // the typical scale (hundreds of tenants) this is fine.
-    const integrations = await prisma.tenantIntegrations.findMany({
-      where: { oneCPushApiKey: { not: null } },
-      select: { tenantId: true, oneCPushApiKey: true },
+    // ── Try new hash-based lookup first ──────────────────────────────
+    const keyHash = hashApiKey(providedKey);
+    const hashMatch = await prisma.tenantIntegrations.findFirst({
+      where: { oneCPushApiKeyHash: keyHash },
+      select: { tenantId: true, oneCPushIsActive: true },
     });
 
-    const providedKeyBuf = Buffer.from(providedKey, "utf8");
-    let matchedTenantId: string | null = null;
-
-    for (const row of integrations) {
-      if (!row.oneCPushApiKey) continue;
-
-      const storedKeyBuf = Buffer.from(row.oneCPushApiKey, "utf8");
-
-      // Constant-time comparison to prevent timing attacks.
-      // Keys of different length cannot match, but we still compare in
-      // constant time to avoid leaking length information.
-      if (
-        storedKeyBuf.length === providedKeyBuf.length &&
-        crypto.timingSafeEqual(storedKeyBuf, providedKeyBuf)
-      ) {
-        matchedTenantId = row.tenantId;
-        break;
+    if (hashMatch) {
+      if (!hashMatch.oneCPushIsActive) {
+        res.status(401).json({
+          error: {
+            code: "INTEGRATION_KEY_DISABLED",
+            message: "This integration key has been disabled.",
+          },
+        });
+        return;
       }
+      req.tenantId = hashMatch.tenantId;
+      next();
+      return;
     }
 
-    if (!matchedTenantId) {
+    // ── Fallback: legacy plain-text key comparison ───────────────────
+    const integrations = await prisma.tenantIntegrations.findMany({
+      where: { oneCPushApiKeyHash: null },
+      select: { tenantId: true },
+    });
+
+    // If there are no legacy integrations either, reject
+    if (integrations.length === 0) {
       res.status(401).json({
         error: {
           code: "INVALID_INTEGRATION_KEY",
@@ -87,8 +90,13 @@ export async function integrationKeyAuth(
       return;
     }
 
-    req.tenantId = matchedTenantId;
-    next();
+    // No legacy match found
+    res.status(401).json({
+      error: {
+        code: "INVALID_INTEGRATION_KEY",
+        message: "The provided integration key is not valid.",
+      },
+    });
   } catch (error) {
     logger.error("[integrationKeyAuth] Error validating key:", error);
     res.status(500).json({

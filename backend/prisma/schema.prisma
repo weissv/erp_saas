@@ -1702,45 +1702,35 @@ model TenantIntegrations {
   oneCCronSchedule String? @default("*/15 * * * *")
 
   // 1C Push Integration (new REST API — 1C pushes data to us)
-  oneCPushApiKey String?  @db.Text  // Bearer token for inbound 1C push API
+  // The plain-text key is NEVER stored; only the SHA-256 hash is persisted.
+  oneCPushApiKeyHash String?  @db.Text  // SHA-256 hash of the Bearer token
+  oneCPushApiKeyHint String?            // First 8 chars for UI display (e.g. "1c_a3b9...")
+  oneCPushIsActive   Boolean  @default(true) // Can be disabled without revoking
+  oneCPushLastSyncAt DateTime?          // Updated by the worker on each successful sync
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([tenantId])
-// MULTI-TENANT: Integration Credentials per Tenant
+}
+
+// ══════════════════════════════════════════════════════════════
+// 1C PUSH SYNC LOG — Audit trail for inbound 1C push jobs
 // ══════════════════════════════════════════════════════════════
 
-/// Stores per-tenant integration credentials so that each tenant can
-/// have its own Telegram bot, 1C OData connection, AI API keys, etc.
-/// Secrets are stored encrypted at the application level.
-model TenantIntegrations {
-  id        Int    @id @default(autoincrement())
-  tenantId  String @unique // Logical tenant identifier
+model OneCPushSyncLog {
+  id          Int      @id @default(autoincrement())
+  tenantId    String
+  jobId       String   @unique          // BullMQ job ID (for idempotency)
+  status      String   @default("pending") // pending | processing | success | failed
+  totalBatches  Int    @default(0)
+  totalRecords  Int    @default(0)
+  errors        Int    @default(0)
+  errorMessage  String? @db.Text
+  receivedAt  DateTime
+  processedAt DateTime?
+  createdAt   DateTime @default(now())
 
-  // --- Telegram ---
-  telegramBotToken String? // Telegram Bot API token
-
-  // --- 1C OData (Pull — legacy VPN-based sync) ---
-  oneCBaseUrl    String? // e.g. http://host/db/odata/standard.odata
-  oneCUser       String? // Basic-auth username (may contain Cyrillic)
-  oneCPassword   String? // Basic-auth password
-  oneCTimeoutMs  Int     @default(60000)
-  oneCCronSchedule String @default("*/15 * * * *")
-
-  // --- 1C Push Integration (new REST API — 1C pushes data to us) ---
-  oneCPushApiKey String?  // Bearer token for inbound 1C push API
-
-  // --- AI: Embeddings (Gemini) ---
-  geminiApiKey String?
-
-  // --- AI: Chat / Grading (Groq) ---
-  groqApiKey String?
-
-  // --- Google Drive (optional document sync) ---
-  googleDriveApiKey  String?
-  googleDriveFolderId String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@index([tenantId, createdAt])
+  @@index([jobId])
 }

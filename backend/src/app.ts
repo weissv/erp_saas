@@ -36,6 +36,7 @@ import integrationRoutes from "./routes/export.routes";
 import oneCIntegrationRoutes from "./modules/onec/routes/sync.routes";
 import oneCDataRoutes from "./modules/onec/routes/onec-data.routes";
 import oneCPushSyncRoutes from "./modules/onec/routes/push-sync.routes";
+import oneCPushApiRoutes from "./modules/onec/routes/push-api.routes";
 import oneCIntegrationSettingsRoutes from "./modules/onec/routes/onec-integration-settings.routes";
 import usersRoutes from "./routes/users.routes";
 import aiRoutes from "./routes/ai.routes";
@@ -108,6 +109,7 @@ app.use("/api/tenant", tenantRoutes); // Public tenant branding (no auth)
 // This endpoint is called by the 1C Extension using a per-tenant API key.
 // It must be mounted BEFORE the JWT auth middleware.
 app.use("/api/v1/integration", oneCPushSyncRoutes);
+app.use("/api/v1/integration", oneCPushApiRoutes);
 
 // Защита всех последующих роутов
 app.use(authMiddleware);
