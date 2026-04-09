@@ -2,6 +2,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { config } from "../config";
+import { JWT } from "../constants";
 import { prisma } from "../prisma";
 
 export interface AuthUser {
@@ -25,7 +26,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
   }
   
   // Try to get token from cookie first
-  let token = req.cookies?.auth_token;
+  let token = req.cookies?.[JWT.COOKIE_NAME];
   
   // Fallback to Authorization header for non-browser clients
   if (!token) {

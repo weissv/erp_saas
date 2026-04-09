@@ -9,6 +9,21 @@ import {
   logError 
 } from "../utils/errors";
 import { HTTP_STATUS, MESSAGES } from "../constants";
+import { config } from "../config";
+
+function hasCode(err: unknown): err is { code: string } {
+  return typeof err === 'object' && err !== null && typeof (err as Record<string, unknown>).code === 'string';
+}
+
+function hasName(err: unknown): err is { name: string } {
+  return typeof err === 'object' && err !== null && typeof (err as Record<string, unknown>).name === 'string';
+}
+
+function hasStatusAndMessage(err: unknown): err is { status: number; message: string } {
+  return typeof err === 'object' && err !== null && 
+    typeof (err as Record<string, unknown>).status === 'number' && 
+    typeof (err as Record<string, unknown>).message === 'string';
+}
 
 /**
  * Глобальный обработчик ошибок
@@ -43,13 +58,13 @@ export const errorHandler = (
   }
 
   // Обработка Prisma ошибок
-  if ((err as any)?.code?.startsWith?.('P')) {
+  if (hasCode(err) && err.code.startsWith('P')) {
     const prismaError = handlePrismaError(err);
     return res.status(prismaError.statusCode).json(prismaError.toJSON());
   }
 
   // Обработка JWT ошибок
-  if ((err as any)?.name === 'JsonWebTokenError') {
+  if (hasName(err) && err.name === 'JsonWebTokenError') {
     return res.status(HTTP_STATUS.UNAUTHORIZED).json({
       error: {
         code: 'INVALID_TOKEN',
@@ -58,7 +73,7 @@ export const errorHandler = (
     });
   }
 
-  if ((err as any)?.name === 'TokenExpiredError') {
+  if (hasName(err) && err.name === 'TokenExpiredError') {
     return res.status(HTTP_STATUS.UNAUTHORIZED).json({
       error: {
         code: 'TOKEN_EXPIRED',
@@ -68,12 +83,12 @@ export const errorHandler = (
   }
 
   // Старый формат для обратной совместимости
-  if ((err as any)?.status && (err as any)?.message) {
-    return res.status((err as any).status).json({ message: (err as any).message });
+  if (hasStatusAndMessage(err)) {
+    return res.status(err.status).json({ message: err.message });
   }
 
   // Необработанная ошибка - скрываем детали в production
-  const isProduction = process.env.NODE_ENV === 'production';
+  const isProduction = config.nodeEnv === 'production';
   
   return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
     error: {

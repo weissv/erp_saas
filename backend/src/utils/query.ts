@@ -1,17 +1,18 @@
 // src/utils/query.ts
 import { Prisma } from "@prisma/client";
+import { PAGINATION } from "../constants";
 
 export type ListQuery = {
   page?: string;
   pageSize?: string;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
-  [key: string]: any;
+  [key: string]: string | undefined;
 };
 
 export const buildPagination = (q: ListQuery) => {
-  const page = Math.max(parseInt(q.page || "1", 10), 1);
-  const pageSize = Math.min(Math.max(parseInt(q.pageSize || "20", 10), 1), 200);
+  const page = Math.max(parseInt(q.page || String(PAGINATION.DEFAULT_PAGE), 10), 1);
+  const pageSize = Math.min(Math.max(parseInt(q.pageSize || String(PAGINATION.DEFAULT_PAGE_SIZE), 10), PAGINATION.MIN_PAGE_SIZE), PAGINATION.MAX_PAGE_SIZE);
   const skip = (page - 1) * pageSize;
   const take = pageSize;
   return { page, pageSize, skip, take };
