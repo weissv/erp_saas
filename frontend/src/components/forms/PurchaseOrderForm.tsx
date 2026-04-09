@@ -8,7 +8,7 @@ import { Button} from '../ui/button';
 import { Input} from '../ui/input';
 import { FormError} from '../ui/FormError';
 import { PurchaseOrder, purchaseOrderTypeLabels} from '../../types/procurement';
-import { PlusCircle, Trash2, Package, Search, ChevronDown, Link2, AlertCircle} from 'lucide-react';
+import { PlusCircle, Trash2, Package, Search, ChevronDown, Link2, AlertCircle, Loader2} from 'lucide-react';
 
 // =====================================================
 // ZOD SCHEMA
@@ -254,7 +254,7 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel}: PurchaseO
  {/* Тип и приоритет */}
  <div className="grid grid-cols-2 gap-4">
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-1.5">Тип закупки</label>
+ <label className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1.5">Тип закупки</label>
  <div className="flex gap-2">
  <button
  type="button"
@@ -281,7 +281,7 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel}: PurchaseO
  </div>
  </div>
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-1.5">Приоритет</label>
+ <label className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1.5">Приоритет</label>
  <div className="flex gap-2">
  {[
  { value: 0, label: 'Обычный', color: 'gray'},
@@ -311,15 +311,16 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel}: PurchaseO
 
  {/* Название */}
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-1.5">Название закупки *</label>
- <Input {...register('title')} placeholder="Напр.: Закупка канцтоваров на март"className="text-sm"/>
- <FormError message={errors.title?.message} />
+ <label htmlFor="po-title" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1.5">Название закупки *</label>
+ <Input id="po-title" {...register('title')} placeholder="Напр.: Закупка канцтоваров на март"className="text-sm" error={!!errors.title} aria-describedby={errors.title ? 'po-title-error' : undefined}/>
+ <FormError message={errors.title?.message} id="po-title-error" />
  </div>
 
  {/* Описание */}
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-1.5">Обоснование / описание</label>
+ <label htmlFor="po-description" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1.5">Обоснование / описание</label>
  <textarea
+ id="po-description"
  {...register('description')}
  className="w-full p-2.5 border border-[rgba(0,0,0,0.08)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
  rows={2}
@@ -330,10 +331,11 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel}: PurchaseO
  {/* Поставщик и дата */}
  <div className="grid grid-cols-2 gap-4">
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-1.5">
+ <label htmlFor="po-supplierId" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1.5">
  Поставщик <span className="text-tertiary font-normal">(необязательно)</span>
  </label>
  <select
+ id="po-supplierId"
  {...register('supplierId', { setValueAs: (v) => (v === '' || v === null || v === undefined) ? null : Number(v)})}
  className="w-full px-3 py-2 border border-[rgba(0,0,0,0.08)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
  disabled={isLoading}
@@ -345,15 +347,15 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel}: PurchaseO
  </select>
  </div>
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-1.5">Ожид. дата доставки</label>
- <Input type="date"{...register('expectedDeliveryDate')} className="text-sm"/>
+ <label htmlFor="po-expectedDeliveryDate" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1.5">Ожид. дата доставки</label>
+ <Input id="po-expectedDeliveryDate" type="date"{...register('expectedDeliveryDate')} className="text-sm"/>
  </div>
  </div>
 
  {/* Источник финансирования */}
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-1.5">Источник финансирования</label>
- <Input {...register('budgetSource')} placeholder="Бюджет школы, спонсорские и т.д."className="text-sm"/>
+ <label htmlFor="po-budgetSource" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1.5">Источник финансирования</label>
+ <Input id="po-budgetSource" {...register('budgetSource')} placeholder="Бюджет школы, спонсорские и т.д."className="text-sm"/>
  </div>
 
  {/* =====================================================
@@ -412,7 +414,7 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel}: PurchaseO
  />
  )}
  />
- <FormError message={errors.items?.[index]?.name?.message} />
+ <FormError message={errors.items?.[index]?.name?.message} id={`po-item-${index}-name-error`} />
  </div>
  <div className="pt-5">
  <Button
@@ -440,7 +442,7 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel}: PurchaseO
  {...register(`items.${index}.quantity`, { valueAsNumber: true})}
  className="text-sm text-center"
  />
- <FormError message={errors.items?.[index]?.quantity?.message} />
+ <FormError message={errors.items?.[index]?.quantity?.message} id={`po-item-${index}-quantity-error`} />
  </div>
  <div>
  <label className="block text-xs font-medium text-secondary mb-1">Ед. изм. *</label>
@@ -468,7 +470,7 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel}: PurchaseO
  </select>
  )}
  />
- <FormError message={errors.items?.[index]?.unit?.message} />
+ <FormError message={errors.items?.[index]?.unit?.message} id={`po-item-${index}-unit-error`} />
  </div>
  <div>
  <label className="block text-xs font-medium text-secondary mb-1">Цена за ед.</label>
@@ -480,7 +482,7 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel}: PurchaseO
  {...register(`items.${index}.price`, { valueAsNumber: true})}
  className="text-sm text-right"
  />
- <FormError message={errors.items?.[index]?.price?.message} />
+ <FormError message={errors.items?.[index]?.price?.message} id={`po-item-${index}-price-error`} />
  </div>
  <div>
  <label className="block text-xs font-medium text-secondary mb-1">Сумма</label>
@@ -514,10 +516,11 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel}: PurchaseO
 
  {/* Кнопки */}
  <div className="flex justify-end gap-3 pt-2 border-t border-[rgba(0,0,0,0.04)]">
- <Button type="button"variant="ghost"onClick={onCancel} className="px-6">
+ <Button type="button"variant="ghost"onClick={onCancel} className="px-6" disabled={isSubmitting}>
  Отмена
  </Button>
  <Button type="submit"disabled={isSubmitting} className="px-6">
+ {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
  {isSubmitting ? 'Сохранение...' : isEditing ? 'Обновить заказ' : 'Создать заказ'}
  </Button>
  </div>
