@@ -6,6 +6,7 @@ import { toast} from 'sonner';
 import { api} from '../../lib/api';
 import { useAuth} from '../../hooks/useAuth';
 import { useLocation} from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 import { Button} from '../ui/button';
 import { Input} from '../ui/input';
 import { FormError} from '../ui/FormError';
@@ -108,17 +109,19 @@ export function BugReportForm({ onSuccess}: BugReportFormProps) {
  </div>
 
  <div>
- <label className='mb-1 block text-[11px] font-medium uppercase tracking-widest'>Краткий заголовок</label>
- <Input {...register('title')} placeholder='Например: не открывается карточка ребёнка после сохранения' />
- <FormError message={errors.title?.message} />
+ <label htmlFor='bug-title' className='mb-1 block text-xs font-medium uppercase tracking-widest text-text-primary'>Краткий заголовок</label>
+ <Input id='bug-title' {...register('title')} placeholder='Например: не открывается карточка ребёнка после сохранения' error={!!errors.title} aria-describedby={errors.title ? 'bug-title-error' : undefined} />
+ <FormError message={errors.title?.message} id='bug-title-error' />
  </div>
 
  <div className='grid gap-4 md:grid-cols-[220px_1fr]'>
  <div>
- <label className='mb-1 block text-[11px] font-medium uppercase tracking-widest'>Критичность</label>
+ <label htmlFor='bug-severity' className='mb-1 block text-xs font-medium uppercase tracking-widest text-text-primary'>Критичность</label>
  <select
+ id='bug-severity'
  {...register('severity')}
  className='w-full rounded-md border border-field px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+ aria-describedby={errors.severity ? 'bug-severity-error' : undefined}
  >
  {severityOptions.map((option) => (
  <option key={option.value} value={option.value}>
@@ -126,12 +129,12 @@ export function BugReportForm({ onSuccess}: BugReportFormProps) {
  </option>
  ))}
  </select>
- <FormError message={errors.severity?.message} />
+ <FormError message={errors.severity?.message} id='bug-severity-error' />
  </div>
  <div>
- <label className='mb-1 block text-[11px] font-medium uppercase tracking-widest'>Страница / маршрут</label>
- <Input {...register('pageUrl')} placeholder='/children/123' />
- <FormError message={errors.pageUrl?.message} />
+ <label htmlFor='bug-pageUrl' className='mb-1 block text-xs font-medium uppercase tracking-widest text-text-primary'>Страница / маршрут</label>
+ <Input id='bug-pageUrl' {...register('pageUrl')} placeholder='/children/123' aria-describedby={errors.pageUrl ? 'bug-pageUrl-error' : undefined} />
+ <FormError message={errors.pageUrl?.message} id='bug-pageUrl-error' />
  </div>
  </div>
 
@@ -145,37 +148,44 @@ export function BugReportForm({ onSuccess}: BugReportFormProps) {
  </div>
 
  <div>
- <label className='mb-1 block text-[11px] font-medium uppercase tracking-widest'>Что произошло</label>
+ <label htmlFor='bug-actualBehavior' className='mb-1 block text-xs font-medium uppercase tracking-widest text-text-primary'>Что произошло</label>
  <textarea
+ id='bug-actualBehavior'
  {...register('actualBehavior')}
  placeholder='Опишите фактическое поведение системы, сообщение об ошибке, что именно сломалось.'
  className='min-h-32 w-full rounded-md border border-field px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+ aria-describedby={errors.actualBehavior ? 'bug-actualBehavior-error' : undefined}
  />
- <FormError message={errors.actualBehavior?.message} />
+ <FormError message={errors.actualBehavior?.message} id='bug-actualBehavior-error' />
  </div>
 
  <div>
- <label className='mb-1 block text-[11px] font-medium uppercase tracking-widest'>Как должно было быть</label>
+ <label htmlFor='bug-expectedBehavior' className='mb-1 block text-xs font-medium uppercase tracking-widest text-text-primary'>Как должно было быть</label>
  <textarea
+ id='bug-expectedBehavior'
  {...register('expectedBehavior')}
  placeholder='Опишите ожидаемый результат.'
  className='min-h-24 w-full rounded-md border border-field px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+ aria-describedby={errors.expectedBehavior ? 'bug-expectedBehavior-error' : undefined}
  />
- <FormError message={errors.expectedBehavior?.message} />
+ <FormError message={errors.expectedBehavior?.message} id='bug-expectedBehavior-error' />
  </div>
 
  <div>
- <label className='mb-1 block text-[11px] font-medium uppercase tracking-widest'>Шаги для воспроизведения</label>
+ <label htmlFor='bug-stepsToReproduce' className='mb-1 block text-xs font-medium uppercase tracking-widest text-text-primary'>Шаги для воспроизведения</label>
  <textarea
+ id='bug-stepsToReproduce'
  {...register('stepsToReproduce')}
  placeholder='1. Открыть модуль...&#10;2. Нажать...&#10;3. Получить ошибку...'
  className='min-h-28 w-full rounded-md border border-field px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+ aria-describedby={errors.stepsToReproduce ? 'bug-stepsToReproduce-error' : undefined}
  />
- <FormError message={errors.stepsToReproduce?.message} />
+ <FormError message={errors.stepsToReproduce?.message} id='bug-stepsToReproduce-error' />
  </div>
 
  <div className='flex justify-end'>
  <Button type='submit' disabled={isSubmitting}>
+ {isSubmitting && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
  {isSubmitting ? 'Отправка...' : 'Отправить разработчику'}
  </Button>
  </div>

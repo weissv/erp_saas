@@ -4,6 +4,7 @@ import { zodResolver} from '@hookform/resolvers/zod';
 import { toast} from 'sonner';
 import { api} from '../../lib/api';
 import { ModalNotice, ModalSection} from '../Modal';
+import { Loader2 } from 'lucide-react';
 import { Button} from '../ui/button';
 import { FormError} from '../ui/FormError';
 import { Feedback} from '../../types/feedback';
@@ -64,31 +65,36 @@ export function FeedbackResponseForm({ feedback, onSuccess, onCancel}: FeedbackR
 
  <ModalSection title="Ответ и статус" description="Сформулируйте понятный ответ и сразу переведите обращение в актуальный статус.">
  <div>
- <label className="mezon-form-label">Ответ</label>
+ <label htmlFor="fbr-response" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Ответ</label>
  <textarea
+ id="fbr-response"
  {...register('response')}
  placeholder="Ваш ответ на обращение..."
  className="mezon-field mezon-textarea"
+ aria-describedby={errors.response ? 'fbr-response-error' : undefined}
  />
- <FormError message={errors.response?.message} />
+ <FormError message={errors.response?.message} id="fbr-response-error" />
  </div>
 
  <div>
- <label className="mezon-form-label">Статус</label>
+ <label htmlFor="fbr-status" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Статус</label>
  <select 
+ id="fbr-status"
  {...register('status')} 
  className="mezon-field"
+ aria-describedby={errors.status ? 'fbr-status-error' : undefined}
  >
  <option value="IN_PROGRESS">В работе</option>
  <option value="RESOLVED">Решено</option>
  </select>
- <FormError message={errors.status?.message} />
+ <FormError message={errors.status?.message} id="fbr-status-error" />
  </div>
  </ModalSection>
 
  <div className="mezon-modal-inline-actions">
- <Button type="button"variant="ghost"onClick={onCancel}>Отмена</Button>
- <Button type="submit"disabled={isSubmitting}>
+ <Button type="button" variant="ghost" onClick={onCancel} disabled={isSubmitting}>Отмена</Button>
+ <Button type="submit" disabled={isSubmitting}>
+ {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
  {isSubmitting ? 'Сохранение...' : 'Сохранить ответ'}
  </Button>
  </div>
