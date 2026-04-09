@@ -5,6 +5,7 @@
 import { PrismaClient, Role } from "@prisma/client";
 import { AiService } from "./AiService";
 import { DEFAULT_TENANT_ID } from "./TenantIntegrationsService";
+import { logger } from "../utils/logger";
 
 const prisma = new PrismaClient();
 
@@ -165,7 +166,7 @@ async function createArticle(input: CreateArticleInput): Promise<ArticleResult> 
       WHERE id = ${article.id} AND "tenantId" = ${tenantId}
     `;
   } catch (err) {
-    console.error(`[KnowledgeBase] Ошибка генерации embedding для статьи #${article.id}:`, err);
+    logger.error(`[KnowledgeBase] Ошибка генерации embedding для статьи #${article.id}:`, err);
     // Статья создана, но без вектора — не фатально
   }
 
@@ -221,7 +222,7 @@ async function updateArticle(id: number, input: UpdateArticleInput, tenantId: st
         WHERE id = ${article.id} AND "tenantId" = ${tenantId}
       `;
     } catch (err) {
-      console.error(`[KnowledgeBase] Ошибка обновления embedding для статьи #${article.id}:`, err);
+      logger.error(`[KnowledgeBase] Ошибка обновления embedding для статьи #${article.id}:`, err);
     }
   }
 
@@ -302,7 +303,7 @@ async function search(
 
       return { items, total };
     } catch (err) {
-      console.error("[KnowledgeBase] Ошибка семантического поиска:", err);
+      logger.error("[KnowledgeBase] Ошибка семантического поиска:", err);
       // Fallback к текстовому поиску
     }
   }
@@ -419,7 +420,7 @@ async function getRelated(articleId: number, userRole: Role, limit: number = 5, 
 
     return articles;
   } catch (err) {
-    console.error("[KnowledgeBase] Ошибка поиска похожих статей:", err);
+    logger.error("[KnowledgeBase] Ошибка поиска похожих статей:", err);
     return [];
   }
 }

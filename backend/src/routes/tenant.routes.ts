@@ -1,6 +1,7 @@
 // src/routes/tenant.routes.ts
 import { Router, Request, Response } from "express";
 import { SystemSettingsService } from "../services/SystemSettingsService";
+import { logger } from "../utils/logger";
 
 const router = Router();
 
@@ -14,7 +15,7 @@ router.get("/settings", async (_req: Request, res: Response) => {
     const settings = await SystemSettingsService.getTenantSettings();
     res.json(settings);
   } catch (error) {
-    console.error("Error getting tenant settings:", error);
+    logger.error("Error getting tenant settings:", error);
     res.status(500).json({ message: "Failed to load tenant settings" });
   }
 });

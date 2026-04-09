@@ -7,8 +7,7 @@ import { authMiddleware } from "./middleware/auth";
 import { tenantResolver } from "./middleware/tenantResolver";
 import { errorHandler } from "./middleware/errorHandler";
 import { config } from "./config";
-
-// SaaS module
+import { logger } from "./utils/logger";
 import stripeWebhookRoutes from "./modules/saas/routes/stripe-webhook.routes";
 
 // Импорты роутов
@@ -61,7 +60,7 @@ const corsOptions: cors.CorsOptions = {
     if (allowedOrigins.has(origin) || allowPattern.some((regex) => regex.test(origin))) {
       return callback(null, true);
     }
-    console.log(`CORS blocked origin: ${origin}`);
+    logger.warn(`CORS blocked origin: ${origin}`);
     return callback(new Error(`Origin ${origin} is not allowed by CORS`));
   },
   credentials: true,

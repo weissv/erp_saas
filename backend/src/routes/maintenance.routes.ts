@@ -11,6 +11,7 @@ import {
   deductStockForRequest,
   reverseStockForRequest,
 } from "../services/InventorySyncService";
+import { logger } from "../utils/logger";
 
 // GET /api/maintenance - получить заявки с учетом роли
 router.get("/", checkRole(["DEVELOPER", "DIRECTOR", "DEPUTY", "ADMIN", "TEACHER", "ZAVHOZ", "ACCOUNTANT"]), async (req, res) => {
@@ -157,7 +158,7 @@ router.post("/", checkRole(["DEVELOPER", "DIRECTOR", "DEPUTY", "ADMIN", "TEACHER
       );
     }
   } catch (error) {
-    console.error('Ошибка отправки Telegram уведомления:', error);
+    logger.error('Ошибка отправки Telegram уведомления:', error);
   }
 
   res.status(201).json(created);
@@ -214,7 +215,7 @@ router.put("/:id", checkRole(["DEVELOPER", "DIRECTOR", "DEPUTY", "ADMIN", "TEACH
         .map(i => `${i.name}: запрошено ${i.requested} ${i.unit}, на складе ${i.inStock} ${i.unit}`)
         .join("; ");
       // Не блокируем, но предупреждаем (частичная выдача допустима)
-      console.warn(`Недостаточно товаров на складе для заявки #${id}: ${deficits}`);
+      logger.warn(`Недостаточно товаров на складе для заявки #${id}: ${deficits}`);
     }
   }
   
@@ -262,7 +263,7 @@ router.put("/:id", checkRole(["DEVELOPER", "DIRECTOR", "DEPUTY", "ADMIN", "TEACH
   if (newStatus === "DONE" && previousStatus !== "DONE" && request.type === "ISSUE") {
     stockResult = await deductStockForRequest(id, user.employeeId);
     if (stockResult.warnings.length > 0) {
-      console.warn(`Предупреждения при списании для заявки #${id}:`, stockResult.warnings);
+      logger.warn(`Предупреждения при списании для заявки #${id}:`, stockResult.warnings);
     }
   }
 
@@ -294,7 +295,7 @@ router.put("/:id", checkRole(["DEVELOPER", "DIRECTOR", "DEPUTY", "ADMIN", "TEACH
         await sendTelegramMessage(requesterId, message);
       }
     } catch (error) {
-      console.error('Ошибка отправки Telegram уведомления:', error);
+      logger.error('Ошибка отправки Telegram уведомления:', error);
     }
   }
 
@@ -389,7 +390,7 @@ router.post("/:id/approve", checkRole(["DEVELOPER", "DIRECTOR", "DEPUTY"]), asyn
       `⚡ Готова к выполнению`
     );
   } catch (error) {
-    console.error('Ошибка отправки Telegram уведомления:', error);
+    logger.error('Ошибка отправки Telegram уведомления:', error);
   }
   
   res.json(updated);

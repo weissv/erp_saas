@@ -9,6 +9,7 @@ import { getMasterPrisma } from "../lib/masterPrisma";
 import { getTenantPrisma } from "../lib/tenantPrisma";
 import { config } from "../config";
 import { HTTP_STATUS, TENANT_STATUS } from "../constants";
+import { logger } from "../utils/logger";
 
 // ─── Extend Express Request ────────────────────────────────────────────────
 declare global {
@@ -134,7 +135,7 @@ export const tenantResolver = async (
 
     next();
   } catch (error) {
-    console.error("[tenantResolver] Error resolving tenant:", error);
+    logger.error("[tenantResolver] Error resolving tenant:", error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       error: {
         code: "TENANT_RESOLUTION_ERROR",

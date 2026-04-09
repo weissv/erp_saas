@@ -7,7 +7,7 @@ import { EventEmitter } from "events";
 import { SystemSettingsService } from "./SystemSettingsService";
 import { config } from "../config";
 import { getTenantIntegrations, DEFAULT_TENANT_ID, type TenantCredentials } from "./TenantIntegrationsService";
-import { TenantIntegrationsService, type TenantCredentials } from "./TenantIntegrationsService";
+import { logger } from "../utils/logger";
 
 const prisma = new PrismaClient();
 
@@ -58,20 +58,6 @@ async function getGeminiClient(tenantId: string = DEFAULT_TENANT_ID): Promise<Go
     throw new Error("GEMINI_API_KEY не установлен — embeddings и семантический поиск не будут работать");
   }
   const client = new GoogleGenerativeAI(creds.geminiApiKey);
-// Lazy-init client caches per tenant
-const geminiClients = new Map<string, GoogleGenerativeAI>();
-const groqClients = new Map<string, OpenAI>();
-
-async function getGeminiClient(tenantId: string = "default"): Promise<GoogleGenerativeAI> {
-  const existing = geminiClients.get(tenantId);
-  if (existing) return existing;
-
-  const creds = await TenantIntegrationsService.getCredentials(tenantId);
-  const key = creds.geminiApiKey;
-  if (!key) {
-    throw new Error("GEMINI_API_KEY не установлен в переменных окружения");
-  }
-  const client = new GoogleGenerativeAI(key);
   geminiClients.set(tenantId, client);
   return client;
 }
@@ -86,17 +72,6 @@ async function getGroqClient(tenantId: string = DEFAULT_TENANT_ID): Promise<Open
   }
   const client = new OpenAI({
     apiKey: creds.groqApiKey,
-async function getGroqClient(tenantId: string = "default"): Promise<OpenAI> {
-  const existing = groqClients.get(tenantId);
-  if (existing) return existing;
-
-  const creds = await TenantIntegrationsService.getCredentials(tenantId);
-  const key = creds.groqApiKey;
-  if (!key) {
-    throw new Error("GROQ_API_KEY не установлен в переменных окружения");
-  }
-  const client = new OpenAI({
-    apiKey: key,
     baseURL: "https://api.groq.com/openai/v1",
   });
   groqClients.set(tenantId, client);
@@ -178,7 +153,7 @@ async function getGoogleDriveFiles(tenantId: string = "default"): Promise<Google
   const driveFolderId = creds.googleDriveFolderId;
 
   if (!driveApiKey || !driveFolderId) {
-    console.log("ℹ️  Google Drive не настроен (GOOGLE_DRIVE_API_KEY или GOOGLE_DRIVE_FOLDER_ID отсутствуют)");
+    logger.info("ℹ️  Google Drive не настроен (GOOGLE_DRIVE_API_KEY или GOOGLE_DRIVE_FOLDER_ID отсутствуют)");
     return [];
   }
   
@@ -190,12 +165,12 @@ async function getGoogleDriveFiles(tenantId: string = "default"): Promise<Google
     const response = await fetch(url);
     if (!response.ok) {
       const errorText = await response.text();
-      console.log("Google Drive API response:", errorText);
+      logger.info("Google Drive API response:", errorText);
       
       // Если Drive API недоступен, пробуем альтернативный метод
       if (errorText.includes("accessNotConfigured") || errorText.includes("SERVICE_DISABLED")) {
-        console.log("⚠️ Google Drive API не включен. Используйте ручную загрузку документов.");
-        console.log("Для включения API перейдите: https://console.developers.google.com/apis/api/drive.googleapis.com/overview");
+        logger.info("⚠️ Google Drive API не включен. Используйте ручную загрузку документов.");
+        logger.info("Для включения API перейдите: https://console.developers.google.com/apis/api/drive.googleapis.com/overview");
       }
       return [];
     }
@@ -203,7 +178,7 @@ async function getGoogleDriveFiles(tenantId: string = "default"): Promise<Google
     const data = await response.json();
     return data.files || [];
   } catch (error) {
-    console.error("Error fetching Google Drive files:", error);
+    logger.error("Error fetching Google Drive files:", error);
     return [];
   }
 }
@@ -256,7 +231,7 @@ async function parseDocxContent(buffer: Buffer): Promise<string | null> {
     const result = await mammoth.extractRawText({ buffer });
     return sanitizeText(result.value);
   } catch (error) {
-    console.error("Error parsing DOCX:", error);
+    logger.error("Error parsing DOCX:", error);
     return null;
   }
 }
@@ -301,7 +276,7 @@ async function getGoogleDriveFileContent(fileId: string, mimeType: string, drive
     
     return null;
   } catch (error) {
-    console.error(`Error fetching file ${fileId}:`, error);
+    logger.error(`Error fetching file ${fileId}:`, error);
     return null;
   }
 }
@@ -344,7 +319,7 @@ async function addDocumentFromText(
     
     return { id: firstId, success: true, chunksCreated: chunks.length };
   } catch (error) {
-    console.error("Error adding document from text:", error);
+    logger.error("Error adding document from text:", error);
     throw error;
   }
 }
@@ -646,7 +621,7 @@ async function syncGoogleDriveDocuments(tenantId: string = "default"): Promise<{
     const files = await getGoogleDriveFiles(tenantId);
     const creds = await TenantIntegrationsService.getCredentials(tenantId);
     const driveApiKey = creds.googleDriveApiKey || "";
-    console.log(`📂 Found ${files.length} files in Google Drive folder`);
+    logger.info(`📂 Found ${files.length} files in Google Drive folder`);
     
     updateSyncStatus({ total: files.length });
     
@@ -660,16 +635,15 @@ async function syncGoogleDriveDocuments(tenantId: string = "default"): Promise<{
       try {
         // Проверяем поддерживается ли тип файла
         if (!isSupportedFileType(file.mimeType, file.name)) {
-          console.log(`⏭️ Skipping unsupported file type: ${file.name} (${file.mimeType})`);
+          logger.info(`⏭️ Skipping unsupported file type: ${file.name} (${file.mimeType})`);
           updateSyncStatus({ skipped: syncStatus.skipped + 1 });
           continue;
         }
         
         // Получаем содержимое файла
         const content = await getGoogleDriveFileContent(file.id, file.mimeType, tenantId);
-        const content = await getGoogleDriveFileContent(file.id, file.mimeType, driveApiKey);
         if (!content || content.trim().length < 10) {
-          console.log(`⏭️ File ${file.name} has no content or is too short`);
+          logger.info(`⏭️ File ${file.name} has no content or is too short`);
           updateSyncStatus({ skipped: syncStatus.skipped + 1 });
           continue;
         }
@@ -696,7 +670,7 @@ async function syncGoogleDriveDocuments(tenantId: string = "default"): Promise<{
             WHERE metadata->>'googleDriveFileId' = ${file.id}
               AND "tenantId" = ${tenantId}
           `;
-          console.log(`🔄 Updating: ${file.name}`);
+          logger.info(`🔄 Updating: ${file.name}`);
           updateSyncStatus({ updated: syncStatus.updated + 1 });
         }
         
@@ -733,14 +707,14 @@ async function syncGoogleDriveDocuments(tenantId: string = "default"): Promise<{
         
         if (existing.length === 0) {
           updateSyncStatus({ synced: syncStatus.synced + 1 });
-          console.log(`✅ Synced: ${file.name} (${chunks.length} chunks)`);
+          logger.info(`✅ Synced: ${file.name} (${chunks.length} chunks)`);
         }
         
         // Пауза между файлами чтобы не перегружать API
         await sleep(200);
         
       } catch (fileError) {
-        console.error(`❌ Error processing file ${file.name}:`, fileError);
+        logger.error(`❌ Error processing file ${file.name}:`, fileError);
         updateSyncStatus({ errors: syncStatus.errors + 1 });
       }
     }
@@ -755,7 +729,7 @@ async function syncGoogleDriveDocuments(tenantId: string = "default"): Promise<{
     syncEvents.emit("sync-complete", syncStatus);
     
   } catch (error) {
-    console.error("❌ Error syncing Google Drive documents:", error);
+    logger.error("❌ Error syncing Google Drive documents:", error);
     updateSyncStatus({
       isRunning: false,
       error: error instanceof Error ? error.message : "Неизвестная ошибка",
@@ -784,7 +758,7 @@ function startBackgroundSync(tenantId: string = "default"): { started: boolean; 
   
   // Запускаем синхронизацию асинхронно
   syncGoogleDriveDocuments(tenantId).catch((error) => {
-    console.error("Background sync error:", error);
+    logger.error("Background sync error:", error);
   });
   
   return { started: true, message: "Синхронизация запущена в фоновом режиме" };
@@ -814,7 +788,7 @@ async function generateEmbedding(text: string, tenantId: string = "default"): Pr
     // Или можно изменить размерность в БД на 768
     return embedding;
   } catch (error) {
-    console.error("Error generating embedding:", error);
+    logger.error("Error generating embedding:", error);
     throw new Error("Не удалось сгенерировать эмбеддинг");
   }
 }
@@ -856,7 +830,7 @@ async function addDocument(
 
     return { id: inserted[0].id, success: true };
   } catch (error) {
-    console.error("Error adding document:", error);
+    logger.error("Error adding document:", error);
     throw new Error("Не удалось добавить документ в базу знаний");
   }
 }
@@ -892,7 +866,7 @@ async function findSimilarDocuments(
 
     return results;
   } catch (error) {
-    console.error("Error finding similar documents:", error);
+    logger.error("Error finding similar documents:", error);
     return [];
   }
 }
@@ -969,7 +943,7 @@ async function chatWithAssistant(
       sources: relevantDocs,
     };
   } catch (error) {
-    console.error("Error in chatWithAssistant:", error);
+    logger.error("Error in chatWithAssistant:", error);
     throw new Error("Ошибка при обработке запроса к AI-ассистенту");
   }
 }
@@ -998,7 +972,7 @@ async function getAllDocuments(
     `;
     return documents;
   } catch (error) {
-    console.error("Error getting documents:", error);
+    logger.error("Error getting documents:", error);
     throw new Error("Не удалось получить документы");
   }
 }
@@ -1017,7 +991,7 @@ async function deleteDocument(id: number, tenantId: string = "default"): Promise
     `;
     return true;
   } catch (error) {
-    console.error("Error deleting document:", error);
+    logger.error("Error deleting document:", error);
     throw new Error("Не удалось удалить документ");
   }
 }

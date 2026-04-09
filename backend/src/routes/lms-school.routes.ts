@@ -3,6 +3,7 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
 import { prisma } from "../prisma";
+import { logger } from "../utils/logger";
 
 const router = Router();
 
@@ -156,7 +157,7 @@ router.get("/classes", async (req: Request, res: Response) => {
 
     res.json(result);
   } catch (error) {
-    console.error("Error fetching classes:", error);
+    logger.error("Error fetching classes:", error);
     res.status(500).json({ error: "Failed to fetch classes" });
   }
 });
@@ -205,7 +206,7 @@ router.get("/classes/:id", async (req: Request, res: Response) => {
       studentsCount: schoolClass.children.length,
     });
   } catch (error) {
-    console.error("Error fetching class:", error);
+    logger.error("Error fetching class:", error);
     res.status(500).json({ error: "Failed to fetch class" });
   }
 });
@@ -221,7 +222,7 @@ router.post("/classes", async (req: Request, res: Response) => {
 
     res.status(201).json(schoolClass);
   } catch (error) {
-    console.error("Error creating class:", error);
+    logger.error("Error creating class:", error);
     res.status(500).json({ error: "Failed to create class" });
   }
 });
@@ -244,7 +245,7 @@ router.put("/classes/:id", async (req: Request, res: Response) => {
 
     res.json(schoolClass);
   } catch (error) {
-    console.error("Error updating class:", error);
+    logger.error("Error updating class:", error);
     res.status(500).json({ error: "Failed to update class" });
   }
 });
@@ -273,7 +274,7 @@ router.delete("/classes/:id", async (req: Request, res: Response) => {
     await prisma.group.delete({ where: { id: classId } });
     res.json({ success: true });
   } catch (error) {
-    console.error("Error deleting class:", error);
+    logger.error("Error deleting class:", error);
     res.status(500).json({ error: "Failed to delete class" });
   }
 });
@@ -345,7 +346,7 @@ router.get("/classes/:classId/students", async (req: Request, res: Response) => 
 
     res.json(result);
   } catch (error) {
-    console.error("Error fetching students:", error);
+    logger.error("Error fetching students:", error);
     res.status(500).json({ error: "Failed to fetch students" });
   }
 });
@@ -374,7 +375,7 @@ router.post("/students", async (req: Request, res: Response) => {
 
     res.status(201).json(schoolStudent);
   } catch (error) {
-    console.error("Error creating student:", error);
+    logger.error("Error creating student:", error);
     res.status(500).json({ error: "Failed to create student" });
   }
 });
@@ -401,7 +402,7 @@ router.put("/students/:id", async (req: Request, res: Response) => {
 
     res.json(student);
   } catch (error) {
-    console.error("Error updating student:", error);
+    logger.error("Error updating student:", error);
     res.status(500).json({ error: "Failed to update student" });
   }
 });
@@ -419,7 +420,7 @@ router.delete("/students/:id", async (req: Request, res: Response) => {
     await prisma.lmsSchoolStudent.delete({ where: { id: studentId } });
     res.json({ success: true });
   } catch (error) {
-    console.error("Error deleting student:", error);
+    logger.error("Error deleting student:", error);
     res.status(500).json({ error: "Failed to delete student" });
   }
 });
@@ -480,7 +481,7 @@ router.get("/subjects", async (req: Request, res: Response) => {
 
     res.json(subjects);
   } catch (error) {
-    console.error("Error fetching subjects:", error);
+    logger.error("Error fetching subjects:", error);
     res.status(500).json({ error: "Failed to fetch subjects" });
   }
 });
@@ -526,7 +527,7 @@ router.post("/subjects", async (req: Request, res: Response) => {
       updatedAt: lmsSubject.updatedAt.toISOString(),
     });
   } catch (error) {
-    console.error("Error creating subject:", error);
+    logger.error("Error creating subject:", error);
     res.status(500).json({ error: "Failed to create subject" });
   }
 });
@@ -557,7 +558,7 @@ router.put("/subjects/:id", async (req: Request, res: Response) => {
       updatedAt: subject.updatedAt.toISOString(),
     });
   } catch (error) {
-    console.error("Error updating subject:", error);
+    logger.error("Error updating subject:", error);
     res.status(500).json({ error: "Failed to update subject" });
   }
 });
@@ -622,7 +623,7 @@ router.get("/schedule", async (req: Request, res: Response) => {
 
     res.json(schedule);
   } catch (error) {
-    console.error("Error fetching schedule:", error);
+    logger.error("Error fetching schedule:", error);
     res.status(500).json({ error: "Failed to fetch schedule" });
   }
 });
@@ -708,7 +709,7 @@ router.post("/schedule", async (req: Request, res: Response) => {
       updatedAt: scheduleSlot.updatedAt.toISOString(),
     });
   } catch (error) {
-    console.error("Error creating schedule item:", error);
+    logger.error("Error creating schedule item:", error);
     res.status(500).json({ error: "Failed to create schedule item" });
   }
 });
@@ -782,7 +783,7 @@ router.put("/schedule/:id", async (req: Request, res: Response) => {
       room: scheduleSlot.room?.name || null,
     });
   } catch (error) {
-    console.error("Error updating schedule item:", error);
+    logger.error("Error updating schedule item:", error);
     res.status(500).json({ error: "Failed to update schedule item" });
   }
 });
@@ -804,7 +805,7 @@ router.delete("/schedule/:id", async (req: Request, res: Response) => {
     await prisma.scheduleSlot.delete({ where: { id: itemId } });
     res.json({ success: true });
   } catch (error) {
-    console.error("Error deleting schedule item:", error);
+    logger.error("Error deleting schedule item:", error);
     res.status(500).json({ error: "Failed to delete schedule item" });
   }
 });
@@ -846,7 +847,7 @@ router.get("/grades", async (req: Request, res: Response) => {
 
     res.json(grades);
   } catch (error) {
-    console.error("Error fetching grades:", error);
+    logger.error("Error fetching grades:", error);
     res.status(500).json({ error: "Failed to fetch grades" });
   }
 });
@@ -948,7 +949,7 @@ router.get("/gradebook/:classId/:subjectId", async (req: Request, res: Response)
       subjectId,
     });
   } catch (error) {
-    console.error("Error fetching gradebook:", error);
+    logger.error("Error fetching gradebook:", error);
     res.status(500).json({ error: "Failed to fetch gradebook" });
   }
 });
@@ -997,7 +998,7 @@ router.post("/grades", async (req: Request, res: Response) => {
 
     res.status(201).json(newGrade);
   } catch (error) {
-    console.error("Error creating grade:", error);
+    logger.error("Error creating grade:", error);
     res.status(500).json({ error: "Failed to create grade" });
   }
 });
@@ -1035,7 +1036,7 @@ router.put("/grades/:id", async (req: Request, res: Response) => {
 
     res.json(updatedGrade);
   } catch (error) {
-    console.error("Error updating grade:", error);
+    logger.error("Error updating grade:", error);
     res.status(500).json({ error: "Failed to update grade" });
   }
 });
@@ -1064,7 +1065,7 @@ router.delete("/grades/:id", async (req: Request, res: Response) => {
     await prisma.lmsGrade.delete({ where: { id: gradeId } });
     res.json({ success: true });
   } catch (error) {
-    console.error("Error deleting grade:", error);
+    logger.error("Error deleting grade:", error);
     res.status(500).json({ error: "Failed to delete grade" });
   }
 });
@@ -1107,7 +1108,7 @@ router.get("/homework", async (req: Request, res: Response) => {
 
     res.json(result);
   } catch (error) {
-    console.error("Error fetching homework:", error);
+    logger.error("Error fetching homework:", error);
     res.status(500).json({ error: "Failed to fetch homework" });
   }
 });
@@ -1148,7 +1149,7 @@ router.post("/homework", async (req: Request, res: Response) => {
 
     res.status(201).json(homework);
   } catch (error) {
-    console.error("Error creating homework:", error);
+    logger.error("Error creating homework:", error);
     res.status(500).json({ error: "Failed to create homework" });
   }
 });
@@ -1190,7 +1191,7 @@ router.put("/homework/:id", async (req: Request, res: Response) => {
 
     res.json(homework);
   } catch (error) {
-    console.error("Error updating homework:", error);
+    logger.error("Error updating homework:", error);
     res.status(500).json({ error: "Failed to update homework" });
   }
 });
@@ -1219,7 +1220,7 @@ router.delete("/homework/:id", async (req: Request, res: Response) => {
     await prisma.lmsHomework.delete({ where: { id: homeworkId } });
     res.json({ success: true });
   } catch (error) {
-    console.error("Error deleting homework:", error);
+    logger.error("Error deleting homework:", error);
     res.status(500).json({ error: "Failed to delete homework" });
   }
 });
@@ -1243,7 +1244,7 @@ router.get("/homework/:id/submissions", async (req: Request, res: Response) => {
 
     res.json(submissions);
   } catch (error) {
-    console.error("Error fetching submissions:", error);
+    logger.error("Error fetching submissions:", error);
     res.status(500).json({ error: "Failed to fetch submissions" });
   }
 });
@@ -1270,7 +1271,7 @@ router.put("/homework/submissions/:id/grade", async (req: Request, res: Response
 
     res.json(submission);
   } catch (error) {
-    console.error("Error grading submission:", error);
+    logger.error("Error grading submission:", error);
     res.status(500).json({ error: "Failed to grade submission" });
   }
 });
@@ -1309,7 +1310,7 @@ router.get("/attendance", async (req: Request, res: Response) => {
 
     res.json(attendance);
   } catch (error) {
-    console.error("Error fetching attendance:", error);
+    logger.error("Error fetching attendance:", error);
     res.status(500).json({ error: "Failed to fetch attendance" });
   }
 });
@@ -1356,7 +1357,7 @@ router.post("/attendance/bulk", async (req: Request, res: Response) => {
 
     res.json(results);
   } catch (error) {
-    console.error("Error recording attendance:", error);
+    logger.error("Error recording attendance:", error);
     res.status(500).json({ error: "Failed to record attendance" });
   }
 });
@@ -1380,7 +1381,7 @@ router.get("/announcements", async (req: Request, res: Response) => {
 
     res.json(announcements);
   } catch (error) {
-    console.error("Error fetching announcements:", error);
+    logger.error("Error fetching announcements:", error);
     res.status(500).json({ error: "Failed to fetch announcements" });
   }
 });
@@ -1409,7 +1410,7 @@ router.post("/announcements", async (req: Request, res: Response) => {
 
     res.status(201).json(announcement);
   } catch (error) {
-    console.error("Error creating announcement:", error);
+    logger.error("Error creating announcement:", error);
     res.status(500).json({ error: "Failed to create announcement" });
   }
 });
@@ -1486,7 +1487,7 @@ router.get("/school-stats", async (req: Request, res: Response) => {
       upcomingHomework,
     });
   } catch (error) {
-    console.error("Error fetching school stats:", error);
+    logger.error("Error fetching school stats:", error);
     res.status(500).json({ error: "Failed to fetch school stats" });
   }
 });
@@ -1522,7 +1523,7 @@ router.get("/available-students", async (req: Request, res: Response) => {
 
     res.json(children);
   } catch (error) {
-    console.error("Error fetching available students:", error);
+    logger.error("Error fetching available students:", error);
     res.status(500).json({ error: "Failed to fetch available students" });
   }
 });
@@ -1548,7 +1549,7 @@ router.get("/teachers", async (req: Request, res: Response) => {
 
     res.json(teachers);
   } catch (error) {
-    console.error("Error fetching teachers:", error);
+    logger.error("Error fetching teachers:", error);
     res.status(500).json({ error: "Failed to fetch teachers" });
   }
 });

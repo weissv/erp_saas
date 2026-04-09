@@ -1,13 +1,16 @@
 // src/index.ts
 import { createServer } from "http";
 import app from "./app";
-import { config } from "./config";
+import { config, validateConfig } from "./config";
 import { logger } from "./utils/logger";
 import { AiService } from "./services/AiService";
 import { initTelegramBot } from "./services/TelegramService";
 import { setIntervalWithJitter } from "./services/CronJitterService";
 import { initSocketIO } from "./lib/socketio";
 import { startOneCWorker } from "./modules/onec/queue/onec-sync.worker";
+
+// Validate critical configuration before starting the server
+validateConfig();
 
 // Интервал синхронизации Google Drive (30 минут)
 const SYNC_INTERVAL_MS = 30 * 60 * 1000;

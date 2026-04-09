@@ -3,6 +3,7 @@
 import { Router } from "express";
 import { prisma } from "../prisma";
 import { checkExamAnswerWithAI } from "../services/examAiService";
+import { logger } from "../utils/logger";
 
 const router = Router();
 
@@ -79,7 +80,7 @@ router.get("/:token", async (req, res) => {
       questions
     });
   } catch (error) {
-    console.error("Error fetching public exam:", error);
+    logger.error("Error fetching public exam:", error);
     return res.status(500).json({ message: "Ошибка при получении контрольной" });
   }
 });
@@ -132,7 +133,7 @@ router.post("/:token/start", async (req, res) => {
       timeLimit: exam.timeLimit
     });
   } catch (error) {
-    console.error("Error starting exam:", error);
+    logger.error("Error starting exam:", error);
     return res.status(500).json({ message: "Ошибка при начале контрольной" });
   }
 });
@@ -272,7 +273,7 @@ router.post("/:token/submit", async (req, res) => {
     if (needsAiReview.length > 0) {
       // Не ждём завершения - проверка идёт в фоне
       processAiReview(submission.id, needsAiReview).catch(err => {
-        console.error("AI Review error:", err);
+        logger.error("AI Review error:", err);
       });
     }
 
@@ -315,7 +316,7 @@ router.post("/:token/submit", async (req, res) => {
       submissionId: submission.id
     });
   } catch (error) {
-    console.error("Error submitting exam:", error);
+    logger.error("Error submitting exam:", error);
     return res.status(500).json({ message: "Ошибка при отправке ответов" });
   }
 });
@@ -389,7 +390,7 @@ router.get("/result/:submissionId", async (req, res) => {
       }))
     });
   } catch (error) {
-    console.error("Error fetching result:", error);
+    logger.error("Error fetching result:", error);
     return res.status(500).json({ message: "Ошибка при получении результата" });
   }
 });
@@ -431,7 +432,7 @@ async function processAiReview(submissionId: string, questionIds: string[]) {
         }
       });
     } catch (err) {
-      console.error(`AI review failed for answer ${answer.id}:`, err);
+      logger.error(`AI review failed for answer ${answer.id}:`, err);
     }
   }
 

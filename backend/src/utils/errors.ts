@@ -2,6 +2,7 @@
 // Централизованная система обработки ошибок
 
 import { HTTP_STATUS, MESSAGES } from '../constants';
+import { logger } from './logger';
 
 /**
  * Базовый класс для всех ошибок приложения
@@ -171,11 +172,9 @@ export const getErrorMessage = (error: unknown): string => {
  * Логирование ошибки с контекстом
  */
 export const logError = (error: unknown, context?: Record<string, unknown>): void => {
-  const timestamp = new Date().toISOString();
   const errorMessage = getErrorMessage(error);
   
-  console.error(`[${timestamp}] Error:`, {
-    message: errorMessage,
+  logger.error(errorMessage, {
     ...(error instanceof AppError && {
       code: error.code,
       statusCode: error.statusCode,

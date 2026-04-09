@@ -1,5 +1,6 @@
 // src/services/SystemSettingsService.ts
 import { PrismaClient } from "@prisma/client";
+import { logger } from "../utils/logger";
 
 const prisma = new PrismaClient();
 
@@ -118,7 +119,7 @@ async function get(key: string): Promise<string> {
         return defaultValue;
       }
     }
-    console.error(`Error getting setting ${key}:`, error);
+    logger.error(`Error getting setting ${key}:`, error);
     
     // Fallback к дефолтному значению
     return DEFAULT_VALUES[key] || "";
@@ -172,7 +173,7 @@ async function set(
 
     return setting;
   } catch (error) {
-    console.error(`Error setting ${key}:`, error);
+    logger.error(`Error setting ${key}:`, error);
     throw new Error(`Failed to set setting ${key}`);
   }
 }
@@ -194,7 +195,7 @@ async function getAll(category?: SettingCategory): Promise<SystemSetting[]> {
       value: s.isSecret ? "********" : s.value,
     }));
   } catch (error) {
-    console.error("Error getting all settings:", error);
+    logger.error("Error getting all settings:", error);
     return [];
   }
 }
@@ -209,7 +210,7 @@ async function getAllByCategory(category: SettingCategory): Promise<SystemSettin
       orderBy: { key: "asc" },
     });
   } catch (error) {
-    console.error(`Error getting settings for category ${category}:`, error);
+    logger.error(`Error getting settings for category ${category}:`, error);
     return [];
   }
 }
@@ -225,7 +226,7 @@ async function remove(key: string): Promise<boolean> {
     settingsCache.delete(key);
     return true;
   } catch (error) {
-    console.error(`Error deleting setting ${key}:`, error);
+    logger.error(`Error deleting setting ${key}:`, error);
     return false;
   }
 }

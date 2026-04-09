@@ -3,6 +3,7 @@ import { Router, Request, Response } from "express";
 import { authMiddleware } from "../middleware/auth";
 import { checkRole } from "../middleware/checkRole";
 import { SystemSettingsService, SettingCategory, SettingKey } from "../services/SystemSettingsService";
+import { logger } from "../utils/logger";
 
 const router = Router();
 
@@ -20,7 +21,7 @@ router.get("/", checkRole(["DIRECTOR", "ADMIN"]), async (req: Request, res: Resp
     const settings = await SystemSettingsService.getAll(category);
     res.json(settings);
   } catch (error) {
-    console.error("Error getting settings:", error);
+    logger.error("Error getting settings:", error);
     res.status(500).json({ message: "Ошибка при получении настроек" });
   }
 });
@@ -36,7 +37,7 @@ router.get("/:key", checkRole(["DIRECTOR", "ADMIN"]), async (req: Request, res: 
     const value = await SystemSettingsService.get(key);
     res.json({ key, value });
   } catch (error) {
-    console.error("Error getting setting:", error);
+    logger.error("Error getting setting:", error);
     res.status(404).json({ message: "Настройка не найдена" });
   }
 });
@@ -69,7 +70,7 @@ router.put("/:key", checkRole(["DIRECTOR", "ADMIN"]), async (req: Request, res: 
       value: setting.isSecret ? "********" : setting.value,
     });
   } catch (error) {
-    console.error("Error updating setting:", error);
+    logger.error("Error updating setting:", error);
     res.status(500).json({ message: "Ошибка при обновлении настройки" });
   }
 });
@@ -98,7 +99,7 @@ router.delete("/:key", checkRole(["DIRECTOR"]), async (req: Request, res: Respon
       res.status(404).json({ message: "Настройка не найдена" });
     }
   } catch (error) {
-    console.error("Error deleting setting:", error);
+    logger.error("Error deleting setting:", error);
     res.status(500).json({ message: "Ошибка при удалении настройки" });
   }
 });
@@ -119,7 +120,7 @@ router.post("/:key/reset", checkRole(["DIRECTOR", "ADMIN"]), async (req: Request
 
     res.json({ key, value: defaultValue, message: "Настройка сброшена к значению по умолчанию" });
   } catch (error) {
-    console.error("Error resetting setting:", error);
+    logger.error("Error resetting setting:", error);
     res.status(500).json({ message: "Ошибка при сбросе настройки" });
   }
 });
@@ -140,7 +141,7 @@ router.post("/category/:category/reset", checkRole(["DIRECTOR"]), async (req: Re
     const count = await SystemSettingsService.resetCategory(category, req.user?.id);
     res.json({ message: `Сброшено ${count} настроек категории ${category}` });
   } catch (error) {
-    console.error("Error resetting category:", error);
+    logger.error("Error resetting category:", error);
     res.status(500).json({ message: "Ошибка при сбросе категории настроек" });
   }
 });
@@ -157,7 +158,7 @@ router.get("/ai/prompt", checkRole(["DIRECTOR", "ADMIN", "DEPUTY"]), async (_req
     const prompt = await SystemSettingsService.getAiSystemPrompt();
     res.json({ prompt });
   } catch (error) {
-    console.error("Error getting AI prompt:", error);
+    logger.error("Error getting AI prompt:", error);
     res.status(500).json({ message: "Ошибка при получении промта" });
   }
 });
@@ -186,7 +187,7 @@ router.put("/ai/prompt", checkRole(["DIRECTOR", "ADMIN"]), async (req: Request, 
     await SystemSettingsService.setAiSystemPrompt(prompt, req.user?.id);
     res.json({ message: "Системный промт обновлён", prompt });
   } catch (error) {
-    console.error("Error updating AI prompt:", error);
+    logger.error("Error updating AI prompt:", error);
     res.status(500).json({ message: "Ошибка при обновлении промта" });
   }
 });
@@ -201,7 +202,7 @@ router.post("/ai/prompt/reset", checkRole(["DIRECTOR", "ADMIN"]), async (req: Re
     const defaultPrompt = await SystemSettingsService.resetAiSystemPrompt(req.user?.id);
     res.json({ message: "Системный промт сброшен к значению по умолчанию", prompt: defaultPrompt });
   } catch (error) {
-    console.error("Error resetting AI prompt:", error);
+    logger.error("Error resetting AI prompt:", error);
     res.status(500).json({ message: "Ошибка при сбросе промта" });
   }
 });
@@ -218,7 +219,7 @@ router.get("/maintenance/status", async (_req: Request, res: Response) => {
     const message = isEnabled ? await SystemSettingsService.getMaintenanceMessage() : null;
     res.json({ enabled: isEnabled, message });
   } catch (error) {
-    console.error("Error getting maintenance status:", error);
+    logger.error("Error getting maintenance status:", error);
     res.status(500).json({ message: "Ошибка при получении статуса обслуживания" });
   }
 });
@@ -242,7 +243,7 @@ router.put("/maintenance", checkRole(["DIRECTOR"]), async (req: Request, res: Re
       enabled 
     });
   } catch (error) {
-    console.error("Error setting maintenance mode:", error);
+    logger.error("Error setting maintenance mode:", error);
     res.status(500).json({ message: "Ошибка при изменении режима обслуживания" });
   }
 });
@@ -257,7 +258,7 @@ router.post("/cache/clear", checkRole(["DIRECTOR"]), async (_req: Request, res: 
     SystemSettingsService.clearCache();
     res.json({ message: "Кэш настроек очищен" });
   } catch (error) {
-    console.error("Error clearing cache:", error);
+    logger.error("Error clearing cache:", error);
     res.status(500).json({ message: "Ошибка при очистке кэша" });
   }
 });

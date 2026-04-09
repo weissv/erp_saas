@@ -21,7 +21,7 @@ declare global {
 
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   // Allow preflight requests to pass through without authentication
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return next();
   }
   
@@ -42,7 +42,11 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
   
   try {
     const payload = jwt.verify(token, config.jwtSecret) as AuthUser;
-    const activeUser = await prisma.user.findFirst({
+
+    // Use tenant-scoped prisma when available, fallback to global
+    const db = req.prisma ?? prisma;
+
+    const activeUser = await db.user.findFirst({
       where: {
         id: payload.id,
         deletedAt: null,
@@ -60,7 +64,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
 
     req.user = activeUser;
     next();
-  } catch (error) {
+  } catch {
     return res.status(401).json({ message: "Invalid token" });
   }
 };

@@ -5,6 +5,11 @@
 import { Server as HttpServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import { config } from "../config";
+import { logger } from "../utils/logger";
+
+/** Regex for validating tenant identifiers in Socket.IO handshakes. */
+const TENANT_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
+const MAX_TENANT_ID_LENGTH = 128;
 
 let _io: SocketIOServer | null = null;
 
@@ -26,15 +31,22 @@ export function initSocketIO(httpServer: HttpServer): SocketIOServer {
 
   _io.on("connection", (socket) => {
     // Clients may join a tenant-specific room for scoped events
-    const tenantId = (socket.handshake.query.tenantId as string) || "default";
-    void socket.join(`tenant:${tenantId}`);
+    const tenantId = typeof socket.handshake.query.tenantId === "string"
+      ? socket.handshake.query.tenantId
+      : "default";
+
+    if (isValidTenantId(tenantId)) {
+      void socket.join(`tenant:${tenantId}`);
+    } else {
+      logger.warn("Socket.IO connection with invalid tenantId rejected", { tenantId });
+    }
 
     socket.on("disconnect", () => {
       // no-op
     });
   });
 
-  console.log("🔌 Socket.IO initialised (path: /ws)");
+  logger.info("Socket.IO initialised (path: /ws)");
   return _io;
 }
 
@@ -43,4 +55,12 @@ export function initSocketIO(httpServer: HttpServer): SocketIOServer {
  */
 export function getIO(): SocketIOServer | null {
   return _io;
+}
+
+function isValidTenantId(tenantId: string): boolean {
+  return (
+    tenantId.length > 0 &&
+    tenantId.length < MAX_TENANT_ID_LENGTH &&
+    TENANT_ID_PATTERN.test(tenantId)
+  );
 }

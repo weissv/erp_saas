@@ -2,7 +2,7 @@
 // Улучшенный хук для загрузки данных с пагинацией
 // Обратно совместим со старым API
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { api, getApiErrorMessage, ApiRequestError } from '../lib/api';
 import { toast } from 'sonner';
 
@@ -17,7 +17,7 @@ interface UseApiOptions<T> {
   /** Показывать toast при ошибке */
   showErrorToast?: boolean;
   /** Дополнительные фильтры */
-  filters?: Record<string, any>;
+  filters?: Record<string, string | number | boolean>;
   /** Поле сортировки */
   sortBy?: string;
   /** Порядок сортировки */
@@ -37,7 +37,7 @@ interface UseApiReturn<T> {
   error: ApiRequestError | null;
   setPage: (page: number) => void;
   setSearch: (search: string) => void;
-  setFilters: (filters: Record<string, any>) => void;
+  setFilters: (filters: Record<string, string | number | boolean>) => void;
   fetchData: () => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -65,6 +65,10 @@ export function useApi<T>({
   
   const mountedRef = useRef(true);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Memoize dependency keys to avoid unnecessary re-renders
+  const searchFieldsKey = useMemo(() => searchFields.join(','), [searchFields]);
+  const filtersKey = useMemo(() => JSON.stringify(filters), [filters]);
 
   const fetchData = useCallback(async () => {
     if (!enabled) return;
@@ -151,13 +155,14 @@ export function useApi<T>({
         setLoading(false);
       }
     }
-  }, [url, page, initialPageSize, search, searchFields, filters, sortBy, sortOrder, enabled, showErrorToast]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url, page, initialPageSize, search, searchFieldsKey, filtersKey, sortBy, sortOrder, enabled, showErrorToast]);
 
   const refresh = useCallback(async () => {
     await fetchData();
   }, [fetchData]);
 
-  // Начальная загрузка
+  // Начальная загрузка и перезагрузка при изменении параметров
   useEffect(() => {
     mountedRef.current = true;
     
@@ -171,14 +176,7 @@ export function useApi<T>({
         abortControllerRef.current.abort();
       }
     };
-  }, []);
-
-  // Перезагрузка при изменении параметров
-  useEffect(() => {
-    if (autoFetch && enabled) {
-      fetchData();
-    }
-  }, [page, search, JSON.stringify(filters)]);
+  }, [autoFetch, enabled, fetchData]);
 
   const totalPages = Math.ceil(total / initialPageSize) || 1;
 
