@@ -227,6 +227,7 @@ describe('TenantProvisioningService', () => {
 
       expect(mockMasterDb.$executeRawUnsafe).toHaveBeenCalledWith(
         expect.stringContaining('pg_terminate_backend'),
+        'tenant_abc12345',
       );
       expect(mockMasterDb.$executeRawUnsafe).toHaveBeenCalledWith(
         'DROP DATABASE IF EXISTS "tenant_abc12345"',

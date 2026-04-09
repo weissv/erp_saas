@@ -225,7 +225,8 @@ export class TenantProvisioningService {
     }
     // Terminate existing connections first
     await this.masterDb.$executeRawUnsafe(
-      `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${dbName}' AND pid <> pg_backend_pid()`,
+      `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = $1 AND pid <> pg_backend_pid()`,
+      dbName,
     );
     await this.masterDb.$executeRawUnsafe(`DROP DATABASE IF EXISTS "${dbName}"`);
   }
