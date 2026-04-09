@@ -1,6 +1,9 @@
 // src/lib/tenantPrisma.test.ts
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+// Stub TENANT_PRISMA_CACHE_SIZE before import (doesn't affect module-level
+// const since it's already loaded, so we use _setMaxCacheSize in tests).
+
 // ── Mock @prisma/client using vi.hoisted ───────────────────────────────
 
 const { mockDisconnect, MockPrismaClient } = vi.hoisted(() => {
@@ -21,6 +24,7 @@ import {
   disconnectAllTenants,
   _getCacheSize,
   _clearCache,
+  _setMaxCacheSize,
 } from "./tenantPrisma";
 
 describe("tenantPrisma", () => {
@@ -78,5 +82,31 @@ describe("tenantPrisma", () => {
     await disconnectAllTenants();
     expect(mockDisconnect).toHaveBeenCalledTimes(2);
     expect(_getCacheSize()).toBe(0);
+  });
+
+  it("evicts the least-recently-used client when cache exceeds limit", () => {
+    // Set a small cache limit for this test.
+    _setMaxCacheSize(3);
+
+    // Fill the cache to capacity.
+    getTenantPrisma("t-1", "postgres://db-1");
+    getTenantPrisma("t-2", "postgres://db-2");
+    getTenantPrisma("t-3", "postgres://db-3");
+    expect(_getCacheSize()).toBe(3);
+
+    // Access t-1 to make it "recently used", leaving t-2 as LRU.
+    getTenantPrisma("t-1", "postgres://db-1");
+
+    // Adding a 4th tenant should evict t-2 (least recently used).
+    getTenantPrisma("t-4", "postgres://db-4");
+    expect(_getCacheSize()).toBe(3);
+
+    // t-2 was evicted, so $disconnect should have been called once for eviction.
+    expect(mockDisconnect).toHaveBeenCalledTimes(1);
+
+    // t-1, t-3, and t-4 should still be cached.
+    expect(getTenantPrisma("t-1", "postgres://db-1")).toBeDefined();
+    expect(getTenantPrisma("t-3", "postgres://db-3")).toBeDefined();
+    expect(getTenantPrisma("t-4", "postgres://db-4")).toBeDefined();
   });
 });

@@ -12,7 +12,7 @@
 import { PrismaClient } from "@prisma/client";
 
 /** Maximum number of tenant Prisma clients kept in memory. */
-const MAX_CACHED_CLIENTS = parseInt(
+let maxCachedClients = parseInt(
   process.env.TENANT_PRISMA_CACHE_SIZE || "50",
   10,
 );
@@ -46,7 +46,7 @@ export function getTenantPrisma(tenantId: string, dbUrl: string): PrismaClient {
   }
 
   // Evict least-recently-used entry when cache is full.
-  if (cache.size >= MAX_CACHED_CLIENTS) {
+  if (cache.size >= maxCachedClients) {
     evictLru();
   }
 
@@ -117,4 +117,7 @@ export function _getCacheSize(): number {
 }
 export function _clearCache(): void {
   cache.clear();
+}
+export function _setMaxCacheSize(size: number): void {
+  maxCachedClients = size;
 }
