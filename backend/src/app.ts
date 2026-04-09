@@ -35,6 +35,8 @@ import staffingRoutes from "./routes/staffing.routes";
 import integrationRoutes from "./routes/export.routes";
 import oneCIntegrationRoutes from "./modules/onec/routes/sync.routes";
 import oneCDataRoutes from "./modules/onec/routes/onec-data.routes";
+import oneCPushSyncRoutes from "./modules/onec/routes/push-sync.routes";
+import oneCIntegrationSettingsRoutes from "./modules/onec/routes/onec-integration-settings.routes";
 import usersRoutes from "./routes/users.routes";
 import aiRoutes from "./routes/ai.routes";
 import scheduleRoutes from "./routes/schedule.routes";
@@ -102,6 +104,11 @@ app.use("/api/auth", authRoutes);
 app.use("/api/public/exams", publicExamsRoutes); // Публичный доступ к контрольным для студентов
 app.use("/api/tenant", tenantRoutes); // Public tenant branding (no auth)
 
+// ── 1C Push API (Integration Key auth — not JWT) ────────────────────────
+// This endpoint is called by the 1C Extension using a per-tenant API key.
+// It must be mounted BEFORE the JWT auth middleware.
+app.use("/api/v1/integration", oneCPushSyncRoutes);
+
 // Защита всех последующих роутов
 app.use(authMiddleware);
 
@@ -128,6 +135,7 @@ app.use("/api/recipes", recipesRoutes);
 app.use("/api/staffing", staffingRoutes);
 app.use("/api/integration", integrationRoutes);
 app.use("/api/integrations", oneCIntegrationRoutes);
+app.use("/api/integrations", oneCIntegrationSettingsRoutes);
 app.use("/api/onec-data", oneCDataRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/ai", aiRoutes);
