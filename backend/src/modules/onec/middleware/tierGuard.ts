@@ -17,11 +17,11 @@ import { logger } from "../../../utils/logger";
  * Falls back to allowing access when the tier cannot be resolved
  * (e.g. single-tenant / legacy deployments without a master DB).
  */
-export function tierGuard(
+export async function tierGuard(
   req: Request,
   res: Response,
   next: NextFunction,
-): void {
+): Promise<void> {
   const tenantId = req.tenantId;
 
   if (!tenantId || tenantId === "default") {
@@ -30,8 +30,7 @@ export function tierGuard(
     return;
   }
 
-  // Perform the async lookup without blocking the middleware signature
-  void resolveTierAndGuard(tenantId, res, next);
+  await resolveTierAndGuard(tenantId, res, next);
 }
 
 async function resolveTierAndGuard(

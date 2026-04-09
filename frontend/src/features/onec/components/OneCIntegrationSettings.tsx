@@ -7,7 +7,7 @@
 // 3. Copy-pasteable Setup Instructions for the school's SysAdmin
 // 4. Subscription tier gating (Starter → upsell, Enterprise → dedicated support)
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   Card,
   CardHeader,
@@ -66,21 +66,23 @@ export function OneCIntegrationSettings() {
   const [copied, setCopied] = useState(false);
 
   // ── Fetch settings on mount ─────────────────────────────────────────────
-  useState(() => {
+  useEffect(() => {
+    let cancelled = false;
     void (async () => {
       try {
         const data = await api.get<IntegrationSettings>(
           "/integrations/1c/settings",
         );
-        setSettings(data);
+        if (!cancelled) setSettings(data);
       } catch {
         // Silently fallback — the component will show a loading/error state
-        setSettings({ hasApiKey: false, tier: TIER.PRO });
+        if (!cancelled) setSettings({ hasApiKey: false, tier: TIER.PRO });
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
-  });
+    return () => { cancelled = true; };
+  }, []);
 
   // ── Generate API Key ────────────────────────────────────────────────────
   const handleGenerateKey = useCallback(async () => {
@@ -192,8 +194,7 @@ export function OneCIntegrationSettings() {
   }
 
   // ── Build Setup Instructions (for SysAdmin) ─────────────────────────────
-  const baseUrl =
-    typeof window !== "undefined" ? window.location.origin : "https://your-domain.com";
+  const baseUrl = window.location.origin;
   const setupInstructions = `# Настройка интеграции 1С → ERP
 # =======================================
 #
