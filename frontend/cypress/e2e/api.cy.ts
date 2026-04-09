@@ -5,7 +5,7 @@ type UsersFixture = {
   director: { username: string; password: string }
 }
 
-const BACKEND_URL = 'https://mezon-admin.onrender.com'
+const BACKEND_URL = 'http://localhost:4000'
 
 describe('API Integration Tests', () => {
   let users: UsersFixture
@@ -25,7 +25,7 @@ describe('API Integration Tests', () => {
       body: { login: users.valid.username, password: users.valid.password },
       headers: {
         'Content-Type': 'application/json',
-        Origin: 'https://erp.mezon.uz',
+        Origin: 'http://localhost:5173',
       },
     }).then((response) => {
       authToken = response.body.token
@@ -39,7 +39,7 @@ describe('API Integration Tests', () => {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${authToken}`,
-          Origin: 'https://erp.mezon.uz',
+          Origin: 'http://localhost:5173',
         },
       }).then((response) => {
         expect(response.status).to.eq(200)
@@ -55,7 +55,7 @@ describe('API Integration Tests', () => {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${authToken}`,
-          Origin: 'https://erp.mezon.uz',
+          Origin: 'http://localhost:5173',
         },
       }).then((response) => {
         expect(response.status).to.eq(200)
@@ -71,7 +71,7 @@ describe('API Integration Tests', () => {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${authToken}`,
-          Origin: 'https://erp.mezon.uz',
+          Origin: 'http://localhost:5173',
         },
       }).then((response) => {
         expect(response.status).to.eq(200)
@@ -86,7 +86,7 @@ describe('API Integration Tests', () => {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${authToken}`,
-          Origin: 'https://erp.mezon.uz',
+          Origin: 'http://localhost:5173',
         },
         failOnStatusCode: false,
       }).then((response) => {
@@ -102,7 +102,7 @@ describe('API Integration Tests', () => {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${authToken}`,
-          Origin: 'https://erp.mezon.uz',
+          Origin: 'http://localhost:5173',
         },
       }).then((response) => {
         expect(response.status).to.eq(200)
@@ -118,7 +118,7 @@ describe('API Integration Tests', () => {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${authToken}`,
-          Origin: 'https://erp.mezon.uz',
+          Origin: 'http://localhost:5173',
         },
         failOnStatusCode: false,
       }).then((response) => {
@@ -135,7 +135,7 @@ describe('API Integration Tests', () => {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${authToken}`,
-          Origin: 'https://erp.mezon.uz',
+          Origin: 'http://localhost:5173',
         },
         failOnStatusCode: false,
       }).then((response) => {
@@ -151,7 +151,7 @@ describe('API Integration Tests', () => {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${authToken}`,
-          Origin: 'https://erp.mezon.uz',
+          Origin: 'http://localhost:5173',
         },
         failOnStatusCode: false,
       }).then((response) => {
@@ -167,7 +167,7 @@ describe('API Integration Tests', () => {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${authToken}`,
-          Origin: 'https://erp.mezon.uz',
+          Origin: 'http://localhost:5173',
         },
         failOnStatusCode: false,
       }).then((response) => {
@@ -183,7 +183,7 @@ describe('API Integration Tests', () => {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${authToken}`,
-          Origin: 'https://erp.mezon.uz',
+          Origin: 'http://localhost:5173',
         },
         failOnStatusCode: false,
       }).then((response) => {
@@ -198,7 +198,7 @@ describe('API Integration Tests', () => {
         url: `${BACKEND_URL}/api/children`,
         method: 'GET',
         headers: {
-          Origin: 'https://erp.mezon.uz',
+          Origin: 'http://localhost:5173',
         },
         failOnStatusCode: false,
       }).then((response) => {
@@ -212,7 +212,7 @@ describe('API Integration Tests', () => {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${authToken}`,
-          Origin: 'https://erp.mezon.uz',
+          Origin: 'http://localhost:5173',
         },
         failOnStatusCode: false,
       }).then((response) => {
@@ -228,7 +228,7 @@ describe('API Integration Tests', () => {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${authToken}`,
-          Origin: 'https://erp.mezon.uz',
+          Origin: 'http://localhost:5173',
         },
       }).then((response) => {
         expect(response.headers).to.have.property('access-control-allow-origin')

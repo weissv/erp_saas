@@ -44,12 +44,14 @@ import lmsSchoolRoutes from "./routes/lms-school.routes";
 import permissionsRoutes from "./routes/permissions.routes";
 import examsRoutes from "./routes/exams.routes";
 import publicExamsRoutes from "./routes/public-exams.routes";
+import tenantRoutes from "./routes/tenant.routes";
+import uploadRoutes from "./routes/upload.routes";
 import knowledgeBaseRoutes from "./routes/knowledge-base.routes";
 
 const app = express();
 
 const allowedOrigins = new Set(config.corsOrigins);
-const allowPattern = [/\.onrender\.com$/, /mezon\.uz$/, /\.trycloudflare\.com$/, /\.loca\.lt$/];
+const allowPattern = [/\.onrender\.com$/, /\.trycloudflare\.com$/, /\.loca\.lt$/];
 
 const corsOptions: cors.CorsOptions = {
   origin(origin, callback) {
@@ -99,6 +101,7 @@ app.use(tenantResolver);
 // Публичные роуты
 app.use("/api/auth", authRoutes);
 app.use("/api/public/exams", publicExamsRoutes); // Публичный доступ к контрольным для студентов
+app.use("/api/tenant", tenantRoutes); // Public tenant branding (no auth)
 
 // Защита всех последующих роутов
 app.use(authMiddleware);
@@ -135,6 +138,7 @@ app.use("/api/lms/school", lmsSchoolRoutes);
 app.use("/api/permissions", permissionsRoutes);
 app.use("/api/exams", examsRoutes); // Управление контрольными для учителей/админов
 app.use("/api/knowledge-base", knowledgeBaseRoutes); // База знаний
+app.use("/api/uploads", uploadRoutes); // Tenant-scoped file uploads
 
 // Обработчик ошибок
 app.use(errorHandler);

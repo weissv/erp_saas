@@ -5,11 +5,11 @@ type UsersFixture = {
   director: { username: string; password: string }
 }
 
-const BACKEND_URL = 'https://mezon-admin.onrender.com'
+const BACKEND_URL = 'http://localhost:4000'
 
 const buildAuthHeaders = () => {
   const token = Cypress.env('authToken') as string | null | undefined
-  const headers: Record<string, string> = { Origin: 'https://erp.mezon.uz' }
+  const headers: Record<string, string> = { Origin: 'http://localhost:5173' }
   if (token) {
     headers.Authorization = `Bearer ${token}`
   }

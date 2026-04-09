@@ -2,6 +2,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+import { TenantProvider } from "./contexts/TenantContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import LmsRouter from "./router/lms-router";
 import "../css/index.css";
@@ -9,9 +10,11 @@ import "../css/index.css";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter basename="/lms">
-      <AuthProvider>
-        <LmsRouter />
-      </AuthProvider>
+      <TenantProvider>
+        <AuthProvider>
+          <LmsRouter />
+        </AuthProvider>
+      </TenantProvider>
     </BrowserRouter>
   </React.StrictMode>
 );
