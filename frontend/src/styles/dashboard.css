@@ -2,6 +2,91 @@
    Dashboard — Bento UI Design System
    ======================================== */
 
+:root {
+  /* Bento category tokens */
+  --bento-kpi-bg: linear-gradient(145deg, #EEF2FF 0%, #E0E7FF 100%);
+  --bento-kpi-border: rgba(99, 102, 241, 0.12);
+  --bento-kpi-dot: #6366F1;
+  
+  --bento-finance-bg: linear-gradient(145deg, #ECFDF5 0%, #D1FAE5 100%);
+  --bento-finance-border: rgba(16, 185, 129, 0.12);
+  --bento-finance-dot: #10B981;
+  
+  --bento-operations-bg: linear-gradient(145deg, #FFFBEB 0%, #FEF3C7 100%);
+  --bento-operations-border: rgba(245, 158, 11, 0.14);
+  --bento-operations-dot: #F59E0B;
+  
+  --bento-hr-bg: linear-gradient(145deg, #FFF1F2 0%, #FFE4E6 100%);
+  --bento-hr-border: rgba(225, 29, 72, 0.10);
+  --bento-hr-dot: #E11D48;
+  
+  --bento-alerts-bg: linear-gradient(145deg, #FEF2F2 0%, #FEE2E2 100%);
+  --bento-alerts-border: rgba(220, 38, 38, 0.12);
+  --bento-alerts-dot: #DC2626;
+  
+  --bento-activity-bg: linear-gradient(145deg, #F5F3FF 0%, #EDE9FE 100%);
+  --bento-activity-border: rgba(124, 58, 237, 0.10);
+  --bento-activity-dot: #7C3AED;
+  
+  --bento-actions-bg: linear-gradient(145deg, #EFF6FF 0%, #DBEAFE 100%);
+  --bento-actions-border: rgba(37, 99, 235, 0.12);
+  --bento-actions-dot: #2563EB;
+
+  /* Semantic status colors */
+  --status-positive: #059669;
+  --status-negative: #DC2626;
+  --status-warning: #D97706;
+  --status-info: #1D4ED8;
+  
+  /* Badge semantic tokens */
+  --badge-red-bg: rgba(220, 38, 38, 0.12);
+  --badge-red-text: #991B1B;
+  --badge-amber-bg: rgba(245, 158, 11, 0.14);
+  --badge-amber-text: #92400E;
+  --badge-green-bg: rgba(16, 185, 129, 0.12);
+  --badge-green-text: #065F46;
+  --badge-blue-bg: rgba(37, 99, 235, 0.10);
+  --badge-blue-text: #1E40AF;
+  --badge-purple-bg: rgba(124, 58, 237, 0.10);
+  --badge-purple-text: #5B21B6;
+
+  /* Inventory status tokens */
+  --inventory-critical: #EF4444;
+  --inventory-warn: #F59E0B;
+
+  /* Forecast bar tokens */
+  --forecast-bar-pos: rgba(16, 185, 129, 0.7);
+  --forecast-bar-neg: rgba(220, 38, 38, 0.55);
+
+  /* Notification unread */
+  --notif-unread-bg: rgba(37, 99, 235, 0.10);
+  --notif-unread-text: #1D4ED8;
+
+  /* Bento pin color */
+  --bento-pin: #2563EB;
+  
+  /* Overview metrics */
+  --metric-default-bg: linear-gradient(145deg, #F8FAFC 0%, #F1F5F9 100%);
+  --metric-info-bg: linear-gradient(145deg, #EFF6FF 0%, #DBEAFE 100%);
+  --metric-info-border: rgba(37, 99, 235, 0.10);
+  --metric-success-bg: linear-gradient(145deg, #ECFDF5 0%, #D1FAE5 100%);
+  --metric-success-border: rgba(16, 185, 129, 0.10);
+  --metric-warning-bg: linear-gradient(145deg, #FFFBEB 0%, #FEF3C7 100%);
+  --metric-warning-border: rgba(245, 158, 11, 0.12);
+  --metric-danger-bg: linear-gradient(145deg, #FEF2F2 0%, #FEE2E2 100%);
+  --metric-danger-border: rgba(220, 38, 38, 0.10);
+
+  /* Alert pill tokens */
+  --alert-info-bg: rgba(37, 99, 235, 0.10);
+  --alert-info-text: #1D4ED8;
+  --alert-success-bg: rgba(16, 185, 129, 0.12);
+  --alert-success-text: #065F46;
+  --alert-warning-bg: rgba(245, 158, 11, 0.12);
+  --alert-warning-text: #92400E;
+  --alert-danger-bg: rgba(220, 38, 38, 0.10);
+  --alert-danger-text: #991B1B;
+}
+
 /* ── Root ── */
 .dashboard-root { position: relative; }
 
@@ -43,38 +128,38 @@
 
 /* Category colour tokens */
 .bento-card[data-cat="kpi"] {
-  background: linear-gradient(145deg, #EEF2FF 0%, #E0E7FF 100%);
-  border: 1px solid rgba(99, 102, 241, 0.12);
+  background: var(--bento-kpi-bg);
+  border: 1px solid var(--bento-kpi-border);
   box-shadow: 0 1px 3px rgba(99, 102, 241, 0.08), 0 4px 16px rgba(99, 102, 241, 0.04);
 }
 .bento-card[data-cat="finance"] {
-  background: linear-gradient(145deg, #ECFDF5 0%, #D1FAE5 100%);
-  border: 1px solid rgba(16, 185, 129, 0.12);
+  background: var(--bento-finance-bg);
+  border: 1px solid var(--bento-finance-border);
   box-shadow: 0 1px 3px rgba(16, 185, 129, 0.08), 0 4px 16px rgba(16, 185, 129, 0.04);
 }
 .bento-card[data-cat="operations"] {
-  background: linear-gradient(145deg, #FFFBEB 0%, #FEF3C7 100%);
-  border: 1px solid rgba(245, 158, 11, 0.14);
+  background: var(--bento-operations-bg);
+  border: 1px solid var(--bento-operations-border);
   box-shadow: 0 1px 3px rgba(245, 158, 11, 0.08), 0 4px 16px rgba(245, 158, 11, 0.04);
 }
 .bento-card[data-cat="hr"] {
-  background: linear-gradient(145deg, #FFF1F2 0%, #FFE4E6 100%);
-  border: 1px solid rgba(225, 29, 72, 0.10);
+  background: var(--bento-hr-bg);
+  border: 1px solid var(--bento-hr-border);
   box-shadow: 0 1px 3px rgba(225, 29, 72, 0.06), 0 4px 16px rgba(225, 29, 72, 0.04);
 }
 .bento-card[data-cat="alerts"] {
-  background: linear-gradient(145deg, #FEF2F2 0%, #FEE2E2 100%);
-  border: 1px solid rgba(220, 38, 38, 0.12);
+  background: var(--bento-alerts-bg);
+  border: 1px solid var(--bento-alerts-border);
   box-shadow: 0 1px 3px rgba(220, 38, 38, 0.08), 0 4px 16px rgba(220, 38, 38, 0.04);
 }
 .bento-card[data-cat="activity"] {
-  background: linear-gradient(145deg, #F5F3FF 0%, #EDE9FE 100%);
-  border: 1px solid rgba(124, 58, 237, 0.10);
+  background: var(--bento-activity-bg);
+  border: 1px solid var(--bento-activity-border);
   box-shadow: 0 1px 3px rgba(124, 58, 237, 0.06), 0 4px 16px rgba(124, 58, 237, 0.04);
 }
 .bento-card[data-cat="actions"] {
-  background: linear-gradient(145deg, #EFF6FF 0%, #DBEAFE 100%);
-  border: 1px solid rgba(37, 99, 235, 0.12);
+  background: var(--bento-actions-bg);
+  border: 1px solid var(--bento-actions-border);
   box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08), 0 4px 16px rgba(37, 99, 235, 0.04);
 }
 /* Fallback */
@@ -107,13 +192,13 @@
   border-radius: 50%;
   flex-shrink: 0;
 }
-.bento-card[data-cat="kpi"]       .bento-card__dot { background: #6366F1; }
-.bento-card[data-cat="finance"]   .bento-card__dot { background: #10B981; }
-.bento-card[data-cat="operations"].bento-card__dot { background: #F59E0B; }
-.bento-card[data-cat="hr"]        .bento-card__dot { background: #E11D48; }
-.bento-card[data-cat="alerts"]    .bento-card__dot { background: #DC2626; }
-.bento-card[data-cat="activity"]  .bento-card__dot { background: #7C3AED; }
-.bento-card[data-cat="actions"]   .bento-card__dot { background: #2563EB; }
+.bento-card[data-cat="kpi"]       .bento-card__dot { background: var(--bento-kpi-dot); }
+.bento-card[data-cat="finance"]   .bento-card__dot { background: var(--bento-finance-dot); }
+.bento-card[data-cat="operations"].bento-card__dot { background: var(--bento-operations-dot); }
+.bento-card[data-cat="hr"]        .bento-card__dot { background: var(--bento-hr-dot); }
+.bento-card[data-cat="alerts"]    .bento-card__dot { background: var(--bento-alerts-dot); }
+.bento-card[data-cat="activity"]  .bento-card__dot { background: var(--bento-activity-dot); }
+.bento-card[data-cat="actions"]   .bento-card__dot { background: var(--bento-actions-dot); }
 .bento-card:not([data-cat])       .bento-card__dot { background: var(--mezon-accent); }
 
 .bento-card__title {
@@ -215,24 +300,24 @@
   overflow: hidden;
 }
 .bento-overview__metric--default {
-  background: linear-gradient(145deg, #F8FAFC 0%, #F1F5F9 100%);
+  background: var(--metric-default-bg);
   border: 1px solid rgba(0,0,0,0.06);
 }
 .bento-overview__metric--info {
-  background: linear-gradient(145deg, #EFF6FF 0%, #DBEAFE 100%);
-  border: 1px solid rgba(37,99,235,0.10);
+  background: var(--metric-info-bg);
+  border: 1px solid var(--metric-info-border);
 }
 .bento-overview__metric--success {
-  background: linear-gradient(145deg, #ECFDF5 0%, #D1FAE5 100%);
-  border: 1px solid rgba(16,185,129,0.10);
+  background: var(--metric-success-bg);
+  border: 1px solid var(--metric-success-border);
 }
 .bento-overview__metric--warning {
-  background: linear-gradient(145deg, #FFFBEB 0%, #FEF3C7 100%);
-  border: 1px solid rgba(245,158,11,0.12);
+  background: var(--metric-warning-bg);
+  border: 1px solid var(--metric-warning-border);
 }
 .bento-overview__metric--danger {
-  background: linear-gradient(145deg, #FEF2F2 0%, #FEE2E2 100%);
-  border: 1px solid rgba(220,38,38,0.10);
+  background: var(--metric-danger-bg);
+  border: 1px solid var(--metric-danger-border);
 }
 
 .bento-overview__metric-value {
@@ -276,10 +361,10 @@
 }
 .bento-overview__alert:hover { filter: brightness(0.95); transform: translateY(-1px); }
 .bento-overview__alert--default { background: rgba(0,0,0,0.06); color: var(--text-primary); }
-.bento-overview__alert--info    { background: rgba(37,99,235,0.10); color: #1D4ED8; }
-.bento-overview__alert--success { background: rgba(16,185,129,0.12); color: #065F46; }
-.bento-overview__alert--warning { background: rgba(245,158,11,0.12); color: #92400E; }
-.bento-overview__alert--danger  { background: rgba(220,38,38,0.10); color: #991B1B; }
+.bento-overview__alert--info    { background: var(--alert-info-bg); color: var(--alert-info-text); }
+.bento-overview__alert--success { background: var(--alert-success-bg); color: var(--alert-success-text); }
+.bento-overview__alert--warning { background: var(--alert-warning-bg); color: var(--alert-warning-text); }
+.bento-overview__alert--danger  { background: var(--alert-danger-bg); color: var(--alert-danger-text); }
 
 .bento-overview__alert-value {
   display: inline-flex;
@@ -477,8 +562,8 @@
   letter-spacing: -0.035em;
   line-height: 1;
 }
-.bento-finance__balance-value--pos { color: #059669; }
-.bento-finance__balance-value--neg { color: #DC2626; }
+.bento-finance__balance-value--pos { color: var(--status-positive); }
+.bento-finance__balance-value--neg { color: var(--status-negative); }
 
 .bento-finance__row {
   display: grid;
@@ -571,7 +656,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #2563EB;
+  background: var(--bento-pin);
 }
 
 /* ================================================================
@@ -606,8 +691,8 @@
   letter-spacing: -0.035em;
   line-height: 1;
 }
-.bento-forecast__net-value--pos { color: #059669; }
-.bento-forecast__net-value--neg { color: #DC2626; }
+.bento-forecast__net-value--pos { color: var(--status-positive); }
+.bento-forecast__net-value--neg { color: var(--status-negative); }
 
 .bento-forecast__bars {
   display: flex;
@@ -623,8 +708,8 @@
   min-height: 4px;
   transition: height 300ms ease;
 }
-.bento-forecast__bar--pos { background: rgba(16,185,129,0.7); }
-.bento-forecast__bar--neg { background: rgba(220,38,38,0.55); }
+.bento-forecast__bar--pos { background: var(--forecast-bar-pos); }
+.bento-forecast__bar--neg { background: var(--forecast-bar-neg); }
 
 .bento-forecast__row {
   display: grid;
@@ -803,11 +888,11 @@
   letter-spacing: 0.02em;
   flex-shrink: 0;
 }
-.bento-badge--red    { background: rgba(220,38,38,0.12);  color: #991B1B; }
-.bento-badge--amber  { background: rgba(245,158,11,0.14); color: #92400E; }
-.bento-badge--green  { background: rgba(16,185,129,0.12); color: #065F46; }
-.bento-badge--blue   { background: rgba(37,99,235,0.10);  color: #1E40AF; }
-.bento-badge--purple { background: rgba(124,58,237,0.10); color: #5B21B6; }
+.bento-badge--red    { background: var(--badge-red-bg);  color: var(--badge-red-text); }
+.bento-badge--amber  { background: var(--badge-amber-bg); color: var(--badge-amber-text); }
+.bento-badge--green  { background: var(--badge-green-bg); color: var(--badge-green-text); }
+.bento-badge--blue   { background: var(--badge-blue-bg);  color: var(--badge-blue-text); }
+.bento-badge--purple { background: var(--badge-purple-bg); color: var(--badge-purple-text); }
 .bento-badge--gray   { background: rgba(0,0,0,0.06);      color: var(--text-secondary); }
 
 /* ================================================================
@@ -909,8 +994,8 @@
   gap: 6px;
   padding: 6px 10px;
   border-radius: 10px;
-  background: rgba(37,99,235,0.10);
-  color: #1D4ED8;
+  background: var(--notif-unread-bg);
+  color: var(--notif-unread-text);
   font-size: 11px;
   font-weight: 600;
   margin-bottom: 2px;
@@ -979,8 +1064,8 @@
 }
 
 .bento-inventory-row__fill { height: 100%; border-radius: 3px; }
-.bento-inventory-row__fill--critical { background: #EF4444; }
-.bento-inventory-row__fill--warn     { background: #F59E0B; }
+.bento-inventory-row__fill--critical { background: var(--inventory-critical); }
+.bento-inventory-row__fill--warn     { background: var(--inventory-warn); }
 
 .bento-inventory-row__qty {
   font-size: 10px;
@@ -1086,7 +1171,7 @@
   font-weight: 500;
   background: rgba(255,255,255,0.65);
   border: 1px solid rgba(245,158,11,0.20);
-  color: #92400E;
+  color: var(--badge-amber-text);
 }
 
 /* ================================================================
