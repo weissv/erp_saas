@@ -2,7 +2,7 @@
 // Улучшенный хук для загрузки данных с пагинацией
 // Обратно совместим со старым API
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { api, getApiErrorMessage, ApiRequestError } from '../lib/api';
 import { toast } from 'sonner';
 
@@ -66,9 +66,9 @@ export function useApi<T>({
   const mountedRef = useRef(true);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Serialize searchFields to a stable string for dependency tracking
-  const searchFieldsKey = searchFields.join(',');
-  const filtersKey = JSON.stringify(filters);
+  // Memoize dependency keys to avoid unnecessary re-renders
+  const searchFieldsKey = useMemo(() => searchFields.join(','), [searchFields]);
+  const filtersKey = useMemo(() => JSON.stringify(filters), [filters]);
 
   const fetchData = useCallback(async () => {
     if (!enabled) return;

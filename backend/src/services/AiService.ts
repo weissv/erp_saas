@@ -642,7 +642,6 @@ async function syncGoogleDriveDocuments(tenantId: string = "default"): Promise<{
         
         // Получаем содержимое файла
         const content = await getGoogleDriveFileContent(file.id, file.mimeType, tenantId);
-        const content = await getGoogleDriveFileContent(file.id, file.mimeType, driveApiKey);
         if (!content || content.trim().length < 10) {
           logger.info(`⏭️ File ${file.name} has no content or is too short`);
           updateSyncStatus({ skipped: syncStatus.skipped + 1 });

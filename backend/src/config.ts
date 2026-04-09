@@ -63,6 +63,8 @@ export function validateConfig(): void {
     if (config.nodeEnv === "production") {
       throw new Error("JWT_SECRET environment variable is required in production");
     }
+    // NOTE: console.warn is intentional here — the structured logger imports
+    // config, so using it here would create a circular dependency.
     console.warn("[config] WARNING: JWT_SECRET is not set — tokens will be insecure");
   }
 }
