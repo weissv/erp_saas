@@ -63,7 +63,7 @@ function buildCredentials(
     tenantId,
     telegramBotToken: row?.telegramBotToken ?? process.env.TELEGRAM_BOT_TOKEN?.trim() ?? null,
     geminiApiKey: row?.geminiApiKey ?? process.env.GEMINI_API_KEY ?? null,
-    groqApiKey: row?.groqApiKey ?? config.groqApiKey || null,
+    groqApiKey: row?.groqApiKey ?? (config.groqApiKey || null),
     groqModel: row?.groqModel ?? config.groqModel ?? "qwen/qwen3-32b",
     groqBlitzModel: row?.groqBlitzModel ?? config.groqBlitzModel ?? "llama-3.1-8b-instant",
     groqHeavyModel: row?.groqHeavyModel ?? config.groqHeavyModel ?? "openai/gpt-oss-120b",

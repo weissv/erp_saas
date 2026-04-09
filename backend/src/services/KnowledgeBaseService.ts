@@ -105,6 +105,18 @@ function generateSummary(content: string): string {
 // ============================================================================
 
 /**
+ * Sanitizes a tenantId for safe inclusion in raw SQL queries.
+ * Allows only alphanumeric, dash, and underscore characters.
+ * Throws if the value looks like a SQL injection attempt.
+ */
+function safeTenantId(tenantId: string): string {
+  if (!/^[a-zA-Z0-9_-]+$/.test(tenantId)) {
+    throw new Error("Invalid tenantId");
+  }
+  return tenantId;
+}
+
+/**
  * Создание статьи с автоматической генерацией embedding, slug и summary
  */
 async function createArticle(input: CreateArticleInput): Promise<ArticleResult> {
@@ -222,7 +234,7 @@ async function search(
       // Строим WHERE-условия для ролей, тегов и ОБЯЗАТЕЛЬНОГО tenantId
       const conditions: string[] = [
         `embedding IS NOT NULL`,
-        `"tenantId" = '${tenantId}'`,
+        `"tenantId" = '${safeTenantId(tenantId)}'`,
       ];
 
       // Пользователь видит статьи: без ограничений по ролям ИЛИ его роль в списке
@@ -357,7 +369,7 @@ async function getRelated(articleId: number, userRole: Role, limit: number = 5, 
     const conditions = [
       `id != ${articleId}`,
       `embedding IS NOT NULL`,
-      `"tenantId" = '${tenantId}'`,
+      `"tenantId" = '${safeTenantId(tenantId)}'`,
       `(roles = '{}' OR '${userRole}' = ANY(roles))`,
     ];
     const whereClause = conditions.join(" AND ");
