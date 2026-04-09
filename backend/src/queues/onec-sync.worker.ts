@@ -65,13 +65,15 @@ export function startOneCWorker(io?: IOServer): Worker<OneCJobData, OneCJobResul
   );
 
   _worker.on("failed", (job, err) => {
-    const tenantId = job?.data?.tenantId ?? "unknown";
-    logger.error(`[1C-Worker] Job ${job?.id} failed for tenant=${tenantId}: ${err.message}`);
-    emitToTenant(tenantId, "onec:sync:error", {
-      jobId: job?.id,
-      tenantId,
-      error: err.message,
-    });
+    const tenantId = job?.data?.tenantId;
+    logger.error(`[1C-Worker] Job ${job?.id} failed for tenant=${tenantId ?? "unknown"}: ${err.message}`);
+    if (tenantId) {
+      emitToTenant(tenantId, "onec:sync:error", {
+        jobId: job?.id,
+        tenantId,
+        error: err.message,
+      });
+    }
   });
 
   _worker.on("error", (err) => {

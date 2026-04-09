@@ -26,7 +26,7 @@ export function createIOServer(httpServer: HTTPServer): IOServer {
   io.on("connection", (socket) => {
     // Clients must emit "join-tenant" with their tenantId after connecting
     socket.on("join-tenant", (tenantId: string) => {
-      if (typeof tenantId === "string" && tenantId.length > 0 && tenantId.length < 128) {
+      if (typeof tenantId === "string" && tenantId.length > 0 && tenantId.length < 128 && /^[a-zA-Z0-9_-]+$/.test(tenantId)) {
         void socket.join(`tenant:${tenantId}`);
       }
     });

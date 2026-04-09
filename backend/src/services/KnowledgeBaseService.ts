@@ -105,6 +105,15 @@ function generateSummary(content: string): string {
 // ============================================================================
 
 /**
+ * Validates a tenantId to prevent SQL injection when used in $queryRawUnsafe.
+ * Only alphanumeric, hyphens, and underscores are allowed.
+ */
+function sanitizeTenantId(tenantId: string): string {
+  const cleaned = tenantId.replace(/[^a-zA-Z0-9_-]/g, "");
+  return cleaned || "default";
+}
+
+/**
  * Создание статьи с автоматической генерацией embedding, slug и summary
  */
 async function createArticle(input: CreateArticleInput): Promise<ArticleResult> {
@@ -206,7 +215,8 @@ async function search(
   params: ArticleSearchParams,
   userRole: Role
 ): Promise<ArticleListResult> {
-  const { q, tags, limit = 20, offset = 0, tenantId = "default" } = params;
+  const { q, tags, limit = 20, offset = 0, tenantId: rawTenantId = "default" } = params;
+  const tenantId = sanitizeTenantId(rawTenantId);
 
   // ========== Семантический поиск (если есть запрос) ==========
   if (q && q.trim().length > 0) {
@@ -343,11 +353,12 @@ async function getBySlug(slug: string, userRole: Role, tenantId: string = "defau
  * Поиск похожих статей на основе embedding текущей статьи (tenant-scoped)
  */
 async function getRelated(articleId: number, userRole: Role, limit: number = 5, tenantId: string = "default"): Promise<ArticleResult[]> {
+  const safeTenantId = sanitizeTenantId(tenantId);
   try {
     const conditions = [
       `id != ${articleId}`,
       `embedding IS NOT NULL`,
-      `"tenantId" = '${tenantId}'`,
+      `"tenantId" = '${safeTenantId}'`,
       `(roles = '{}' OR '${userRole}' = ANY(roles))`,
     ];
     const whereClause = conditions.join(" AND ");

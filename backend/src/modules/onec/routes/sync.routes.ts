@@ -28,8 +28,8 @@ router.post(
     try {
       const queue = getOneCQueue();
       const job = await queue.add("sync", { tenantId } satisfies OneCJobData, {
-        // De-duplicate: only one active sync per tenant at a time
-        jobId: `onec-sync-${tenantId}-${Date.now()}`,
+        // De-duplicate: only one pending sync per tenant at a time
+        jobId: `onec-sync-${tenantId}`,
       });
 
       logger.info(`[1C-Sync] Job ${job.id} enqueued for tenant=${tenantId}`);
