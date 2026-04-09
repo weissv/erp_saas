@@ -16,11 +16,11 @@ interface NotificationsFeedData {
 }
 
 const TYPE_CFG: Record<string, { icon: typeof Bell; bg: string; color: string }> = {
-  info:    { icon: Info,          bg: '#EFF6FF', color: '#3B82F6' },
-  warning: { icon: AlertTriangle, bg: '#FFFBEB', color: '#D97706' },
-  success: { icon: CheckCircle,   bg: '#ECFDF5', color: '#10B981' },
-  error:   { icon: XCircle,       bg: '#FEF2F2', color: '#EF4444' },
-  default: { icon: Bell,          bg: '#F8FAFC', color: '#64748B' },
+  info:    { icon: Info,          bg: 'var(--tint-blue)',   color: 'var(--color-blue)' },
+  warning: { icon: AlertTriangle, bg: 'var(--tint-orange)', color: 'var(--color-orange)' },
+  success: { icon: CheckCircle,   bg: 'var(--tint-green)',  color: 'var(--color-green)' },
+  error:   { icon: XCircle,       bg: 'var(--tint-red)',    color: 'var(--color-red)' },
+  default: { icon: Bell,          bg: 'var(--fill-quaternary)', color: 'var(--text-secondary)' },
 };
 
 export default function NotificationsFeedWidget({ data }: { data: NotificationsFeedData | undefined }) {
@@ -45,7 +45,7 @@ export default function NotificationsFeedWidget({ data }: { data: NotificationsF
         const cfg = TYPE_CFG[n.type] ?? TYPE_CFG.default;
         const Icon = cfg.icon;
         return (
-          <div key={n.id} className={`bento-list-item${!n.read ? ' ' : ''}`} style={!n.read ? { background: 'rgba(219,234,254,0.35)' } : undefined}>
+          <div key={n.id} className={`bento-list-item${!n.read ? ' ' : ''}`} style={!n.read ? { background: 'var(--tint-blue)' } : undefined}>
             <div className="bento-list-icon" style={{ background: cfg.bg }}>
               <Icon className="h-3.5 w-3.5" style={{ color: cfg.color }} />
             </div>

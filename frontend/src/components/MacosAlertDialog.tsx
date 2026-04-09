@@ -74,11 +74,11 @@ export function MacosAlertDialog({
       contentClassName="mezon-alert-dialog__content"
     >
       <div className="mezon-alert-dialog__actions">
-        <AlertActionButton action={primaryAction} tone="primary" />
+        <AlertActionButton action={cancelAction} tone="secondary" />
         {destructiveAction ? (
           <AlertActionButton action={destructiveAction} tone="destructive" />
         ) : null}
-        <AlertActionButton action={cancelAction} tone="secondary" />
+        <AlertActionButton action={primaryAction} tone="primary" />
       </div>
     </Modal>
   );

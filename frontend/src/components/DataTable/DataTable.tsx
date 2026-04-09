@@ -61,6 +61,7 @@ export function DataTable<T extends Record<string, any>>({
         <button
           className="text-[12px] font-medium px-3 py-1.5 rounded-[var(--radius-md)] bg-fill-quaternary hover:bg-fill-tertiary text-secondary macos-transition"
           onClick={downloadCsv}
+          aria-label="Экспорт данных в CSV"
         >
           Экспорт CSV
         </button>
@@ -68,7 +69,7 @@ export function DataTable<T extends Record<string, any>>({
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className={tableCls}>
+        <table className={tableCls} role="table">
           <thead>
             <tr className="border-b border-[var(--separator)] bg-[var(--bg-inset)]">
               {columns.map((c) => (
@@ -122,6 +123,7 @@ export function DataTable<T extends Record<string, any>>({
             disabled={page <= 1}
             onClick={() => onPageChange(page - 1)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] bg-fill-quaternary text-primary disabled:opacity-30 disabled:cursor-not-allowed hover:bg-fill-tertiary macos-transition font-medium"
+            aria-label="Предыдущая страница"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
             Назад
@@ -133,6 +135,7 @@ export function DataTable<T extends Record<string, any>>({
             disabled={page >= pages}
             onClick={() => onPageChange(page + 1)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] bg-fill-quaternary text-primary disabled:opacity-30 disabled:cursor-not-allowed hover:bg-fill-tertiary macos-transition font-medium"
+            aria-label="Следующая страница"
           >
             Вперёд
             <ChevronRight className="w-3.5 h-3.5" />

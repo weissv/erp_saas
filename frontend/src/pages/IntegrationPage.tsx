@@ -2,7 +2,7 @@ import { OneCIntegrationPanel} from"../features/onec/components/OneCIntegrationP
 import { ChangeEvent, DragEvent, useEffect, useMemo, useRef, useState, useCallback} from"react";
 import { Download, UploadCloud, Link2, RefreshCw, CheckCircle2, Clock, AlertCircle} from"lucide-react";
 import { toast} from"sonner";
-import { Card} from"../components/Card";
+import { Card} from"../components/ui/Card";
 import { Button} from"../components/ui/button";
 import { useOneCSync} from"../features/onec";
 import { api} from"../lib/api";

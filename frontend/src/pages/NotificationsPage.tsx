@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState} from"react";
 import { BellRing, FileText, Megaphone, Trash2, AlertTriangle} from"lucide-react";
 import { toast} from"sonner";
 import { api} from"../lib/api";
-import { Card} from"../components/Card";
+import { Card} from"../components/ui/Card";
 import { Button} from"../components/ui/button";
 import { Modal} from"../components/Modal";
 import { ROLE_LABELS} from"../lib/constants";

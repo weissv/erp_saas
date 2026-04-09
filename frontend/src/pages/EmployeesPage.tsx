@@ -8,7 +8,7 @@ import { PlusCircle, AlertCircle, UploadCloud, Download, Trash2} from 'lucide-re
 import { EmployeeForm} from '../components/forms/EmployeeForm';
 import { Employee} from '../types/employee';
 import { api} from '../lib/api';
-import { Card} from '../components/Card';
+import { Card} from '../components/ui/Card';
 import { useNavigate} from 'react-router-dom';
 
 export default function EmployeesPage() {

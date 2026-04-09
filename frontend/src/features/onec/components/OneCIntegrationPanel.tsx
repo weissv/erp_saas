@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Card } from "../../../components/Card";
+import { Card } from "../../../components/ui/Card";
 import { Button } from "../../../components/ui/button";
 import { useOneCSync } from "../hooks";
 import { RefreshCw, CheckCircle2, AlertCircle, Clock } from "lucide-react";

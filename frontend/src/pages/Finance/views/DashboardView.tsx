@@ -1,6 +1,6 @@
 import React, { useState, useEffect} from"react";
 import { toast} from"sonner";
-import { Card} from"../../../components/Card";
+import { Card} from"../../../components/ui/Card";
 import { useOneCBalances} from"../../../features/onec";
 import { api} from"../../../lib/api";
 import { FINANCE_CATEGORIES, TRANSACTION_CHANNELS} from"../../../lib/constants";

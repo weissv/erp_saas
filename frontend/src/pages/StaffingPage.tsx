@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo} from 'react';
 import { toast} from 'sonner';
 import { api} from '../lib/api';
-import { Card} from '../components/Card';
+import { Card} from '../components/ui/Card';
 import { Button} from '../components/ui/button';
 import { Modal} from '../components/Modal';
 import { Input} from '../components/ui/input';

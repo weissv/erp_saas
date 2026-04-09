@@ -21,7 +21,7 @@ export default function DoomGame({ onClose}: DoomGameProps) {
 
  return (
  <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90">
- <div className="relative w-full h-full max-w-7xl max-h-[90vh] m-4 bg-gray-900 rounded-lg overflow-hidden shadow-2xl">
+ <div className="relative w-full h-full max-w-7xl max-h-[90vh] m-4 bg-card rounded-lg overflow-hidden shadow-2xl">
  {/* Header */}
  <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent p-4">
  <div className="text-white">
@@ -32,7 +32,7 @@ export default function DoomGame({ onClose}: DoomGameProps) {
  variant="outline"
  size="sm"
  onClick={onClose}
- className="bg-red-600 hover:bg-red-700 text-white border-red-500"
+ className="bg-destructive hover:bg-destructive/90 text-destructive-foreground border-destructive"
  >
  <X className="h-5 w-5 mr-2"/>
  Close Game

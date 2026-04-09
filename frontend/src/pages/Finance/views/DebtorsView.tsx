@@ -1,5 +1,5 @@
 import React from"react";
-import { Card} from"../../../components/Card";
+import { Card} from"../../../components/ui/Card";
 import { useOneCDebtors} from"../../../features/onec";
 import type { DebtorsResponse, DebtorItem} from"../../../types/finance";
 import { Users, AlertTriangle, TrendingUp} from"lucide-react";

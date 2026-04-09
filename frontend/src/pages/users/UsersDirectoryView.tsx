@@ -3,7 +3,7 @@ import { Edit, RotateCcw, Search, Trash2, UserPlus} from 'lucide-react';
 import { toast} from 'sonner';
 import { useApi} from '../../hooks/useApi';
 import { DataTable, Column} from '../../components/DataTable/DataTable';
-import { Card} from '../../components/Card';
+import { Card} from '../../components/ui/Card';
 import { Button} from '../../components/ui/button';
 import { Input} from '../../components/ui/input';
 import { Modal} from '../../components/Modal';

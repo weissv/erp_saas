@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState} from"react";
 import { toast} from"sonner";
 import { DataTable, Column} from"../../../components/DataTable/DataTable";
-import { Card} from"../../../components/Card";
+import { Card} from"../../../components/ui/Card";
 import { Button} from"../../../components/ui/button";
 import { useOneCContractors, useOneCTransactions} from"../../../features/onec";
 import type { FinanceTransaction} from"../../../types/finance";

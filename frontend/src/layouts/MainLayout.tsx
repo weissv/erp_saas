@@ -68,12 +68,12 @@ export default function MainLayout() {
       {showDoom && <DoomGame onClose={() => setShowDoom(false)} />}
 
       {/* ── Top Bar ── */}
-      <header className="mezon-top-bar">
+      <header className="mezon-top-bar" role="banner">
         <div className="mezon-top-bar__leading">
           <button
             className="mezon-mobile-menu-btn"
             onClick={() => {
-              (window as any).toggleMobileMenu?.();
+              window.dispatchEvent(new CustomEvent('toggle-mobile-menu'));
             }}
             aria-label="Toggle menu"
           >
@@ -120,7 +120,7 @@ export default function MainLayout() {
       {/* ── Body ── */}
       <div className="mezon-shell">
         <SideNav />
-        <main className="mezon-main">
+        <main className="mezon-main" role="main" aria-label="Основное содержимое">
           <Toaster position="top-right" richColors />
           <div className="mezon-main-inner macos-animate-fade-in">
             <Outlet />

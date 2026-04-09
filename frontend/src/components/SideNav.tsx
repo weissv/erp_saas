@@ -34,9 +34,9 @@ export default function SideNav() {
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    (window as any).toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev);
-    return () => { delete (window as any).toggleMobileMenu; };
+    const handler = () => setIsMobileMenuOpen((prev) => !prev);
+    window.addEventListener('toggle-mobile-menu', handler);
+    return () => window.removeEventListener('toggle-mobile-menu', handler);
   }, []);
 
   useEffect(() => {
@@ -63,7 +63,7 @@ export default function SideNav() {
         <div className="mezon-mobile-overlay" onClick={closeMobileMenu} />
       )}
 
-      <aside className={clsx("mezon-sidenav", isMobileMenuOpen && "mezon-sidenav--mobile-open")}>
+      <aside className={clsx("mezon-sidenav", isMobileMenuOpen && "mezon-sidenav--mobile-open")} role="navigation" aria-label="Основная навигация">
         {/* Brand */}
         <div className="mezon-sidenav__brand">
           <div className="flex items-center justify-between">
@@ -79,9 +79,9 @@ export default function SideNav() {
               />
             </div>
             <button
-              className="mezon-mobile-close"
+              className="mezon-mobile-close p-2 min-h-[44px] min-w-[44px]"
               onClick={closeMobileMenu}
-              aria-label="Close menu"
+              aria-label="Закрыть меню"
             >
               <X className="h-5 w-5" />
             </button>
