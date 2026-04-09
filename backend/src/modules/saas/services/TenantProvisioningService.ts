@@ -1,9 +1,10 @@
 // src/modules/saas/services/TenantProvisioningService.ts
 // Handles the full lifecycle of provisioning a new tenant database.
 
-import { execSync } from 'child_process';
+import { execFile } from 'child_process';
 import crypto from 'crypto';
 import path from 'path';
+import { promisify } from 'util';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { prisma as masterPrisma } from '../../../prisma';
@@ -36,6 +37,8 @@ export type TenantPrismaFactory = (databaseUrl: string) => PrismaClient;
 
 const defaultTenantPrismaFactory: TenantPrismaFactory = (databaseUrl) =>
   new PrismaClient({ datasources: { db: { url: databaseUrl } } });
+
+const execFileAsync = promisify(execFile);
 
 /**
  * Builds a PostgreSQL connection URL for a given database name,
@@ -139,11 +142,17 @@ export class TenantProvisioningService {
       __dirname,
       '../../../../prisma/schema.prisma',
     );
-    execSync(`npx prisma migrate deploy --schema="${schemaPath}"`, {
-      env: { ...process.env, DATABASE_URL: databaseUrl },
-      stdio: 'pipe',
-      timeout: 120_000,
-    });
+
+    await execFileAsync(
+      process.platform === 'win32' ? 'npx.cmd' : 'npx',
+      ['prisma', 'migrate', 'deploy', `--schema=${schemaPath}`],
+      {
+        env: { ...process.env, DATABASE_URL: databaseUrl },
+        timeout: 120_000,
+        maxBuffer: 10 * 1024 * 1024,
+        windowsHide: true,
+      },
+    );
   }
 
   // ---------------------------------------------------------------------------

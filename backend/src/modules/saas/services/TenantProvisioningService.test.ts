@@ -10,12 +10,16 @@ import {
 
 // Mock child_process
 vi.mock('child_process', () => ({
-  execSync: vi.fn(),
+  execFile: vi.fn((_file, _args, _options, callback) => callback(null, '', '')),
 }));
 
 // Mock bcryptjs
 vi.mock('bcryptjs', () => ({
   default: { hash: vi.fn().mockResolvedValue('hashed_password') },
+}));
+
+vi.mock('@prisma/client', () => ({
+  PrismaClient: class PrismaClient {},
 }));
 
 // Mock prisma (master DB) – not used directly since we inject mockMasterDb
@@ -112,17 +116,26 @@ describe('TenantProvisioningService', () => {
 
   describe('runMigrations', () => {
     it('should call npx prisma migrate deploy with correct DATABASE_URL', async () => {
-      const { execSync } = await import('child_process');
+      const { execFile } = await import('child_process');
       const dbUrl = 'postgresql://user:pass@localhost:5432/tenant_abc12345';
 
       await service.runMigrations(dbUrl);
 
-      expect(execSync).toHaveBeenCalledWith(
-        expect.stringContaining('npx prisma migrate deploy'),
+      expect(execFile).toHaveBeenCalledWith(
+        expect.stringMatching(/npx(\.cmd)?$/),
+        expect.arrayContaining([
+          'prisma',
+          'migrate',
+          'deploy',
+          expect.stringContaining('--schema='),
+        ]),
         expect.objectContaining({
           env: expect.objectContaining({ DATABASE_URL: dbUrl }),
           timeout: 120_000,
+          maxBuffer: 10 * 1024 * 1024,
+          windowsHide: true,
         }),
+        expect.any(Function),
       );
     });
   });
@@ -161,7 +174,7 @@ describe('TenantProvisioningService', () => {
 
   describe('provision (full pipeline)', () => {
     it('should execute all provisioning steps in order', async () => {
-      const { execSync } = await import('child_process');
+      const { execFile } = await import('child_process');
 
       const result = await service.provision({
         email: 'admin@school.com',
@@ -177,7 +190,7 @@ describe('TenantProvisioningService', () => {
       );
 
       // Should have run migrations
-      expect(execSync).toHaveBeenCalled();
+      expect(execFile).toHaveBeenCalled();
 
       // Should have seeded admin
       expect(mockTenantUserCreate).toHaveBeenCalled();
@@ -199,10 +212,12 @@ describe('TenantProvisioningService', () => {
     });
 
     it('should drop database if migration fails', async () => {
-      const { execSync } = (await import('child_process')) as any;
-      execSync.mockImplementationOnce(() => {
-        throw new Error('Migration failed');
-      });
+      const { execFile } = (await import('child_process')) as any;
+      execFile.mockImplementationOnce(
+        (_file: string, _args: string[], _options: unknown, callback: (error: Error) => void) => {
+          callback(new Error('Migration failed'));
+        },
+      );
 
       await expect(
         service.provision({
