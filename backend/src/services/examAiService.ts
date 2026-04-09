@@ -2,6 +2,7 @@
 // Сервис для AI проверки открытых вопросов и задач
 
 import { config } from "../config";
+import { TenantIntegrationsService } from "./TenantIntegrationsService";
 
 export interface AiCheckResult {
   score: number;
@@ -18,7 +19,8 @@ export async function checkExamAnswerWithAI(
   studentAnswer: string,
   keyPoints: string[],
   maxPoints: number,
-  questionType?: string
+  questionType?: string,
+  tenantId: string = "default"
 ): Promise<AiCheckResult> {
   try {
     // Формируем промпт для AI
@@ -70,13 +72,17 @@ ${studentAnswer || '(ответ не предоставлен)'}
       model = config.groqHeavyModel || model;
     }
 
+    // Fetch Groq API key from tenant credentials at runtime
+    const creds = await TenantIntegrationsService.getCredentials(tenantId);
+    const groqApiKey = creds.groqApiKey || config.groqApiKey;
+
     // Используем Groq API для AI проверки
-    if (config.groqApiKey) {
+    if (groqApiKey) {
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${config.groqApiKey}`
+          'Authorization': `Bearer ${groqApiKey}`
         },
         body: JSON.stringify({
           model,
