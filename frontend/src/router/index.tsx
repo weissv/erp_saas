@@ -52,6 +52,9 @@ import ExamTakePage from "../pages/ExamTakePage";
 import ArticleList from "../pages/KnowledgeBase/ArticleList";
 import ArticleView from "../pages/KnowledgeBase/ArticleView";
 
+// AI Settings (BYOK)
+import AiSettingsPage from "../pages/AiSettingsPage";
+
 function LoadingScreen() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
@@ -185,6 +188,7 @@ export default function Router() {
 
             <Route element={<RoleBasedRoute roles={["DIRECTOR", "DEPUTY", "ADMIN"]} />}>
               <Route path="ai-assistant" element={<AiAssistantPage />} />
+              <Route path="ai-settings" element={<AiSettingsPage />} />
             </Route>
 
             <Route element={<RoleBasedRoute roles={["DIRECTOR", "DEPUTY", "ADMIN", "ACCOUNTANT"]} />}>
