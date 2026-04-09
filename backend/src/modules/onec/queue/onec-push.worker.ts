@@ -2,7 +2,7 @@
 // BullMQ Worker that processes inbound 1C push data.
 //
 // Key guarantees:
-// 1. Chunked writes via Prisma `$transaction` to avoid oversized batches.
+// 1. Chunked transactional writes via Prisma `$transaction` to avoid oversized batches.
 // 2. Idempotency — duplicate jobs (same jobId) are safely skipped.
 // 3. Observability — structured logs with tenantId context.
 // 4. Real-time UX — WebSocket events on completion/failure.
@@ -45,6 +45,10 @@ export function startOneCPushWorker(): Worker<OneCPushJobData, OneCPushJobResult
     async (job: Job<OneCPushJobData, OneCPushJobResult>) => {
       const { tenantId, payload, receivedAt } = job.data;
       const jobId = job.id!;
+      const totalPayloadRecords = payload.batches.reduce(
+        (sum, batch) => sum + batch.records.length,
+        0,
+      );
 
       logger.info(
         `[1C-Push-Worker] Processing job ${jobId} for tenant=${tenantId}, batches=${payload.batches.length}`,
@@ -83,7 +87,7 @@ export function startOneCPushWorker(): Worker<OneCPushJobData, OneCPushJobResult
             jobId,
             status: "processing",
             totalBatches: payload.batches.length,
-            totalRecords: payload.batches.reduce((sum, b) => sum + b.records.length, 0),
+            totalRecords: totalPayloadRecords,
             receivedAt: new Date(receivedAt),
           },
         });
@@ -98,16 +102,19 @@ export function startOneCPushWorker(): Worker<OneCPushJobData, OneCPushJobResult
         batchCount: payload.batches.length,
       });
 
-      let totalRecords = 0;
+      let processedRecords = 0;
       let errors = 0;
 
       try {
+        // Each chunk is committed independently to stay under Prisma/Postgres limits.
+        // Retries remain safe because the underlying writes are idempotent upserts.
         for (const batch of payload.batches) {
           for (
             let startIndex = 0;
             startIndex < batch.records.length;
             startIndex += PUSH_TRANSACTION_CHUNK_SIZE
           ) {
+            const chunkNumber = Math.floor(startIndex / PUSH_TRANSACTION_CHUNK_SIZE) + 1;
             const chunk = batch.records.slice(
               startIndex,
               startIndex + PUSH_TRANSACTION_CHUNK_SIZE,
@@ -157,9 +164,9 @@ export function startOneCPushWorker(): Worker<OneCPushJobData, OneCPushJobResult
               }
             });
 
-            totalRecords += chunk.length;
+            processedRecords += chunk.length;
             logger.info(
-              `[1C-Push-Worker] Job ${jobId}: entity=${batch.entity}, chunk=${startIndex / PUSH_TRANSACTION_CHUNK_SIZE + 1}, chunkRecords=${chunk.length}`,
+              `[1C-Push-Worker] Job ${jobId}: entity=${batch.entity}, chunk=${chunkNumber}, chunkRecords=${chunk.length}`,
             );
           }
 
@@ -173,7 +180,7 @@ export function startOneCPushWorker(): Worker<OneCPushJobData, OneCPushJobResult
           tenantId,
           processedAt: processedAt.toISOString(),
           totalBatches: payload.batches.length,
-          totalRecords,
+          totalRecords: totalPayloadRecords,
           errors,
         };
 
@@ -193,7 +200,7 @@ export function startOneCPushWorker(): Worker<OneCPushJobData, OneCPushJobResult
             where: { jobId },
             data: {
               status: errors > 0 ? "failed" : "success",
-              totalRecords,
+              totalRecords: totalPayloadRecords,
               errors,
               processedAt,
             },
@@ -223,7 +230,7 @@ export function startOneCPushWorker(): Worker<OneCPushJobData, OneCPushJobResult
             where: { jobId },
             data: {
               status: "failed",
-              totalRecords,
+              totalRecords: processedRecords,
               errors,
               errorMessage: message.slice(0, 4096),
               processedAt: new Date(),
