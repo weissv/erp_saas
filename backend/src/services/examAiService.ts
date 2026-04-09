@@ -2,6 +2,7 @@
 // Сервис для AI проверки открытых вопросов и задач
 
 import { config } from "../config";
+import { getTenantIntegrations, DEFAULT_TENANT_ID } from "./TenantIntegrationsService";
 import { TenantIntegrationsService } from "./TenantIntegrationsService";
 
 export interface AiCheckResult {
@@ -20,9 +21,13 @@ export async function checkExamAnswerWithAI(
   keyPoints: string[],
   maxPoints: number,
   questionType?: string,
+  tenantId: string = DEFAULT_TENANT_ID,
   tenantId: string = "default"
 ): Promise<AiCheckResult> {
   try {
+    // Fetch per-tenant API credentials
+    const creds = await getTenantIntegrations(tenantId);
+
     // Формируем промпт для AI
     const systemPrompt = `Ты - опытный преподаватель, проверяющий работу студента. 
 Твоя задача - оценить ответ студента на вопрос или задачу.
@@ -64,12 +69,12 @@ ${studentAnswer || '(ответ не предоставлен)'}
 Оцени ответ студента и верни результат в формате JSON.`;
 
     const normalizedType = (questionType || "").toUpperCase();
-    let model = config.groqModel || 'llama-3.3-70b-versatile';
+    let model = creds.groqModel || config.groqModel || 'llama-3.3-70b-versatile';
     if (normalizedType === 'TEXT_SHORT') {
-      model = config.groqBlitzModel || model;
+      model = creds.groqBlitzModel || config.groqBlitzModel || model;
     }
     if (normalizedType === 'TEXT_LONG' || normalizedType === 'PROBLEM') {
-      model = config.groqHeavyModel || model;
+      model = creds.groqHeavyModel || config.groqHeavyModel || model;
     }
 
     // Fetch Groq API key from tenant credentials at runtime
@@ -77,6 +82,7 @@ ${studentAnswer || '(ответ не предоставлен)'}
     const groqApiKey = creds.groqApiKey || config.groqApiKey;
 
     // Используем Groq API для AI проверки
+    const groqApiKey = creds.groqApiKey;
     if (groqApiKey) {
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
@@ -218,7 +224,8 @@ export async function checkMathProblem(
   problemContent: string,
   expectedAnswer: string,
   studentAnswer: string,
-  maxPoints: number
+  maxPoints: number,
+  tenantId: string = DEFAULT_TENANT_ID,
 ): Promise<AiCheckResult> {
   // Пытаемся извлечь числовой ответ
   const extractNumber = (text: string): number | null => {
@@ -255,5 +262,5 @@ export async function checkMathProblem(
   }
 
   // Если числовая проверка не дала результат, используем AI
-  return checkExamAnswerWithAI(problemContent, expectedAnswer, studentAnswer, [], maxPoints, 'PROBLEM');
+  return checkExamAnswerWithAI(problemContent, expectedAnswer, studentAnswer, [], maxPoints, 'PROBLEM', tenantId);
 }

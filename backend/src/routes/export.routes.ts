@@ -1,5 +1,5 @@
 import { Router } from "express";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import http from "node:http";
 import https from "node:https";
 import { URL } from "node:url";
@@ -14,6 +14,117 @@ import {
   IntegrationEntity,
 } from "../schemas/export.schema";
 import { csvTextToRecords } from "../utils/csv";
+
+// ---------------------------------------------------------------------------
+// ExcelJS helpers (replaces the vulnerable `xlsx` package)
+// ---------------------------------------------------------------------------
+
+/**
+ * Converts an array of flat JSON objects into an ExcelJS buffer (.xlsx).
+ * Mirrors the old `XLSX.utils.json_to_sheet` + `XLSX.write` workflow.
+ */
+async function jsonToExcelBuffer(
+  rows: Record<string, unknown>[],
+  sheetName: string,
+): Promise<Buffer> {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet(sheetName);
+
+  if (rows.length === 0) {
+    return Buffer.from(await workbook.xlsx.writeBuffer());
+  }
+
+  // Use the keys of the first row as column headers
+  const columns = Object.keys(rows[0]);
+  sheet.columns = columns.map((key) => ({ header: key, key }));
+
+  for (const row of rows) {
+    sheet.addRow(row);
+  }
+
+  return Buffer.from(await workbook.xlsx.writeBuffer());
+}
+
+/**
+ * Reads an Excel buffer and returns an array of flat JSON objects for the
+ * first sheet (or a specific sheet).
+ * `headerRowIndex` (0-based) allows skipping preamble rows.
+ */
+async function excelBufferToJson<T extends Record<string, any> = Record<string, any>>(
+  buffer: Buffer,
+  headerRowIndex: number = 0,
+): Promise<{ rows: T[]; worksheet: ExcelJS.Worksheet | undefined }> {
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(buffer as unknown as ArrayBuffer);
+
+  const worksheet = workbook.worksheets[0];
+  if (!worksheet || worksheet.rowCount === 0) {
+    return { rows: [], worksheet };
+  }
+
+  // Determine headers from the designated header row
+  // NOTE: ExcelJS eachCell provides 1-based colNumber, so headers[0] is unused.
+  // Both the population and read loops use the same 1-based indexing consistently.
+  const headerRow = worksheet.getRow(headerRowIndex + 1); // ExcelJS rows are 1-based
+  const headers: string[] = [];
+  headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+    headers[colNumber] = cell.text?.trim() ?? `Column${colNumber}`;
+  });
+
+  const rows: T[] = [];
+  for (let r = headerRowIndex + 2; r <= worksheet.rowCount; r++) {
+    const row = worksheet.getRow(r);
+    const obj: Record<string, any> = {};
+    let hasValue = false;
+
+    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      const key = headers[colNumber] ?? `Column${colNumber}`;
+      const val = cell.value;
+      obj[key] = val !== null && val !== undefined ? String(val) : "";
+      if (val !== null && val !== undefined && String(val).trim() !== "") {
+        hasValue = true;
+      }
+    });
+
+    // Fill in any missing headers with empty strings (defval: "")
+    for (let c = 1; c < headers.length; c++) {
+      if (headers[c] && !(headers[c] in obj)) {
+        obj[headers[c]] = "";
+      }
+    }
+
+    if (hasValue) {
+      rows.push(obj as T);
+    }
+  }
+
+  return { rows, worksheet };
+}
+
+/**
+ * Scans the first N rows of a worksheet looking for a header row
+ * that contains one of the given marker strings.
+ * Returns the 0-based row index or -1 if not found.
+ */
+function findHeaderRow(
+  worksheet: ExcelJS.Worksheet,
+  markers: string[],
+  maxScanRows: number = 11,
+): number {
+  for (let r = 1; r <= Math.min(worksheet.rowCount, maxScanRows); r++) {
+    const row = worksheet.getRow(r);
+    let found = false;
+    row.eachCell((cell) => {
+      if (found) return;
+      const text = typeof cell.value === "string" ? cell.value : "";
+      if (markers.some((m) => text.includes(m))) {
+        found = true;
+      }
+    });
+    if (found) return r - 1; // Convert to 0-based
+  }
+  return -1;
+}
 
 const router = Router();
 
@@ -370,10 +481,7 @@ router.get(
     }
 
     const rows = await exporter();
-    const workbook = XLSX.utils.book_new();
-    const worksheet = XLSX.utils.json_to_sheet(rows);
-    XLSX.utils.book_append_sheet(workbook, worksheet, entity.toUpperCase());
-    const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+    const buffer = await jsonToExcelBuffer(rows, entity.toUpperCase());
 
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", `attachment; filename=${entity}-export-${new Date().toISOString().split("T")[0]}.xlsx`);
@@ -394,14 +502,12 @@ router.post(
 
     const fileBase64 = sanitizeBase64(req.body.fileBase64);
     const buffer = Buffer.from(fileBase64, "base64");
-    const workbook = XLSX.read(buffer, { type: "buffer" });
-    const [firstSheetName] = workbook.SheetNames;
-    if (!firstSheetName) {
+
+    let { rows, worksheet } = await excelBufferToJson<ImportRow>(buffer);
+
+    if (!worksheet || rows.length === 0) {
       return res.status(400).json({ message: "Не удалось прочитать Excel-файл" });
     }
-
-    const sheet = workbook.Sheets[firstSheetName];
-    let rows = XLSX.utils.sheet_to_json<ImportRow>(sheet, { defval: "" });
 
     // If entity is children and standard headers not found, try to detect header row
     if (entity === "children" && rows.length > 0) {
@@ -410,21 +516,10 @@ router.post(
         (k) => k.includes("Ф.И.О.") || k.includes("ребенка") || k === "First Name" || k === "Класс"
       );
       if (!hasStandardHeaders) {
-        // Find the header row by scanning raw data
-        const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
-        let headerRowIndex = -1;
-        for (let r = range.s.r; r <= Math.min(range.e.r, 10); r++) {
-          for (let c = range.s.c; c <= range.e.c; c++) {
-            const cell = sheet[XLSX.utils.encode_cell({ r, c })];
-            if (cell && typeof cell.v === "string" && (cell.v.includes("Ф.И.О.") || cell.v.includes("ребенка"))) {
-              headerRowIndex = r;
-              break;
-            }
-          }
-          if (headerRowIndex >= 0) break;
-        }
+        const headerRowIndex = findHeaderRow(worksheet, ["Ф.И.О.", "ребенка"]);
         if (headerRowIndex >= 0) {
-          rows = XLSX.utils.sheet_to_json<ImportRow>(sheet, { defval: "", range: headerRowIndex });
+          const result = await excelBufferToJson<ImportRow>(buffer, headerRowIndex);
+          rows = result.rows;
         }
       }
     }

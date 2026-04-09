@@ -1669,6 +1669,42 @@ model OneCRegister {
 }
 
 // ══════════════════════════════════════════════════════════════
+// TENANT INTEGRATIONS — Per-tenant API keys & credentials
+// ══════════════════════════════════════════════════════════════
+
+/// Stores third-party integration credentials for each tenant.
+/// Services fetch the active row at runtime instead of reading .env.
+model TenantIntegrations {
+  id        Int     @id @default(autoincrement())
+  tenantId  String  @unique          // Logical tenant identifier
+
+  // Telegram
+  telegramBotToken String? @db.Text  // Telegram BOT_TOKEN
+
+  // AI – Embeddings (Gemini)
+  geminiApiKey String? @db.Text
+
+  // AI – Chat (Groq / OpenAI-compatible)
+  groqApiKey    String? @db.Text
+  groqModel     String? @default("qwen/qwen3-32b")
+  groqBlitzModel String? @default("llama-3.1-8b-instant")
+  groqHeavyModel String? @default("openai/gpt-oss-120b")
+
+  // Google Drive sync
+  googleDriveApiKey  String? @db.Text
+  googleDriveFolderId String?
+
+  // 1C OData Integration
+  oneCBaseUrl    String?
+  oneCUser       String?
+  oneCPassword   String? @db.Text
+  oneCTimeoutMs  Int?     @default(60000)
+  oneCCronSchedule String? @default("*/15 * * * *")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
 // MULTI-TENANT: Integration Credentials per Tenant
 // ══════════════════════════════════════════════════════════════
 

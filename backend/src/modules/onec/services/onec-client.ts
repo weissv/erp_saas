@@ -22,6 +22,9 @@ export function getOneCApplicationBaseUrl(baseUrl?: string): string {
 }
 
 /**
+ * Creates a 1C OData client using .env / config values (legacy single-tenant).
+ */
+export function createOneCClient(): AxiosInstance {
  * Creates a 1C OData HTTP client using tenant-specific credentials.
  * Falls back to config (env) when no credentials are supplied.
  */
@@ -43,6 +46,21 @@ export function createOneCClient(creds?: TenantCredentials): AxiosInstance {
   return client;
 }
 
+/**
+ * Creates a 1C OData client using per-tenant credentials from the DB.
+ */
+export function createOneCClientForTenant(creds: TenantCredentials): AxiosInstance {
+  return axios.create({
+    baseURL: creds.oneCBaseUrl,
+    timeout: creds.oneCTimeoutMs,
+    headers: {
+      Authorization: buildBasicAuth(creds.oneCUser, creds.oneCPassword),
+      Accept: "application/json",
+    },
+  });
+}
+
+export function createOneCApplicationClient(): AxiosInstance {
 export function createOneCApplicationClient(creds?: TenantCredentials): AxiosInstance {
   const baseURL = creds?.oneCBaseUrl || config.oneCBaseUrl;
   const user    = creds?.oneCUser || config.oneCUser;
