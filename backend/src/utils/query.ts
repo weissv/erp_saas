@@ -47,13 +47,13 @@ export function createPaginatedResponse<T>(
 }
 
 // Простой конструктор where из query: eq-поиск по полям
-export const buildWhere = <T extends Record<string, any>>(q: ListQuery, allowed: string[]) => {
-  const where: Record<string, any> = {};
+export const buildWhere = <T extends Record<string, unknown>>(q: ListQuery, allowed: string[]): Partial<T> => {
+  const where: Record<string, unknown> = {};
   for (const key of allowed) {
     const val = q[key];
     if (val !== undefined && val !== "") {
       where[key] = isNaN(Number(val)) ? val : Number(val);
     }
   }
-  return where as T;
+  return where as Partial<T>;
 };

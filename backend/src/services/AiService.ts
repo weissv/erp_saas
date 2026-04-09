@@ -7,7 +7,6 @@ import { EventEmitter } from "events";
 import { SystemSettingsService } from "./SystemSettingsService";
 import { config } from "../config";
 import { getTenantIntegrations, DEFAULT_TENANT_ID, type TenantCredentials } from "./TenantIntegrationsService";
-import { TenantIntegrationsService, type TenantCredentials } from "./TenantIntegrationsService";
 
 const prisma = new PrismaClient();
 
@@ -58,20 +57,6 @@ async function getGeminiClient(tenantId: string = DEFAULT_TENANT_ID): Promise<Go
     throw new Error("GEMINI_API_KEY не установлен — embeddings и семантический поиск не будут работать");
   }
   const client = new GoogleGenerativeAI(creds.geminiApiKey);
-// Lazy-init client caches per tenant
-const geminiClients = new Map<string, GoogleGenerativeAI>();
-const groqClients = new Map<string, OpenAI>();
-
-async function getGeminiClient(tenantId: string = "default"): Promise<GoogleGenerativeAI> {
-  const existing = geminiClients.get(tenantId);
-  if (existing) return existing;
-
-  const creds = await TenantIntegrationsService.getCredentials(tenantId);
-  const key = creds.geminiApiKey;
-  if (!key) {
-    throw new Error("GEMINI_API_KEY не установлен в переменных окружения");
-  }
-  const client = new GoogleGenerativeAI(key);
   geminiClients.set(tenantId, client);
   return client;
 }
@@ -86,17 +71,6 @@ async function getGroqClient(tenantId: string = DEFAULT_TENANT_ID): Promise<Open
   }
   const client = new OpenAI({
     apiKey: creds.groqApiKey,
-async function getGroqClient(tenantId: string = "default"): Promise<OpenAI> {
-  const existing = groqClients.get(tenantId);
-  if (existing) return existing;
-
-  const creds = await TenantIntegrationsService.getCredentials(tenantId);
-  const key = creds.groqApiKey;
-  if (!key) {
-    throw new Error("GROQ_API_KEY не установлен в переменных окружения");
-  }
-  const client = new OpenAI({
-    apiKey: key,
     baseURL: "https://api.groq.com/openai/v1",
   });
   groqClients.set(tenantId, client);

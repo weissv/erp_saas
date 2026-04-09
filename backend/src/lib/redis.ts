@@ -2,6 +2,7 @@
 // Shared Redis (IORedis) connection used by BullMQ queues and workers.
 
 import IORedis from "ioredis";
+import { logger } from "../utils/logger";
 
 /**
  * Lazily-created singleton IORedis connection for BullMQ.
@@ -13,14 +14,14 @@ export function getRedisConnection(): IORedis {
   if (!_connection) {
     const url = process.env.REDIS_URL || "redis://127.0.0.1:6379";
     if (!process.env.REDIS_URL) {
-      console.warn("[Redis] REDIS_URL not set — falling back to localhost:6379");
+      logger.warn("[Redis] REDIS_URL not set — falling back to localhost:6379");
     }
     _connection = new IORedis(url, {
       maxRetriesPerRequest: null, // Required by BullMQ
       enableReadyCheck: false,
     });
     _connection.on("error", (err) => {
-      console.error("[Redis] Connection error:", err.message);
+      logger.error("[Redis] Connection error:", err);
     });
   }
   return _connection;

@@ -1,15 +1,17 @@
 // src/routes/auth.routes.ts
-import { Router } from "express";
-import { prisma } from "../prisma";
+import { Router, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { config } from "../config";
 import { JWT } from "../constants";
+import { prisma } from "../prisma";
+import { asyncHandler } from "../middleware/errorHandler";
+import { logger } from "../utils/logger";
 
 const router = Router();
 
 // Публичный роут для входа
-router.post("/login", async (req, res) => {
+router.post("/login", asyncHandler(async (req: Request, res: Response) => {
   const { email, login, password } = req.body;
   const identifier = login || email;
 
@@ -17,7 +19,10 @@ router.post("/login", async (req, res) => {
     return res.status(400).json({ message: "Email/login and password are required" });
   }
 
-  const user = await prisma.user.findFirst({
+  // Use tenant-scoped prisma when available, fallback to global for backward compat
+  const db = req.prisma ?? prisma;
+
+  const user = await db.user.findFirst({
     where: {
       email: identifier,
       deletedAt: null,
@@ -44,21 +49,21 @@ router.post("/login", async (req, res) => {
   // Set HttpOnly cookie
   const cookieOptions = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'none' as const, // Changed from 'lax' to 'none' for cross-origin
+    secure: config.nodeEnv === "production",
+    sameSite: "none" as const,
     maxAge: JWT.COOKIE_MAX_AGE,
   };
   
-  res.cookie('auth_token', token, cookieOptions);
+  res.cookie(JWT.COOKIE_NAME, token, cookieOptions);
   
   // Remove sensitive data
   const { passwordHash, ...sanitizedUser } = user;
   return res.json({ user: sanitizedUser, token });
-});
+}));
 
 // Session probe route: returns null instead of 401 when user is not authenticated
-router.get("/me", async (req, res) => {
-  let token = req.cookies?.auth_token;
+router.get("/me", asyncHandler(async (req: Request, res: Response) => {
+  let token = req.cookies?.[JWT.COOKIE_NAME];
 
   if (!token) {
     const header = req.headers.authorization;
@@ -77,7 +82,9 @@ router.get("/me", async (req, res) => {
       return res.json({ user: null });
     }
 
-    const me = await prisma.user.findFirst({
+    const db = req.prisma ?? prisma;
+
+    const me = await db.user.findFirst({
       where: {
         id: payload.id,
         deletedAt: null,
@@ -94,17 +101,17 @@ router.get("/me", async (req, res) => {
   } catch {
     return res.json({ user: null });
   }
-});
+}));
 
 // Logout route - clears the cookie
-router.post("/logout", (req, res) => {
-  res.cookie('auth_token', '', {
+router.post("/logout", (_req: Request, res: Response) => {
+  res.cookie(JWT.COOKIE_NAME, "", {
     httpOnly: true,
     expires: new Date(0),
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'none' as const
+    secure: config.nodeEnv === "production",
+    sameSite: "none" as const,
   });
-  return res.status(200).json({ message: 'Logged out successfully' });
+  return res.status(200).json({ message: "Logged out successfully" });
 });
 
 export default router;
