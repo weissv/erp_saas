@@ -49,8 +49,8 @@ export default function ActivityStreamWidget({ data }: { data: ActivityStreamDat
             <div className="bento-list-item__main">
               <p className="bento-list-item__title">
                 <span>{entry.userName}</span>{' '}
-                <span className="text-text-tertiary">{ACTION_LABELS[entry.action] ?? entry.action}</span>{' '}
-                <span className="text-text-secondary">{entry.entityName}</span>
+                <span className="text-tertiary">{ACTION_LABELS[entry.action] ?? entry.action}</span>{' '}
+                <span className="text-secondary">{entry.entityName}</span>
               </p>
               <p className="bento-list-item__sub">
                 <User className="h-2.5 w-2.5 inline mr-0.5" />
