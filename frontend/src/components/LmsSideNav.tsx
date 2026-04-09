@@ -1,11 +1,11 @@
-import { useState, useRef} from"react";
-import { Link, useLocation, useNavigate} from"react-router-dom";
-import clsx from"clsx";
-import { X} from"lucide-react";
-import { Button} from"./ui/button";
-import { useAuth} from"../hooks/useAuth";
-import { useTenant} from"../contexts/TenantContext";
-import type { UserRole} from"../types/auth";
+import { useState, useRef } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import clsx from "clsx";
+import { X } from "lucide-react";
+import { Button } from "./ui/button";
+import { useAuth } from "../hooks/useAuth";
+import { useTenant } from "../contexts/TenantContext";
+import type { UserRole } from "../types/auth";
 
 export default function LmsSideNav() {
  const { user, logout} = useAuth();
@@ -75,7 +75,7 @@ export default function LmsSideNav() {
  />
  )}
  
- <aside className={clsx("mezon-sidenav", isMobileMenuOpen &&"mezon-sidenav--mobile-open")}>
+ <aside className={clsx("mezon-sidenav", isMobileMenuOpen &&"mezon-sidenav--mobile-open")} role="navigation" aria-label="Навигация LMS">
  <div className="mezon-sidenav__brand">
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-3 cursor-pointer"onClick={handleLogoClick}>
@@ -83,7 +83,7 @@ export default function LmsSideNav() {
  src={tenant.logoUrl}
  alt={tenant.name}
  className={clsx(
-"transition-transform 0",
+"transition-transform",
  isLogoSpinning &&"animate-spin-flip"
  )}
  style={{
@@ -94,7 +94,7 @@ export default function LmsSideNav() {
  <button 
  className="mezon-mobile-close"
  onClick={closeMobileMenu}
- aria-label="Close menu"
+ aria-label="Закрыть меню"
  >
  <X className="h-6 w-6"/>
  </button>

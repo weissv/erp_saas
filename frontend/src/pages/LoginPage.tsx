@@ -1,9 +1,10 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { Check } from 'lucide-react';
+import { Check, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTenant } from '../contexts/TenantContext';
 import { Button } from '../components/ui/button';
@@ -18,6 +19,7 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
   const { tenant } = useTenant();
@@ -83,15 +85,25 @@ export default function LoginPage() {
               <label className="text-[12px] font-medium text-secondary mb-1.5 block" htmlFor="login">
                 Логин
               </label>
-              <Input id="login" type="text" autoComplete="off" {...register('login')} />
-              <FormError message={errors.login?.message} />
+              <Input id="login" type="text" autoComplete="off" aria-describedby={errors.login?.message ? 'login-error' : undefined} {...register('login')} />
+              <FormError message={errors.login?.message} id="login-error" />
             </div>
             <div>
               <label className="text-[12px] font-medium text-secondary mb-1.5 block" htmlFor="password">
                 Пароль
               </label>
-              <Input id="password" type="password" autoComplete="new-password" {...register('password')} />
-              <FormError message={errors.password?.message} />
+              <div className="relative">
+                <Input id="password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" aria-describedby={errors.password?.message ? 'password-error' : undefined} {...register('password')} />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-tertiary hover:text-secondary"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <FormError message={errors.password?.message} id="password-error" />
             </div>
             <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
               {isSubmitting ? 'Входим...' : 'Войти'}

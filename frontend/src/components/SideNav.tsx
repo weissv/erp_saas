@@ -63,7 +63,7 @@ export default function SideNav() {
         <div className="mezon-mobile-overlay" onClick={closeMobileMenu} />
       )}
 
-      <aside className={clsx("mezon-sidenav", isMobileMenuOpen && "mezon-sidenav--mobile-open")}>
+      <aside className={clsx("mezon-sidenav", isMobileMenuOpen && "mezon-sidenav--mobile-open")} role="navigation" aria-label="Основная навигация">
         {/* Brand */}
         <div className="mezon-sidenav__brand">
           <div className="flex items-center justify-between">
@@ -81,7 +81,7 @@ export default function SideNav() {
             <button
               className="mezon-mobile-close"
               onClick={closeMobileMenu}
-              aria-label="Close menu"
+              aria-label="Закрыть меню"
             >
               <X className="h-5 w-5" />
             </button>

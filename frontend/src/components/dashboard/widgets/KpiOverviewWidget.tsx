@@ -17,11 +17,11 @@ function formatCompact(amount: number) {
 }
 
 const ITEMS = (data: KpiData) => [
-  { label: 'Дети', value: data.childrenCount, icon: Users, bg: '#EEF2FF', color: '#6366F1' },
-  { label: 'Сотрудники', value: data.employeesCount, icon: Briefcase, bg: '#FFFBEB', color: '#D97706' },
-  { label: 'Кружки', value: data.activeClubs, icon: School, bg: '#F5F3FF', color: '#7C3AED' },
-  { label: 'Доход / 30д', value: formatCompact(data.income), icon: TrendingUp, bg: '#ECFDF5', color: '#059669' },
-  { label: 'Расход / 30д', value: formatCompact(data.expense), icon: TrendingDown, bg: '#FEF2F2', color: '#DC2626' },
+  { label: 'Дети', value: data.childrenCount, icon: Users, bg: 'var(--tint-blue)', color: 'var(--color-indigo)' },
+  { label: 'Сотрудники', value: data.employeesCount, icon: Briefcase, bg: 'var(--tint-orange)', color: 'var(--color-orange)' },
+  { label: 'Кружки', value: data.activeClubs, icon: School, bg: 'var(--tint-purple)', color: 'var(--color-purple)' },
+  { label: 'Доход / 30д', value: formatCompact(data.income), icon: TrendingUp, bg: 'var(--tint-green)', color: 'var(--color-green)' },
+  { label: 'Расход / 30д', value: formatCompact(data.expense), icon: TrendingDown, bg: 'var(--tint-red)', color: 'var(--color-red)' },
 ];
 
 export default function KpiOverviewWidget({ data }: { data: KpiData | undefined }) {
