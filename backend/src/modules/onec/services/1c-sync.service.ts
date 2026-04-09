@@ -23,6 +23,7 @@ import { invoiceSyncSteps } from "./sync/invoice-sync";
 import { hrSyncSteps } from "./sync/hr-sync";
 import { payrollSyncSteps } from "./sync/payroll-sync";
 import { universalCatalogSteps, chartEntitySteps, registerSteps, extraRegisterSteps } from "./sync/universal-sync";
+import { TenantIntegrationsService, type TenantCredentials } from "../../../services/TenantIntegrationsService";
 
 type SyncResult = OneCSyncResult;
 type SyncReport = OneCSyncReport;
@@ -287,12 +288,26 @@ export class OneCSyncService {
   private readonly missingOneCEntityWarnings = new Set<string>();
   private running = false;
   private currentSnapshotDate: Date | null = null;
+  public readonly tenantId: string;
+  private tenantCreds: TenantCredentials | undefined;
 
-  constructor(client?: AxiosInstance, db?: PrismaClient) {
+  constructor(client?: AxiosInstance, db?: PrismaClient, tenantId: string = "default") {
+    this.tenantId = tenantId;
     this.ctx = new SyncContext(
       client ?? createOneCClient(),
       db ?? prisma,
     );
+  }
+
+  /**
+   * Create a OneCSyncService initialized with tenant-specific credentials.
+   */
+  static async forTenant(tenantId: string): Promise<OneCSyncService> {
+    const creds = await TenantIntegrationsService.getCredentials(tenantId);
+    const client = createOneCClient(creds);
+    const svc = new OneCSyncService(client, prisma, tenantId);
+    svc.tenantCreds = creds;
+    return svc;
   }
 
   async syncAll(): Promise<SyncReport> {
@@ -331,8 +346,8 @@ export class OneCSyncService {
   }
 
   startSchedule(): void {
-    const schedule = config.oneCCronSchedule;
-    logger.info(`[1C-Sync] Starting cron schedule: ${schedule}`);
+    const schedule = this.tenantCreds?.oneCCronSchedule || config.oneCCronSchedule;
+    logger.info(`[1C-Sync][${this.tenantId}] Starting cron schedule: ${schedule}`);
 
     scheduleWithJitter(
       schedule,
@@ -479,7 +494,8 @@ export class OneCSyncService {
   }
 
   private getOneCConfigurationError(): string | null {
-    if (!config.oneCPassword.trim()) {
+    const password = this.tenantCreds?.oneCPassword || config.oneCPassword;
+    if (!password.trim()) {
       return "ONEC_PASSWORD is not configured";
     }
 

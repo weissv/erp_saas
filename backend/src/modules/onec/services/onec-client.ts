@@ -3,6 +3,7 @@
 
 import axios, { AxiosInstance, AxiosError } from "axios";
 import { config } from "../../../config";
+import type { TenantCredentials } from "../../../services/TenantIntegrationsService";
 
 /**
  * Собирает Basic Auth заголовок с поддержкой кириллицы.
@@ -15,16 +16,29 @@ function buildBasicAuth(user: string, password: string): string {
   return `Basic ${encoded}`;
 }
 
-export function getOneCApplicationBaseUrl(): string {
-  return config.oneCBaseUrl.replace(/\/odata\/[^/]+\/?$/, "");
+export function getOneCApplicationBaseUrl(baseUrl?: string): string {
+  const url = baseUrl || config.oneCBaseUrl;
+  return url.replace(/\/odata\/[^/]+\/?$/, "");
 }
 
+/**
+ * Creates a 1C OData client using .env / config values (legacy single-tenant).
+ */
 export function createOneCClient(): AxiosInstance {
+ * Creates a 1C OData HTTP client using tenant-specific credentials.
+ * Falls back to config (env) when no credentials are supplied.
+ */
+export function createOneCClient(creds?: TenantCredentials): AxiosInstance {
+  const baseURL = creds?.oneCBaseUrl || config.oneCBaseUrl;
+  const user    = creds?.oneCUser || config.oneCUser;
+  const password = creds?.oneCPassword || config.oneCPassword;
+  const timeout = creds?.oneCTimeoutMs ?? config.oneCTimeoutMs;
+
   const client = axios.create({
-    baseURL: config.oneCBaseUrl,
-    timeout: config.oneCTimeoutMs,
+    baseURL,
+    timeout,
     headers: {
-      Authorization: buildBasicAuth(config.oneCUser, config.oneCPassword),
+      Authorization: buildBasicAuth(user, password),
       Accept: "application/json",
     },
   });
@@ -32,12 +46,32 @@ export function createOneCClient(): AxiosInstance {
   return client;
 }
 
-export function createOneCApplicationClient(): AxiosInstance {
+/**
+ * Creates a 1C OData client using per-tenant credentials from the DB.
+ */
+export function createOneCClientForTenant(creds: TenantCredentials): AxiosInstance {
   return axios.create({
-    baseURL: getOneCApplicationBaseUrl(),
-    timeout: config.oneCTimeoutMs,
+    baseURL: creds.oneCBaseUrl,
+    timeout: creds.oneCTimeoutMs,
     headers: {
-      Authorization: buildBasicAuth(config.oneCUser, config.oneCPassword),
+      Authorization: buildBasicAuth(creds.oneCUser, creds.oneCPassword),
+      Accept: "application/json",
+    },
+  });
+}
+
+export function createOneCApplicationClient(): AxiosInstance {
+export function createOneCApplicationClient(creds?: TenantCredentials): AxiosInstance {
+  const baseURL = creds?.oneCBaseUrl || config.oneCBaseUrl;
+  const user    = creds?.oneCUser || config.oneCUser;
+  const password = creds?.oneCPassword || config.oneCPassword;
+  const timeout = creds?.oneCTimeoutMs ?? config.oneCTimeoutMs;
+
+  return axios.create({
+    baseURL: getOneCApplicationBaseUrl(baseURL),
+    timeout,
+    headers: {
+      Authorization: buildBasicAuth(user, password),
       Accept: "*/*",
     },
   });

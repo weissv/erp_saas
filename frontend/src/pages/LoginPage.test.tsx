@@ -17,6 +17,21 @@ vi.mock('../hooks/useAuth', () => ({
 }),
 }));
 
+// Мок для useTenant
+vi.mock('../contexts/TenantContext', () => ({
+ useTenant: () => ({
+  tenant: {
+    name: 'Test ERP',
+    logoUrl: '/logo.png',
+    faviconUrl: '/favicon.ico',
+    primaryColor: '#007AFF',
+    supportEmail: '',
+    supportPhone: '',
+  },
+  isLoading: false,
+ }),
+}));
+
 // Мок для useNavigate
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
@@ -71,10 +86,10 @@ describe('LoginPage', () => {
  expect(screen.getByText(/документооборот/i)).toBeInTheDocument();
 });
 
- it('отображает badge Mezon', () => {
+ it('отображает tenant badge', () => {
  renderLoginPage();
 
- expect(screen.getByText(/mezon/i)).toBeInTheDocument();
+ expect(screen.getByText(/Test ERP/i)).toBeInTheDocument();
 });
 });
 
