@@ -4,6 +4,7 @@ import cors from "cors";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import { authMiddleware } from "./middleware/auth";
+import { tenantResolver } from "./middleware/tenantResolver";
 import { errorHandler } from "./middleware/errorHandler";
 import { config } from "./config";
 
@@ -73,10 +74,16 @@ app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 app.use(morgan("dev"));
 
-// Health check endpoint (public)
+// Health check endpoint (public, no tenant resolution needed)
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
+
+// ── Tenant resolution ──────────────────────────────────────────────────
+// Every request below this point is scoped to a specific tenant.
+// The middleware parses the subdomain, looks up the Control Plane, and
+// injects req.tenantId + req.prisma for downstream handlers.
+app.use(tenantResolver);
 
 // Публичные роуты
 app.use("/api/auth", authRoutes);
