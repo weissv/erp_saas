@@ -3,6 +3,7 @@
 
 import axios, { AxiosInstance, AxiosError } from "axios";
 import { config } from "../../../config";
+import type { TenantCredentials } from "../../../services/TenantIntegrationsService";
 
 /**
  * Собирает Basic Auth заголовок с поддержкой кириллицы.
@@ -19,6 +20,9 @@ export function getOneCApplicationBaseUrl(): string {
   return config.oneCBaseUrl.replace(/\/odata\/[^/]+\/?$/, "");
 }
 
+/**
+ * Creates a 1C OData client using .env / config values (legacy single-tenant).
+ */
 export function createOneCClient(): AxiosInstance {
   const client = axios.create({
     baseURL: config.oneCBaseUrl,
@@ -30,6 +34,20 @@ export function createOneCClient(): AxiosInstance {
   });
 
   return client;
+}
+
+/**
+ * Creates a 1C OData client using per-tenant credentials from the DB.
+ */
+export function createOneCClientForTenant(creds: TenantCredentials): AxiosInstance {
+  return axios.create({
+    baseURL: creds.oneCBaseUrl,
+    timeout: creds.oneCTimeoutMs,
+    headers: {
+      Authorization: buildBasicAuth(creds.oneCUser, creds.oneCPassword),
+      Accept: "application/json",
+    },
+  });
 }
 
 export function createOneCApplicationClient(): AxiosInstance {
