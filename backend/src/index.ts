@@ -1,39 +1,40 @@
 // src/index.ts
 import { createServer } from "http";
-import http from "http";
 import app from "./app";
 import { config } from "./config";
+import { logger } from "./utils/logger";
 import { AiService } from "./services/AiService";
 import { initTelegramBot } from "./services/TelegramService";
 import { setIntervalWithJitter } from "./services/CronJitterService";
 import { initSocketIO } from "./lib/socketio";
 import { startOneCWorker } from "./modules/onec/queue/onec-sync.worker";
-import { createIOServer } from "./io";
-import { startOneCWorker } from "./queues/onec-sync.worker";
 
 // Интервал синхронизации Google Drive (30 минут)
 const SYNC_INTERVAL_MS = 30 * 60 * 1000;
+
+// Delay before starting Google Drive sync to allow DB initialisation
+const BOOT_DELAY_MS = 5_000;
 
 /**
  * Запускает автоматическую синхронизацию с Google Drive
  */
 async function startGoogleDriveSync() {
-  console.log("🔄 Starting initial Google Drive sync...");
+  logger.info("Starting initial Google Drive sync...");
   try {
     const result = await AiService.syncGoogleDriveDocuments();
-    console.log(`✅ Initial sync completed: ${result.synced} synced, ${result.updated} updated, ${result.skipped} skipped, ${result.errors} errors`);
+    logger.info(`Initial sync completed: ${result.synced} synced, ${result.updated} updated, ${result.skipped} skipped, ${result.errors} errors`);
   } catch (error) {
-    console.error("❌ Initial Google Drive sync failed:", error);
+    logger.error("Initial Google Drive sync failed:", error);
   }
 
   // Запускаем периодическую синхронизацию с jitter
   setIntervalWithJitter(
     SYNC_INTERVAL_MS,
     async () => {
-      console.log("🔄 Running periodic Google Drive sync...");
+      logger.info("Running periodic Google Drive sync...");
       const result = await AiService.syncGoogleDriveDocuments();
       if (result.synced > 0 || result.updated > 0 || result.errors > 0) {
-        console.log(`✅ Periodic sync: ${result.synced} new, ${result.updated} updated, ${result.errors} errors`);
+        logger.info(`Periodic sync: ${result.synced} new, ${result.updated} updated, ${result.errors} errors`);
       }
     },
     { label: "GoogleDriveSync", maxJitterMs: 60_000 },
@@ -50,29 +51,16 @@ initSocketIO(httpServer);
 try {
   startOneCWorker();
 } catch (err) {
-  console.warn("⚠️ Could not start 1C BullMQ worker (Redis may be unavailable):", (err as Error).message);
+  logger.warn("Could not start 1C BullMQ worker (Redis may be unavailable):", (err as Error).message);
 }
 
 httpServer.listen(config.port, () => {
-const server = http.createServer(app);
+  logger.info(`API running on http://0.0.0.0:${config.port}`);
 
-// Attach Socket.io to the HTTP server
-const io = createIOServer(server);
-
-// Start the BullMQ worker for 1C sync (non-blocking — gracefully no-ops if Redis is down)
-try {
-  startOneCWorker(io);
-} catch (err) {
-  console.warn("⚠️ Could not start 1C sync worker (Redis may be unavailable):", err);
-}
-
-server.listen(config.port, () => {
-  console.log(`API running on http://0.0.0.0:${config.port}`);
-  
   // Инициализируем Telegram бота
   void initTelegramBot();
-  
-  // Запускаем синхронизацию Google Drive через 5 секунд после старта
+
+  // Запускаем синхронизацию Google Drive после задержки,
   // чтобы дать время для инициализации базы данных
-  setTimeout(startGoogleDriveSync, 5000);
+  setTimeout(startGoogleDriveSync, BOOT_DELAY_MS);
 });
