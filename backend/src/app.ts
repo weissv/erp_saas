@@ -41,6 +41,7 @@ import permissionsRoutes from "./routes/permissions.routes";
 import examsRoutes from "./routes/exams.routes";
 import publicExamsRoutes from "./routes/public-exams.routes";
 import tenantRoutes from "./routes/tenant.routes";
+import uploadRoutes from "./routes/upload.routes";
 import knowledgeBaseRoutes from "./routes/knowledge-base.routes";
 
 const app = express();
@@ -119,6 +120,7 @@ app.use("/api/lms/school", lmsSchoolRoutes);
 app.use("/api/permissions", permissionsRoutes);
 app.use("/api/exams", examsRoutes); // Управление контрольными для учителей/админов
 app.use("/api/knowledge-base", knowledgeBaseRoutes); // База знаний
+app.use("/api/uploads", uploadRoutes); // Tenant-scoped file uploads
 
 // Обработчик ошибок
 app.use(errorHandler);
