@@ -49,6 +49,7 @@ import publicExamsRoutes from "./routes/public-exams.routes";
 import tenantRoutes from "./routes/tenant.routes";
 import uploadRoutes from "./routes/upload.routes";
 import knowledgeBaseRoutes from "./routes/knowledge-base.routes";
+import openaiIntegrationRoutes from "./routes/openai-integration.routes";
 
 const app = express();
 
@@ -147,6 +148,7 @@ app.use("/api/lms/school", lmsSchoolRoutes);
 app.use("/api/permissions", permissionsRoutes);
 app.use("/api/exams", examsRoutes); // Управление контрольными для учителей/админов
 app.use("/api/knowledge-base", knowledgeBaseRoutes); // База знаний
+app.use("/api/v1/tenant/integrations/openai", openaiIntegrationRoutes); // BYOK OpenAI key management
 app.use("/api/uploads", uploadRoutes); // Tenant-scoped file uploads
 
 // Обработчик ошибок

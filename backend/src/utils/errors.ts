@@ -120,6 +120,20 @@ export class BusinessError extends AppError {
 }
 
 /**
+ * Tenant has not configured their OpenAI API key (BYOK).
+ * Returns 428 Precondition Required with code MISSING_OPENAI_KEY.
+ */
+export class MissingOpenAiKeyError extends AppError {
+  constructor() {
+    super(
+      'OpenAI API key is not configured. Please add your API key in Settings → AI Integration.',
+      428,
+      'MISSING_OPENAI_KEY',
+    );
+  }
+}
+
+/**
  * Проверка, является ли ошибка операционной (ожидаемой)
  */
 export const isOperationalError = (error: unknown): error is AppError => {

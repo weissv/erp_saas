@@ -45,6 +45,9 @@ export const config = {
   // Базовый URL для публичных ссылок на контрольные
   publicExamBaseUrl: process.env.PUBLIC_EXAM_BASE_URL || "http://localhost:5173/exam",
 
+  // Master encryption key for AES-256-GCM (BYOK tenant API keys)
+  encryptionKey: process.env.ENCRYPTION_KEY || "",
+
   // 1C OData Integration
   oneCBaseUrl: process.env.ONEC_BASE_URL || "",
   oneCUser: process.env.ONEC_USER || "",

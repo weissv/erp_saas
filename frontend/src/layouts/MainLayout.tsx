@@ -1,5 +1,5 @@
 // src/layouts/MainLayout.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, Outlet } from "react-router-dom";
 import { Menu, GraduationCap, Lock } from "lucide-react";
 import SideNav from "../components/SideNav";
@@ -10,11 +10,19 @@ import { useAuth } from "../hooks/useAuth";
 import { useTenant } from "../contexts/TenantContext";
 import { ROLE_LABELS } from "../types/auth";
 import { Spinner } from "../components/ui/LoadingState";
+import { MissingOpenAiKeyDialog } from "../features/ai/components/MissingOpenAiKeyDialog";
+import { installOpenAiKeyErrorInterceptor } from "../features/ai/setup-openai-error-interceptor";
 
 export default function MainLayout() {
   const { user, isLoading } = useAuth();
   const { tenant } = useTenant();
   const [showDoom, setShowDoom] = useState(false);
+
+  // Install global MISSING_OPENAI_KEY error interceptor once
+  useEffect(() => {
+    installOpenAiKeyErrorInterceptor();
+  }, []);
+
   const userName = user?.employee
     ? [user.employee.firstName, user.employee.lastName].filter(Boolean).join(" ")
     : user?.email;
@@ -120,6 +128,7 @@ export default function MainLayout() {
         <SideNav />
         <main className="mezon-main" role="main" aria-label="Основное содержимое">
           <Toaster position="top-right" richColors />
+          <MissingOpenAiKeyDialog />
           <div className="mezon-main-inner macos-animate-fade-in">
             <Outlet />
           </div>

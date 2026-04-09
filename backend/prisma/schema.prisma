@@ -1690,6 +1690,13 @@ model TenantIntegrations {
   groqBlitzModel String? @default("llama-3.1-8b-instant")
   groqHeavyModel String? @default("openai/gpt-oss-120b")
 
+  // AI – OpenAI BYOK (Bring Your Own Key)
+  // The plain-text key is NEVER stored; only the AES-256-GCM ciphertext is persisted.
+  openAiKeyEncrypted String? @db.Text   // AES-256-GCM ciphertext (hex)
+  openAiKeyIv        String?            // 12-byte IV (hex)
+  openAiKeyAuthTag   String?            // 16-byte GCM auth tag (hex)
+  openAiKeyHint      String?            // Masked key for UI (e.g. "sk-proj-...7890")
+
   // Google Drive sync
   googleDriveApiKey  String? @db.Text
   googleDriveFolderId String?
