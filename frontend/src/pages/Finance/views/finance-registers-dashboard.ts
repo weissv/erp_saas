@@ -37,6 +37,7 @@ const DIRECTION_HINTS = {
   incoming: ["receipt", "incoming", "вход", "приход", "поступ"],
   outgoing: ["expense", "outgoing", "исход", "расход", "реализац", "списан"],
 };
+const DIRECTION_FIELD_HINTS = ["record type", "recordtype", "direction", "движение", "type"];
 
 const VAT_AMOUNT_HINTS = ["ндс", "vat", "налог"];
 const DEPRECIATION_HINTS = ["амортиз", "depreciat"];
@@ -221,7 +222,7 @@ function resolveDirection(
   value: unknown,
 ): Pick<BusinessField, "value" | "direction" | "badgeVariant"> | null {
   if (typeof value !== "string") return null;
-  if (!matchesHints(key, ["record type", "recordtype", "direction", "движение", "type"])) {
+  if (!matchesHints(key, DIRECTION_FIELD_HINTS)) {
     return null;
   }
 
@@ -336,6 +337,13 @@ function collectRegisterRecords(item: OneCRegisterItem): RegisterRecord[] {
     fields: [...topLevelFields, ...extractObjectFields(row)],
     registerType: item.registerType,
   }));
+}
+
+function mergeBusinessFields(current: BusinessField[], next: BusinessField[]) {
+  return [...current, ...next].filter(
+    (field, index, allFields) =>
+      allFields.findIndex((candidate) => candidate.key === field.key && candidate.value === field.value) === index,
+  );
 }
 
 function findField(fields: BusinessField[], hints: string[]) {
@@ -472,7 +480,7 @@ export function buildFixedAssetsDashboard(items: OneCRegisterItem[]): FixedAsset
           updatedAtLabel !== "—"
             ? updatedAtLabel
             : existing?.updatedAtLabel ?? "—",
-        details: (existing?.details ?? record.fields).slice(0, 4),
+        details: mergeBusinessFields(existing?.details ?? [], record.fields).slice(0, 4),
       });
     }
   }
