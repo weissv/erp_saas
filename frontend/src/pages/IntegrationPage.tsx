@@ -1,5 +1,5 @@
 import { OneCIntegrationPanel} from"../features/onec/components/OneCIntegrationPanel";
-import { OneCIntegrationSettings } from "../features/onec/components/OneCIntegrationSettings";
+import { OneCIntegrationView } from "../features/onec/components/OneCIntegrationView";
 import { ChangeEvent, DragEvent, useEffect, useMemo, useRef, useState, useCallback} from"react";
 import { Download, UploadCloud, Link2, RefreshCw, CheckCircle2, Clock, AlertCircle} from"lucide-react";
 import { toast} from"sonner";
@@ -260,8 +260,8 @@ export default function IntegrationPage() {
  {/* 1C: Enterprise Integration */}
  <OneCIntegrationPanel />
 
- {/* 1C: Push Integration Self-Serve Settings */}
- <OneCIntegrationSettings />
+ {/* 1C: Push Integration Cockpit UI */}
+ <OneCIntegrationView />
  </div>
  );
 }
