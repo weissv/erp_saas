@@ -1,0 +1,50 @@
+// prisma/master/schema.prisma
+// Control Plane schema – stores tenant metadata and global settings.
+// Each tenant's application data lives in its own isolated database.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../node_modules/@prisma/master-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("MASTER_DATABASE_URL")
+}
+
+/// Lifecycle status of a tenant.
+enum TenantStatus {
+  ACTIVE
+  TRIAL
+  SUSPENDED   // e.g. non-payment, manual admin action
+  DEACTIVATED // permanent off-boarding
+}
+
+/// Each row represents an isolated tenant (organisation / school).
+model Tenant {
+  id        String       @id @default(uuid())
+  /// Unique subdomain prefix, e.g. "hogwarts" → hogwarts.mezon.app
+  subdomain String       @unique
+  /// Full connection string to the tenant's isolated database.
+  dbUrl     String       @map("db_url")
+  /// Stripe customer ID for billing integration.
+  stripeId  String?      @map("stripe_id")
+  /// Current lifecycle status.
+  status    TenantStatus @default(TRIAL)
+  /// Human-readable display name (white-label).
+  name      String?
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+
+  @@map("tenants")
+}
+
+/// Singleton-style key/value store for platform-wide settings.
+model GlobalSetting {
+  key       String   @id
+  value     String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("global_settings")
+}

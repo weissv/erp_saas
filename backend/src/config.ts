@@ -34,6 +34,11 @@ export const config = {
   smtpPass: process.env.SMTP_PASS || "",
   smtpFrom: process.env.SMTP_FROM || "noreply@erp-saas.com",
 
+  // ── Multi-tenant / Control Plane ──────────────────────────────────
+  /** Connection string for the Control Plane (master) database. */
+  masterDatabaseUrl: process.env.MASTER_DATABASE_URL || "",
+  /** Base domain used to extract tenant subdomains (e.g. "mezon.app"). */
+  baseDomain: process.env.BASE_DOMAIN || "mezon.app",
   // Groq API для AI проверки контрольных
   groqApiKey: process.env.GROQ_API_KEY || "",
   groqModel: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
