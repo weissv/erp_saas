@@ -81,19 +81,21 @@ router.post(
         },
       );
 
-      // Create an audit log entry (fire-and-forget, don't block response)
-      void prisma.oneCPushSyncLog.create({
-        data: {
-          tenantId,
-          jobId: job.id!,
-          status: "pending",
-          totalBatches: payload.batches.length,
-          totalRecords: payload.batches.reduce((sum, b) => sum + b.records.length, 0),
-          receivedAt: new Date(receivedAt),
-        },
-      }).catch((err) => {
-        logger.warn("[1C-Push] Could not create sync log:", err);
-      });
+      // Create an audit log entry (synchronous — needed for worker idempotency check)
+      try {
+        await prisma.oneCPushSyncLog.create({
+          data: {
+            tenantId,
+            jobId: job.id!,
+            status: "pending",
+            totalBatches: payload.batches.length,
+            totalRecords: payload.batches.reduce((sum, b) => sum + b.records.length, 0),
+            receivedAt: new Date(receivedAt),
+          },
+        });
+      } catch (logErr) {
+        logger.warn("[1C-Push] Could not create sync log:", logErr);
+      }
 
       logger.info(
         `[1C-Push] Job ${job.id} enqueued for tenant=${tenantId}, batches=${payload.batches.length}`,

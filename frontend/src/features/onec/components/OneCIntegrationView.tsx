@@ -96,6 +96,7 @@ export function OneCIntegrationView() {
       setSettings(data);
       setSyncLogs(data.recentSyncs ?? []);
     } catch {
+      toast.error("Не удалось загрузить настройки интеграции");
       setSettings({ hasApiKey: false, apiKeyHint: null, isActive: false, lastSyncAt: null, tier: TIER.PRO, recentSyncs: [] });
     } finally {
       setLoading(false);
@@ -139,7 +140,7 @@ export function OneCIntegrationView() {
         }
         return [
           {
-            id: Date.now(),
+            id: 0, // Placeholder — will be replaced on next fetch
             jobId: data.jobId,
             status: data.errors > 0 ? "failed" : "success",
             totalRecords: data.totalRecords,

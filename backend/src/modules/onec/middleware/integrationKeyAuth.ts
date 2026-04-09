@@ -9,7 +9,6 @@
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../../../prisma";
 import { logger } from "../../../utils/logger";
-import crypto from "crypto";
 import { hashApiKey } from "./requireIntegrationToken";
 
 /**
@@ -58,29 +57,7 @@ export async function integrationKeyAuth(
       select: { tenantId: true, oneCPushIsActive: true },
     });
 
-    if (hashMatch) {
-      if (!hashMatch.oneCPushIsActive) {
-        res.status(401).json({
-          error: {
-            code: "INTEGRATION_KEY_DISABLED",
-            message: "This integration key has been disabled.",
-          },
-        });
-        return;
-      }
-      req.tenantId = hashMatch.tenantId;
-      next();
-      return;
-    }
-
-    // ── Fallback: legacy plain-text key comparison ───────────────────
-    const integrations = await prisma.tenantIntegrations.findMany({
-      where: { oneCPushApiKeyHash: null },
-      select: { tenantId: true },
-    });
-
-    // If there are no legacy integrations either, reject
-    if (integrations.length === 0) {
+    if (!hashMatch) {
       res.status(401).json({
         error: {
           code: "INVALID_INTEGRATION_KEY",
@@ -90,13 +67,18 @@ export async function integrationKeyAuth(
       return;
     }
 
-    // No legacy match found
-    res.status(401).json({
-      error: {
-        code: "INVALID_INTEGRATION_KEY",
-        message: "The provided integration key is not valid.",
-      },
-    });
+    if (!hashMatch.oneCPushIsActive) {
+      res.status(401).json({
+        error: {
+          code: "INTEGRATION_KEY_DISABLED",
+          message: "This integration key has been disabled.",
+        },
+      });
+      return;
+    }
+
+    req.tenantId = hashMatch.tenantId;
+    next();
   } catch (error) {
     logger.error("[integrationKeyAuth] Error validating key:", error);
     res.status(500).json({

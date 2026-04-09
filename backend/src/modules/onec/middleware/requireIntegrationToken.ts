@@ -15,6 +15,12 @@ import crypto from "crypto";
 
 /**
  * Computes the SHA-256 hex digest of a string.
+ *
+ * NOTE: SHA-256 is appropriate for API key hashing because:
+ * - The input is a cryptographically random 32-byte (256-bit) secret.
+ * - Brute-force/dictionary attacks are infeasible against high-entropy input.
+ * - SHA-256 is the industry standard for API key storage (AWS, GitHub, Stripe).
+ * - bcrypt/scrypt are for user-chosen passwords with low entropy, not random tokens.
  */
 export function hashApiKey(key: string): string {
   return crypto.createHash("sha256").update(key, "utf8").digest("hex");

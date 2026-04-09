@@ -1705,7 +1705,7 @@ model TenantIntegrations {
   // The plain-text key is NEVER stored; only the SHA-256 hash is persisted.
   oneCPushApiKeyHash String?  @db.Text  // SHA-256 hash of the Bearer token
   oneCPushApiKeyHint String?            // First 8 chars for UI display (e.g. "1c_a3b9...")
-  oneCPushIsActive   Boolean  @default(true) // Can be disabled without revoking
+  oneCPushIsActive   Boolean  @default(false) // Enabled only when a key is generated
   oneCPushLastSyncAt DateTime?          // Updated by the worker on each successful sync
 
   createdAt DateTime @default(now())

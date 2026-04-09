@@ -8,6 +8,7 @@
 // 4. Real-time UX — WebSocket events on completion/failure.
 
 import { Worker, Job } from "bullmq";
+import crypto from "crypto";
 import { getRedisConnection } from "../../../lib/redis";
 import { getIO } from "../../../lib/socketio";
 import { prisma } from "../../../prisma";
@@ -47,16 +48,16 @@ export function startOneCPushWorker(): Worker<OneCPushJobData, OneCPushJobResult
         `[1C-Push-Worker] Processing job ${jobId} for tenant=${tenantId}, batches=${payload.batches.length}`,
       );
 
-      // ── Idempotency check: skip if this job was already processed ──
+      // ── Idempotency check: skip only if already completed successfully ──
       try {
         const existingLog = await prisma.oneCPushSyncLog.findUnique({
           where: { jobId },
           select: { status: true },
         });
 
-        if (existingLog && (existingLog.status === "success" || existingLog.status === "processing")) {
+        if (existingLog?.status === "success") {
           logger.info(
-            `[1C-Push-Worker] Job ${jobId} already ${existingLog.status}, skipping (idempotency)`,
+            `[1C-Push-Worker] Job ${jobId} already completed successfully, skipping (idempotency)`,
           );
           return {
             tenantId,
@@ -116,7 +117,7 @@ export function startOneCPushWorker(): Worker<OneCPushJobData, OneCPushJobResult
                 const externalId =
                   typeof record["Ref_Key"] === "string" && record["Ref_Key"]
                     ? String(record["Ref_Key"])
-                    : `${batch.entity}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+                    : `${batch.entity}_${crypto.randomUUID()}`;
 
                 await tx.oneCRegister.upsert({
                   where: {
