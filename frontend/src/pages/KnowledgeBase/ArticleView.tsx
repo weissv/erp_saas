@@ -144,10 +144,11 @@ export default function ArticleView() {
  try {
  await knowledgeBaseApi.delete(article.id);
  toast.success("Статья удалена");
- setIsDeleteOpen(false);
  navigate("/knowledge-base");
 } catch {
  toast.error("Не удалось удалить статью");
+} finally {
+ setIsDeleteOpen(false);
 }
 };
 

@@ -128,10 +128,11 @@ export default function ArticleList() {
  try {
  await knowledgeBaseApi.delete(id);
  toast.success("Статья удалена");
- setArticleToDelete(null);
  fetchArticles();
 } catch (err) {
  toast.error("Не удалось удалить статью");
+} finally {
+ setArticleToDelete(null);
 }
 };
 

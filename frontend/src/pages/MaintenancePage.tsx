@@ -377,10 +377,11 @@ export default function MaintenancePage() {
  try {
  await api.delete(`/api/maintenance/cleaning/${id}`);
  toast.success('Удалено');
- setCleaningToDelete(null);
  fetchCleaningSchedules();
 } catch (error: any) {
  toast.error('Ошибка удаления', { description: error?.message});
+} finally {
+ setCleaningToDelete(null);
 }
 };
 
@@ -439,10 +440,11 @@ export default function MaintenancePage() {
  try {
  await api.delete(`/api/maintenance/equipment/${id}`);
  toast.success('Удалено');
- setEquipmentToDelete(null);
  fetchEquipment();
 } catch (error: any) {
  toast.error('Ошибка удаления', { description: error?.message});
+} finally {
+ setEquipmentToDelete(null);
 }
 };
 

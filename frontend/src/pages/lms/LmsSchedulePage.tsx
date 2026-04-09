@@ -65,10 +65,11 @@ export default function LmsSchedulePage() {
  try {
  await lmsApi.deleteScheduleItem(id);
  toast.success("Урок удален из расписания");
- setItemToDelete(null);
  refetchSchedule();
 } catch (error) {
  toast.error("Не удалось удалить урок");
+} finally {
+ setItemToDelete(null);
 }
 };
 

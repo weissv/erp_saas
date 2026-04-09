@@ -424,10 +424,11 @@ export default function SchedulePage() {
  try {
  await api.delete(`/api/schedule/subjects/${subject.id}`);
  toast.success("Предмет удалён");
- setSubjectToDelete(null);
  loadAllData();
 } catch (error: any) {
  toast.error("Ошибка удаления", { description: error?.message});
+} finally {
+ setSubjectToDelete(null);
 }
 };
 
@@ -479,10 +480,11 @@ export default function SchedulePage() {
  try {
  await api.delete(`/api/schedule/rooms/${room.id}`);
  toast.success("Кабинет удалён");
- setRoomToDelete(null);
  loadAllData();
 } catch (error: any) {
  toast.error("Ошибка удаления", { description: error?.message});
+} finally {
+ setRoomToDelete(null);
 }
 };
 
@@ -540,10 +542,11 @@ export default function SchedulePage() {
  try {
  await api.delete(`/api/schedule/timeslots/${slot.id}`);
  toast.success("Урок удалён");
- setTimeSlotToDelete(null);
  loadAllData();
 } catch (error: any) {
  toast.error("Ошибка удаления", { description: error?.message});
+} finally {
+ setTimeSlotToDelete(null);
 }
 };
 
