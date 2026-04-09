@@ -684,7 +684,7 @@ function excelSheetToJson(sheet: ExcelJS.Worksheet, headerRow = 1): ImportRow[] 
   const headers: string[] = [];
   const hdrRow = sheet.getRow(headerRow);
   hdrRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-    headers[colNumber] = cell.value != null ? String(cell.value).trim() : `__col${colNumber}`;
+    headers[colNumber] = cell.value != null ? String(cell.value).trim() : `Column${colNumber}`;
   });
 
   const rows: ImportRow[] = [];
@@ -694,7 +694,7 @@ function excelSheetToJson(sheet: ExcelJS.Worksheet, headerRow = 1): ImportRow[] 
     let empty = true;
     const record: ImportRow = {};
     row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-      const key = headers[colNumber] ?? `__col${colNumber}`;
+      const key = headers[colNumber] ?? `Column${colNumber}`;
       const val = cell.value;
       record[key] = val != null ? val : "";
       if (val != null && String(val).trim() !== "") {

@@ -106,13 +106,11 @@ export class TenantCache {
   async set(suffix: string, value: unknown, ttlSeconds?: number): Promise<void> {
     const serialized = typeof value === "string" ? value : JSON.stringify(value);
     await this.backend.set(this.key(suffix), serialized, ttlSeconds);
-    logger.info(`[TenantCache] SET ${this.key(suffix)}`);
   }
 
   /** Delete a single key. */
   async del(suffix: string): Promise<void> {
     await this.backend.del(this.key(suffix));
-    logger.info(`[TenantCache] DEL ${this.key(suffix)}`);
   }
 
   /**

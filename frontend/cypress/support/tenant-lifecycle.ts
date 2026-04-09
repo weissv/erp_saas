@@ -29,6 +29,9 @@ export interface TestTenant {
 const CONTROL_PLANE_URL =
   Cypress.env("CONTROL_PLANE_URL") || "http://localhost:4000";
 
+const TEST_ADMIN_PASSWORD =
+  Cypress.env("TEST_ADMIN_PASSWORD") || "E2E_Secret!1";
+
 // ─── Commands ────────────────────────────────────────────────────────────────
 
 /**
@@ -46,7 +49,7 @@ Cypress.Commands.add("provisionTestTenant", () => {
       name: tenantName,
       plan: "starter",
       adminEmail: `admin@${tenantName}.test`,
-      adminPassword: "E2E_Secret!1",
+      adminPassword: TEST_ADMIN_PASSWORD,
     },
     headers: { "Content-Type": "application/json" },
     failOnStatusCode: true,
@@ -57,7 +60,7 @@ Cypress.Commands.add("provisionTestTenant", () => {
       tenantId: res.body.tenantId,
       subdomain: res.body.subdomain,
       adminEmail: res.body.adminEmail,
-      adminPassword: "E2E_Secret!1",
+      adminPassword: TEST_ADMIN_PASSWORD,
       baseUrl: res.body.baseUrl,
       token: res.body.token,
     };
