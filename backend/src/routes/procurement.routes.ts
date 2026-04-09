@@ -27,6 +27,7 @@ import {
   generateOrderFromLowStock,
 } from "../services/ProcurementService";
 import { notifyRole, sendTelegramMessage } from "../services/TelegramService";
+import { logger } from "../utils/logger";
 
 const router = Router();
 
@@ -180,7 +181,7 @@ router.post("/orders/:id/submit", checkRole(["DEVELOPER", "DIRECTOR", "DEPUTY", 
         `Требуется ваше одобрение.`
       );
     } catch (e) {
-      console.error("Telegram notification error:", e);
+      logger.error("Telegram notification error:", e);
     }
 
     return res.json(order);
@@ -215,7 +216,7 @@ router.post("/orders/:id/approve", checkRole(["DEVELOPER", "DIRECTOR", "DEPUTY"]
         );
       }
     } catch (e) {
-      console.error("Telegram notification error:", e);
+      logger.error("Telegram notification error:", e);
     }
 
     return res.json(order);
@@ -251,7 +252,7 @@ router.post("/orders/:id/reject", checkRole(["DEVELOPER", "DIRECTOR", "DEPUTY"])
         );
       }
     } catch (e) {
-      console.error("Telegram notification error:", e);
+      logger.error("Telegram notification error:", e);
     }
 
     return res.json(order);
@@ -313,7 +314,7 @@ router.post("/orders/:id/receive", checkRole(["DEVELOPER", "DIRECTOR", "ADMIN", 
           : "")
       );
     } catch (e) {
-      console.error("Telegram notification error:", e);
+      logger.error("Telegram notification error:", e);
     }
 
     return res.json(result);

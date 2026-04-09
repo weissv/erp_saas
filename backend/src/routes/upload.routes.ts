@@ -2,6 +2,7 @@
 import { Router, Request, Response } from "express";
 import multer from "multer";
 import { StorageService } from "../services/StorageService";
+import { logger } from "../utils/logger";
 
 const router = Router();
 
@@ -58,7 +59,7 @@ router.post("/", upload.single("file"), async (req: Request, res: Response) => {
       ...result,
     });
   } catch (error: any) {
-    console.error("Upload error:", error);
+    logger.error("Upload error:", error);
     const status = error.message?.includes("exceeds maximum size") ? 413 : 500;
     res.status(status).json({ message: error.message || "Upload failed" });
   }
@@ -83,7 +84,7 @@ router.delete("/*", async (req: Request, res: Response) => {
     await StorageService.remove(tenantId, key);
     res.json({ message: "File deleted" });
   } catch (error: any) {
-    console.error("Delete error:", error);
+    logger.error("Delete error:", error);
     const status = error.message?.includes("Access denied") ? 403 : 500;
     res.status(status).json({ message: error.message || "Delete failed" });
   }

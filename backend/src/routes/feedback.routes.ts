@@ -3,6 +3,7 @@ import { Router } from "express";
 import { prisma } from "../prisma";
 import { checkRole } from "../middleware/checkRole";
 import { notifyRole } from "../services/TelegramService";
+import { logger } from "../utils/logger";
 
 const router = Router();
 
@@ -198,7 +199,7 @@ router.post("/bug-report", async (req, res) => {
         })
       );
     } catch (telegramError) {
-      console.error("Ошибка отправки bug-report в Telegram:", telegramError);
+      logger.error("Ошибка отправки bug-report в Telegram:", telegramError);
     }
 
     return res.status(201).json(feedback);

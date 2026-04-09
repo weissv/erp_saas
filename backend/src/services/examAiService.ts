@@ -4,6 +4,7 @@
 import { config } from "../config";
 import { getTenantIntegrations, DEFAULT_TENANT_ID } from "./TenantIntegrationsService";
 import { TenantIntegrationsService } from "./TenantIntegrationsService";
+import { logger } from "../utils/logger";
 
 export interface AiCheckResult {
   score: number;
@@ -102,7 +103,7 @@ ${studentAnswer || '(ответ не предоставлен)'}
 
       if (!response.ok) {
         const error = await response.text();
-        console.error("Groq API error:", error);
+        logger.error("Groq API error:", error);
         throw new Error(`Groq API error: ${response.status}`);
       }
 
@@ -119,7 +120,7 @@ ${studentAnswer || '(ответ не предоставлен)'}
             confidence: Number(result.confidence) || 0.5
           };
         } catch (e) {
-          console.error("Failed to parse AI response:", content);
+          logger.error("Failed to parse AI response:", content);
         }
       }
     }
@@ -128,7 +129,7 @@ ${studentAnswer || '(ответ не предоставлен)'}
     return fallbackCheck(questionContent, expectedAnswer, studentAnswer, keyPoints, maxPoints);
     
   } catch (error) {
-    console.error("AI check error:", error);
+    logger.error("AI check error:", error);
     // При ошибке AI возвращаем результат для ручной проверки
     return {
       score: 0,

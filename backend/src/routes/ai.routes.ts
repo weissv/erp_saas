@@ -4,6 +4,7 @@ import { AiService } from "../services/AiService";
 import { checkRole } from "../middleware/checkRole";
 import { z } from "zod";
 import { validate } from "../middleware/validate";
+import { logger } from "../utils/logger";
 
 const router = Router();
 
@@ -71,7 +72,7 @@ router.post(
         data: result,
       });
     } catch (error) {
-      console.error("Error adding document:", error);
+      logger.error("Error adding document:", error);
       res.status(500).json({
         success: false,
         message: error instanceof Error ? error.message : "Ошибка добавления документа",
@@ -99,7 +100,7 @@ router.post(
         data: result,
       });
     } catch (error) {
-      console.error("Error uploading document:", error);
+      logger.error("Error uploading document:", error);
       res.status(500).json({
         success: false,
         message: error instanceof Error ? error.message : "Ошибка загрузки документа",
@@ -123,7 +124,7 @@ router.get(
         data: documents,
       });
     } catch (error) {
-      console.error("Error getting documents:", error);
+      logger.error("Error getting documents:", error);
       res.status(500).json({
         success: false,
         message: error instanceof Error ? error.message : "Ошибка получения документов",
@@ -150,7 +151,7 @@ router.delete(
         message: "Документ успешно удален",
       });
     } catch (error) {
-      console.error("Error deleting document:", error);
+      logger.error("Error deleting document:", error);
       res.status(500).json({
         success: false,
         message: error instanceof Error ? error.message : "Ошибка удаления документа",
@@ -187,7 +188,7 @@ router.post(
         },
       });
     } catch (error) {
-      console.error("Error in chat:", error);
+      logger.error("Error in chat:", error);
       res.status(500).json({
         success: false,
         message:
@@ -227,7 +228,7 @@ router.post(
         data: result,
       });
     } catch (error) {
-      console.error("Error syncing Google Drive:", error);
+      logger.error("Error syncing Google Drive:", error);
       res.status(500).json({
         success: false,
         message: error instanceof Error ? error.message : "Ошибка синхронизации Google Drive",
@@ -251,7 +252,7 @@ router.get(
         data: status,
       });
     } catch (error) {
-      console.error("Error getting sync status:", error);
+      logger.error("Error getting sync status:", error);
       res.status(500).json({
         success: false,
         message: "Ошибка получения статуса синхронизации",
@@ -276,7 +277,7 @@ router.get(
         data: files,
       });
     } catch (error) {
-      console.error("Error getting Google Drive files:", error);
+      logger.error("Error getting Google Drive files:", error);
       res.status(500).json({
         success: false,
         message: error instanceof Error ? error.message : "Ошибка получения файлов из Google Drive",
@@ -300,7 +301,7 @@ router.get(
         data: { prompt },
       });
     } catch (error) {
-      console.error("Error getting system prompt:", error);
+      logger.error("Error getting system prompt:", error);
       res.status(500).json({
         success: false,
         message: "Ошибка получения системного промта",
@@ -334,7 +335,7 @@ router.put(
         message: "Системный промт успешно обновлен",
       });
     } catch (error) {
-      console.error("Error updating system prompt:", error);
+      logger.error("Error updating system prompt:", error);
       res.status(500).json({
         success: false,
         message: "Ошибка обновления системного промта",
@@ -360,7 +361,7 @@ router.post(
         data: { prompt: AiService.getSystemPrompt() },
       });
     } catch (error) {
-      console.error("Error resetting system prompt:", error);
+      logger.error("Error resetting system prompt:", error);
       res.status(500).json({
         success: false,
         message: "Ошибка сброса системного промта",

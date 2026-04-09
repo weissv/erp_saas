@@ -5,6 +5,7 @@ import { Router, Request, Response } from "express";
 import { checkRole } from "../middleware/checkRole";
 import { KnowledgeBaseService } from "../services/KnowledgeBaseService";
 import { Role } from "@prisma/client";
+import { logger } from "../utils/logger";
 
 const router = Router();
 
@@ -31,7 +32,7 @@ router.get("/", async (req: Request, res: Response) => {
 
     res.json(result);
   } catch (error) {
-    console.error("[knowledge-base] GET / error:", error);
+    logger.error("[knowledge-base] GET / error:", error);
     res.status(500).json({ message: "Ошибка при поиске статей" });
   }
 });
@@ -53,7 +54,7 @@ router.get("/:slug", async (req: Request, res: Response) => {
 
     res.json(article);
   } catch (error) {
-    console.error("[knowledge-base] GET /:slug error:", error);
+    logger.error("[knowledge-base] GET /:slug error:", error);
     res.status(500).json({ message: "Ошибка при получении статьи" });
   }
 });
@@ -74,7 +75,7 @@ router.get("/:id/related", async (req: Request, res: Response) => {
 
     res.json(related);
   } catch (error) {
-    console.error("[knowledge-base] GET /:id/related error:", error);
+    logger.error("[knowledge-base] GET /:id/related error:", error);
     res.status(500).json({ message: "Ошибка при поиске похожих статей" });
   }
 });
@@ -106,7 +107,7 @@ router.post(
 
       res.status(201).json(article);
     } catch (error) {
-      console.error("[knowledge-base] POST / error:", error);
+      logger.error("[knowledge-base] POST / error:", error);
       res.status(500).json({ message: "Ошибка при создании статьи" });
     }
   }
@@ -137,7 +138,7 @@ router.put(
       if (error.message === "Статья не найдена") {
         return res.status(404).json({ message: error.message });
       }
-      console.error("[knowledge-base] PUT /:id error:", error);
+      logger.error("[knowledge-base] PUT /:id error:", error);
       res.status(500).json({ message: "Ошибка при обновлении статьи" });
     }
   }
@@ -160,7 +161,7 @@ router.delete(
       if (error.message === "Статья не найдена") {
         return res.status(404).json({ message: error.message });
       }
-      console.error("[knowledge-base] DELETE /:id error:", error);
+      logger.error("[knowledge-base] DELETE /:id error:", error);
       res.status(500).json({ message: "Ошибка при удалении статьи" });
     }
   }

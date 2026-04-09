@@ -3,6 +3,7 @@ import { Router } from "express";
 import { prisma } from "../prisma";
 import { authMiddleware } from "../middleware/auth";
 import { checkRole } from "../middleware/checkRole";
+import { logger } from "../utils/logger";
 
 const router = Router();
 
@@ -51,7 +52,7 @@ router.get("/", authMiddleware, checkRole(["DIRECTOR", "DEPUTY", "TEACHER", "DEV
 
     return res.json(examsWithStats);
   } catch (error) {
-    console.error("Error fetching exams:", error);
+    logger.error("Error fetching exams:", error);
     return res.status(500).json({ message: "Ошибка при получении контрольных" });
   }
 });
@@ -127,7 +128,7 @@ router.post("/", authMiddleware, checkRole(["DIRECTOR", "DEPUTY", "TEACHER", "DE
       publicUrl: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/exam/${exam.publicToken}`
     });
   } catch (error) {
-    console.error("Error creating exam:", error);
+    logger.error("Error creating exam:", error);
     return res.status(500).json({ message: "Ошибка при создании контрольной" });
   }
 });
@@ -172,7 +173,7 @@ router.get("/:id", authMiddleware, checkRole(["DIRECTOR", "DEPUTY", "TEACHER", "
       publicUrl: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/exam/${exam.publicToken}`
     });
   } catch (error) {
-    console.error("Error fetching exam:", error);
+    logger.error("Error fetching exam:", error);
     return res.status(500).json({ message: "Ошибка при получении контрольной" });
   }
 });
@@ -277,7 +278,7 @@ router.put("/:id", authMiddleware, checkRole(["DIRECTOR", "DEPUTY", "TEACHER", "
       publicUrl: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/exam/${exam.publicToken}`
     });
   } catch (error) {
-    console.error("Error updating exam:", error);
+    logger.error("Error updating exam:", error);
     return res.status(500).json({ message: "Ошибка при обновлении контрольной" });
   }
 });
@@ -316,7 +317,7 @@ router.get(
 
       return res.json(submission);
     } catch (error) {
-      console.error("Error fetching submission details:", error);
+      logger.error("Error fetching submission details:", error);
       return res.status(500).json({ message: "Ошибка при получении деталей" });
     }
   }
@@ -353,7 +354,7 @@ router.delete("/:id", authMiddleware, checkRole(["DIRECTOR", "DEPUTY", "TEACHER"
 
     return res.json({ message: "Контрольная удалена" });
   } catch (error) {
-    console.error("Error deleting exam:", error);
+    logger.error("Error deleting exam:", error);
     return res.status(500).json({ message: "Ошибка при удалении контрольной" });
   }
 });
@@ -399,7 +400,7 @@ router.post("/:id/publish", authMiddleware, checkRole(["DIRECTOR", "DEPUTY", "TE
       publicUrl: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/exam/${exam.publicToken}`
     });
   } catch (error) {
-    console.error("Error publishing exam:", error);
+    logger.error("Error publishing exam:", error);
     return res.status(500).json({ message: "Ошибка при публикации контрольной" });
   }
 });
@@ -436,7 +437,7 @@ router.post("/:id/close", authMiddleware, checkRole(["DIRECTOR", "DEPUTY", "TEAC
 
     return res.json(exam);
   } catch (error) {
-    console.error("Error closing exam:", error);
+    logger.error("Error closing exam:", error);
     return res.status(500).json({ message: "Ошибка при закрытии контрольной" });
   }
 });
@@ -515,7 +516,7 @@ router.get("/:id/results", authMiddleware, checkRole(["DIRECTOR", "DEPUTY", "TEA
       },
     });
   } catch (error) {
-    console.error("Error fetching exam results:", error);
+    logger.error("Error fetching exam results:", error);
     return res.status(500).json({ message: "Ошибка при получении результатов" });
   }
 });
@@ -559,7 +560,7 @@ router.post("/answers/:answerId/grade", authMiddleware, checkRole(["DIRECTOR", "
 
     return res.json(answer);
   } catch (error) {
-    console.error("Error grading answer:", error);
+    logger.error("Error grading answer:", error);
     return res.status(500).json({ message: "Ошибка при оценке ответа" });
   }
 });
@@ -657,7 +658,7 @@ router.get("/:id/export", authMiddleware, checkRole(["DIRECTOR", "DEPUTY", "TEAC
     
     return res.send(csvContent);
   } catch (error) {
-    console.error("Error exporting exam results:", error);
+    logger.error("Error exporting exam results:", error);
     return res.status(500).json({ message: "Ошибка при экспорте результатов" });
   }
 });
