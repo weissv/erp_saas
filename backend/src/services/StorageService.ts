@@ -78,11 +78,13 @@ function buildSafeKey(
   //   1. Take only the base name (no directory component).
   //   2. Remove any null bytes or control characters.
   //   3. Collapse multiple dots (prevents ".." tricks).
+  //   4. Replace characters that cause URL-encoding issues in S3 keys.
   const baseName = path.basename(filename);
   const sanitized = baseName
-    .replace(/[\x00-\x1f]/g, "") // strip control chars
-    .replace(/\.{2,}/g, ".")     // collapse consecutive dots
-    .replace(/[/\\]/g, "_");     // just in case
+    .replace(/[\x00-\x1f]/g, "")       // strip control chars
+    .replace(/\.{2,}/g, ".")           // collapse consecutive dots
+    .replace(/[/\\]/g, "_")            // no slashes
+    .replace(/[^a-zA-Z0-9._-]/g, "_"); // replace other special chars
 
   if (!sanitized || sanitized === "." || sanitized === "..") {
     throw new Error("Invalid filename after sanitisation");

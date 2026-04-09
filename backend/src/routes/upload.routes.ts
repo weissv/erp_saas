@@ -31,13 +31,19 @@ router.post("/", upload.single("file"), async (req: Request, res: Response) => {
       return res.status(400).json({ message: "No file provided" });
     }
 
-    // tenantId comes from the authenticated user context or body fallback
+    // tenantId comes from the authenticated user context or body
     const tenantId: string =
-      (req as any).tenantId ??
-      req.body.tenantId ??
-      "default";
+      (req as any).tenantId ?? req.body.tenantId;
 
-    const userId = String(req.user?.id ?? "anonymous");
+    if (!tenantId) {
+      return res.status(400).json({ message: "Missing tenantId" });
+    }
+
+    if (!req.user?.id) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const userId = String(req.user.id);
 
     const result = await StorageService.upload(
       tenantId,
@@ -69,8 +75,10 @@ router.delete("/*", async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Missing file key" });
     }
 
-    const tenantId: string =
-      (req as any).tenantId ?? "default";
+    const tenantId: string = (req as any).tenantId;
+    if (!tenantId) {
+      return res.status(400).json({ message: "Missing tenantId" });
+    }
 
     await StorageService.remove(tenantId, key);
     res.json({ message: "File deleted" });
