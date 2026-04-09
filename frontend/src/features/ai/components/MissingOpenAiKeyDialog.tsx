@@ -102,7 +102,7 @@ export function MissingOpenAiKeyDialog() {
                   <ExternalLink className="h-3 w-3" />
                 </a>
               </li>
-              <li>Navigate to Settings → AI Integration</li>
+              <li>Navigate to the AI Integration settings page</li>
               <li>Paste your key and save</li>
             </ol>
           </div>

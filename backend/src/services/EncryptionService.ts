@@ -91,7 +91,7 @@ export function maskApiKey(key: string): string {
   if (key.length <= 8) return "****";
 
   // Keep the prefix (e.g. "sk-" or "sk-proj-") and last 4 chars
-  const dashIdx = key.indexOf("-", 3); // find second dash
+  const dashIdx = key.indexOf("-", 3); // find first dash after position 3
   const prefixEnd = dashIdx > 0 && dashIdx < 12 ? dashIdx + 1 : 3;
   const prefix = key.slice(0, prefixEnd);
   const suffix = key.slice(-4);
