@@ -2,13 +2,15 @@
 // Utility functions for the frontend
 
 import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
 /**
- * Combines class names using clsx
- * This is the standard utility for conditional class names in shadcn/ui
+ * Combines class names using clsx + tailwind-merge.
+ * This ensures conflicting Tailwind utilities resolve correctly
+ * (e.g. cn("px-4", "px-2") → "px-2").
  */
 export function cn(...inputs: ClassValue[]) {
-  return clsx(inputs);
+  return twMerge(clsx(inputs));
 }
 
 /**
