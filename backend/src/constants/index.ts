@@ -313,9 +313,23 @@ export const HTTP_STATUS = {
   NO_CONTENT: 204,
   BAD_REQUEST: 400,
   UNAUTHORIZED: 401,
+  PAYMENT_REQUIRED: 402,
   FORBIDDEN: 403,
   NOT_FOUND: 404,
   CONFLICT: 409,
   UNPROCESSABLE_ENTITY: 422,
   INTERNAL_SERVER_ERROR: 500,
 } as const;
+
+// ============================================================================
+// MULTI-TENANT / CONTROL PLANE
+// ============================================================================
+
+export const TENANT_STATUS = {
+  ACTIVE: 'ACTIVE',
+  TRIAL: 'TRIAL',
+  SUSPENDED: 'SUSPENDED',
+  DEACTIVATED: 'DEACTIVATED',
+} as const;
+
+export type TenantStatus = keyof typeof TENANT_STATUS;
