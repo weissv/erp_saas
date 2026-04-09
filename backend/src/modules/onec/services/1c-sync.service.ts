@@ -1,5 +1,5 @@
-import cron from "node-cron";
 import axios, { type AxiosInstance } from "axios";
+import { scheduleWithJitter } from "../../../services/CronJitterService";
 import {
   type Prisma,
   PrismaClient,
@@ -334,14 +334,14 @@ export class OneCSyncService {
     const schedule = config.oneCCronSchedule;
     logger.info(`[1C-Sync] Starting cron schedule: ${schedule}`);
 
-    cron.schedule(schedule, async () => {
-      logger.info(`[1C-Sync] Cron triggered at ${new Date().toISOString()}`);
-      try {
+    scheduleWithJitter(
+      schedule,
+      async () => {
+        logger.info(`[1C-Sync] Cron triggered at ${new Date().toISOString()}`);
         await this.syncAll();
-      } catch (error) {
-        logger.error("[1C-Sync] Top-level sync error:", error instanceof Error ? error.message : String(error));
-      }
-    });
+      },
+      { label: "1C-Sync", maxJitterMs: 30_000 },
+    );
   }
 
   async runOnce(): Promise<SyncReport> {
