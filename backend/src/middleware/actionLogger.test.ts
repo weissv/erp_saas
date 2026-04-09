@@ -13,6 +13,11 @@ vi.mock("../prisma", () => ({
   },
 }));
 
+// ── Mock logger ──────────────────────────────────────────────────────────────
+vi.mock("../utils/logger", () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}));
+
 import { prisma } from "../prisma";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
