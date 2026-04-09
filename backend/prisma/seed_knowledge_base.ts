@@ -28,212 +28,212 @@ async function main() {
 
     author = await prisma.user.create({
       data: {
-        email: 'admin@mezon.uz',
+        email: 'admin@example.com',
         passwordHash: hashedPassword,
         role: Role.ADMIN,
         employeeId: employee.id,
       }
     });
-    console.log('Created default admin user: admin@mezon.uz');
+    console.log('Created default admin user: admin@example.com');
   }
 
   const articles = [
     {
-      title: 'Добро пожаловать в Mezon ERP',
-      slug: 'welcome-to-mezon-erp',
+      title: 'Welcome to the ERP Platform',
+      slug: 'welcome-to-erp-platform',
       tags: ['general', 'onboarding'],
       roles: [], // All roles
-      summary: 'Обзор возможностей системы и навигация по основным модулям.',
+      summary: 'Overview of system capabilities and navigation across the main modules.',
       content: `
-# Добро пожаловать в Mezon ERP
+# Welcome to the ERP Platform
 
-Mezon ERP — это комплексная система управления школой, объединяющая учебные, административные и хозяйственные процессы.
+This is a comprehensive school management system that unites academic, administrative, and operational processes.
 
-## Основные разделы
+## Main Sections
 
-### 🎓 Учебный процесс
-* **Дети**: База данных учеников, личные дела, здоровье.
-* **Классы**: Управление группами и классным руководством.
-* **Расписание**: Сетка занятий, звонков и кабинетов.
-* **LMS**: Электронный журнал, домашние задания и оценки.
-* **Контрольные**: Платформа для проведения тестирований.
+### 🎓 Academic
+* **Children**: Student database, personal files, health records.
+* **Classes**: Group management and homeroom assignments.
+* **Schedule**: Class timetable, bells, and room assignments.
+* **LMS**: Grade book, homework, and assessments.
+* **Exams**: Online test platform.
 
-### 👥 Кадры
-* **Сотрудники**: Личные дела, договоры, ставки.
-* **Штатное расписание**: Планирование вакансий и нагрузок.
+### 👥 Staff
+* **Employees**: Personal files, contracts, pay rates.
+* **Staffing Table**: Vacancy and workload planning.
 
-### 💰 Финансы и Склад
-* **Финансы**: Учет доходов и расходов, бюджетирование.
-* **Склад**: Учет товаров, инвентаризация, списания.
-* **Закупки**: Полный цикл снабжения от заявки до приемки.
-* **Меню и Рецепты**: Технологические карты и планирование питания.
+### 💰 Finance & Inventory
+* **Finance**: Revenue/expense tracking and budgeting.
+* **Inventory**: Stock management, audits, write-offs.
+* **Procurement**: Full supply-chain from request to delivery.
+* **Menu & Recipes**: Meal planning and recipe costing.
 
-### 🛠 Хозяйство
-* **Заявки**: Система тикетов для ремонта и обслуживания.
-* **Безопасность**: Журналы посещений и инцидентов.
+### 🛠 Facilities
+* **Maintenance**: Repair and service ticket system.
+* **Security**: Visitor and incident logs.
       `,
     },
     {
-      title: 'Работа с модулем "Дети"',
+      title: 'Working with the Children Module',
       slug: 'children-module-guide',
       tags: ['students', 'guide'],
       roles: ['ADMIN', 'DEPUTY', 'TEACHER'],
-      summary: 'Инструкция по добавлению и редактированию карточек учеников.',
+      summary: 'Guide for adding and editing student records.',
       content: `
-# Управление контингентом учащихся
+# Student Management
 
-Модуль "Дети" позволяет вести полный учет учеников школы.
+The Children module provides complete student record-keeping.
 
-## Добавление нового ученика
-1. Перейдите в раздел **Дети**.
-2. Нажмите кнопку **"Добавить ребенка"**.
-3. Заполните обязательные поля:
-   * ФИО
-   * Дата рождения
-   * Класс (Группа)
-4. Дополнительно можно указать медицинские данные (аллергии) и статус.
+## Adding a New Student
+1. Navigate to **Children**.
+2. Click **"Add Child"**.
+3. Fill in the required fields:
+   * Full name
+   * Date of birth
+   * Class (Group)
+4. Optionally specify medical data (allergies) and status.
 
-## Статусы учеников
-* **ACTIVE**: Учится в данный момент.
-* **LEFT**: Выбыл из школы (архив).
+## Student Statuses
+* **ACTIVE**: Currently enrolled.
+* **LEFT**: Withdrawn (archived).
 
-## Перевод между классами
-Для перевода ученика откройте его профиль и измените поле "Группа". История перемещений сохранится в логах.
+## Class Transfers
+To transfer a student, open their profile and change the "Group" field. Transfer history is kept in the logs.
       `,
     },
     {
-      title: 'Закупки и Снабжение',
+      title: 'Procurement Workflow',
       slug: 'procurement-workflow',
       tags: ['finance', 'inventory', 'procurement'],
       roles: ['ADMIN', 'ZAVHOZ', 'DIRECTOR', 'ACCOUNTANT'],
-      summary: 'Как оформить заявку на закупку и отследить её статус.',
+      summary: 'How to create a procurement request and track its status.',
       content: `
-# Процесс закупок (Procurement)
+# Procurement Process
 
-Система поддерживает полный цикл снабжения: от планирования до оприходования на склад.
+The system supports the full supply-chain: from planning to warehouse receipt.
 
-## Этапы закупки
+## Procurement Stages
 
-1. **Создание заявки (DRAFT)**
-   * Завхоз или администратор создает черновик закупки.
-   * Указывается поставщик, список товаров и цены.
+1. **Create Request (DRAFT)**
+   * The facilities manager or admin creates a draft.
+   * Supplier, item list, and prices are specified.
 
-2. **Согласование (PENDING -> APPROVED)**
-   * Директор получает уведомление о новой заявке.
-   * Директор может одобрить или отклонить заявку с комментарием.
+2. **Approval (PENDING -> APPROVED)**
+   * The director receives a notification.
+   * The director can approve or reject with a comment.
 
-3. **Заказ (ORDERED)**
-   * После одобрения статус меняется на "Заказано".
-   * Отправляется заказ поставщику.
+3. **Ordered (ORDERED)**
+   * After approval the status changes to "Ordered".
+   * The order is sent to the supplier.
 
-4. **Доставка и Приемка (DELIVERED -> RECEIVED)**
-   * При поступлении товара на склад ответственный сотрудник отмечает фактическое количество.
-   * Система автоматически создает транзакции **IN** (Приход) на складе.
+4. **Delivery & Receipt (DELIVERED -> RECEIVED)**
+   * Upon arrival the responsible employee marks actual quantities.
+   * The system automatically creates **IN** (receipt) transactions in inventory.
 
-## Типы закупок
-* **PLANNED**: Плановая закупка (продукты на месяц, канцтовары на четверть).
-* **OPERATIONAL**: Срочная закупка (ремонт, замена оборудования).
+## Procurement Types
+* **PLANNED**: Scheduled procurement (monthly food supplies, quarterly stationery).
+* **OPERATIONAL**: Urgent procurement (repairs, equipment replacement).
       `,
     },
     {
-      title: 'Работа с LMS: Оценки и ДЗ',
+      title: 'LMS: Grades & Homework',
       slug: 'lms-grading-homework',
       tags: ['lms', 'teachers'],
       roles: ['TEACHER', 'DEPUTY', 'ADMIN'],
-      summary: 'Инструкция для учителей по ведению электронного журнала.',
+      summary: 'Teacher guide for the electronic grade book.',
       content: `
-# Электронный журнал (LMS)
+# Electronic Grade Book (LMS)
 
-## Выставление оценок
-1. Перейдите в раздел **Школьная LMS** -> **Журнал**.
-2. Выберите класс и предмет.
-3. Нажмите на ячейку на пересечении ученика и даты.
-4. Выберите оценку (1-5) или отметку о посещаемости.
+## Entering Grades
+1. Navigate to **School LMS** -> **Grade Book**.
+2. Select a class and subject.
+3. Click the cell at the intersection of a student and a date.
+4. Choose a grade (1-5) or an attendance mark.
 
-## Домашние задания
-1. В разделе **Домашние задания** нажмите "Создать".
-2. Укажите тему, описание и дедлайн.
-3. Можно прикрепить файлы.
-4. Ученики увидят задание в своих личных кабинетах.
+## Homework
+1. In the **Homework** section click "Create".
+2. Specify the topic, description, and deadline.
+3. Optionally attach files.
+4. Students will see the assignment in their personal dashboards.
 
-## Типы работ
-* **Regular**: Обычная работа на уроке.
-* **Test**: Контрольная работа.
-* **Quarterly**: Четвертная оценка.
-* **Exam**: Экзамен.
+## Work Types
+* **Regular**: Everyday classwork.
+* **Test**: Assessment / quiz.
+* **Quarterly**: Quarter grade.
+* **Exam**: Final exam.
       `,
     },
     {
-      title: 'Техническая поддержка и Заявки',
+      title: 'Maintenance Requests',
       slug: 'maintenance-requests',
       tags: ['maintenance', 'support'],
       roles: [], // All roles can create requests
-      summary: 'Как сообщить о поломке или запросить необходимое оборудование.',
+      summary: 'How to report a broken item or request equipment.',
       content: `
-# Заявки на обслуживание
+# Maintenance Requests
 
-Если в классе что-то сломалось или нужны хозяйственные товары, создайте заявку.
+If something is broken or supplies are needed, create a request.
 
-## Создание заявки
-1. Раздел **Заявки** -> **Новая заявка**.
-2. Выберите тип:
-   * **REPAIR**: Ремонт (сломался стул, перегорела лампа).
-   * **ISSUE**: Выдача (нужны маркеры, бумага).
-3. Опишите проблему и приложите фото (опционально).
+## Creating a Request
+1. Go to **Maintenance** -> **New Request**.
+2. Select a type:
+   * **REPAIR**: Fix something (broken chair, burnt-out lamp).
+   * **ISSUE**: Supply request (markers, paper).
+3. Describe the problem and attach a photo (optional).
 
-## Статусы
-* **PENDING**: Ожидает рассмотрения завхозом.
-* **IN_PROGRESS**: В работе.
-* **DONE**: Выполнено.
-* **REJECTED**: Отклонено (см. комментарий).
+## Statuses
+* **PENDING**: Awaiting review by facilities.
+* **IN_PROGRESS**: Being worked on.
+* **DONE**: Completed.
+* **REJECTED**: Declined (see comment).
       `,
     },
     {
-      title: 'Проведение Экзаменов',
+      title: 'Running Exams',
       slug: 'running-exams',
       tags: ['exams', 'lms'],
       roles: ['TEACHER', 'DEPUTY'],
-      summary: 'Создание и публикация контрольных работ на платформе.',
+      summary: 'Creating and publishing online tests.',
       content: `
-# Платформа Контрольных Работ
+# Online Exam Platform
 
-Модуль позволяет создавать онлайн-тесты с автоматической проверкой.
+The module allows creating auto-graded online tests.
 
-## Создание теста
-1. **Контрольные** -> **Создать**.
-2. Укажите название, предмет и время выполнения.
-3. Добавьте вопросы:
-   * **Выбор ответа**: Одиночный или множественный.
-   * **Текст**: Открытый вопрос (проверяется AI или учителем).
-   * **Задача**: Текстовое решение.
+## Creating a Test
+1. **Exams** -> **Create**.
+2. Specify title, subject, and time limit.
+3. Add questions:
+   * **Multiple choice**: Single or multi-select.
+   * **Text**: Open-ended (reviewed by AI or teacher).
+   * **Problem**: Written solution.
 
-## Публикация
-* Установите статус **PUBLISHED**.
-* Система сгенерирует публичную ссылку или код доступа для учеников.
-* Установите дату и время доступа (Start/End Date).
+## Publishing
+* Set status to **PUBLISHED**.
+* The system generates a public link or access code.
+* Set start and end dates for availability.
 
-## Результаты
-После завершения теста результаты доступны во вкладке **Ответы**. Система автоматически подсчитывает баллы за тестовые вопросы. Открытые вопросы требуют проверки (или пред-проверки через AI).
+## Results
+After the test closes, results are available in the **Answers** tab. The system auto-scores multiple choice. Open-ended questions require review (or AI pre-check).
       `,
     },
     {
-      title: 'Учет питания (Меню и Рецепты)',
+      title: 'Nutrition Management',
       slug: 'nutrition-management',
       tags: ['nutrition', 'kitchen'],
       roles: ['ADMIN', 'ZAVHOZ', 'ACCOUNTANT'],
-      summary: 'Составление меню и калькуляция блюд.',
+      summary: 'Menu planning and recipe costing.',
       content: `
-# Организация питания
+# Nutrition Management
 
-## Ингредиенты и Рецепты
-* **Ингредиенты**: Базовые продукты (мука, сахар, молоко). Содержат данные о КБЖУ.
-* **Блюда (Рецепты)**: Состоят из ингредиентов. Система считает себестоимость и калорийность блюда автоматически.
+## Ingredients & Recipes
+* **Ingredients**: Basic products (flour, sugar, milk) with KCAL/protein/fat/carb data.
+* **Dishes (Recipes)**: Composed of ingredients. The system calculates cost and calories automatically.
 
-## Составление Меню
-1. Раздел **Меню**.
-2. Выберите дату и возрастную группу (Ясли, Дошкольники, Школа).
-3. Добавьте блюда на завтрак, обед, полдник и ужин.
-4. Меню можно распечатать или опубликовать для родителей.
+## Menu Planning
+1. Navigate to **Menu**.
+2. Select a date and age group (Nursery, Preschool, School).
+3. Add dishes for breakfast, lunch, snack, and dinner.
+4. The menu can be printed or published for parents.
       `,
     }
   ];
@@ -273,10 +273,6 @@ Mezon ERP — это комплексная система управления 
         }
       });
     }
-
-    // Note: We are not generating embeddings here as that requires the AiService to be running/mocked.
-    // In a real scenario, the service hook or a background job would generate them.
-    // For this seed, the articles will be text-searchable but not vector-searchable until updated via API or a utility script.
   }
 
   console.log('Knowledge Base seeding completed.');
