@@ -102,7 +102,7 @@ export function startOneCPushWorker(): Worker<OneCPushJobData, OneCPushJobResult
         batchCount: payload.batches.length,
       });
 
-      let processedRecords = 0;
+      let attemptedRecords = 0;
       let errors = 0;
 
       try {
@@ -164,7 +164,7 @@ export function startOneCPushWorker(): Worker<OneCPushJobData, OneCPushJobResult
               }
             });
 
-            processedRecords += chunk.length;
+            attemptedRecords += chunk.length;
             logger.info(
               `[1C-Push-Worker] Job ${jobId}: entity=${batch.entity}, chunk=${chunkNumber}, chunkRecords=${chunk.length}`,
             );
@@ -223,7 +223,7 @@ export function startOneCPushWorker(): Worker<OneCPushJobData, OneCPushJobResult
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         logger.error(
-          `[1C-Push-Worker] Job ${jobId} failed after ${processedRecords}/${totalPayloadRecords} records: ${message}`,
+          `[1C-Push-Worker] Job ${jobId} failed after ${attemptedRecords}/${totalPayloadRecords} attempted records: ${message}`,
         );
 
         // Update sync log with failure
