@@ -27,6 +27,8 @@ import {
 type FinanceRegSubTab = "vat-summary" | "fixed-assets";
 type RegisterDashboardFilters = OneCRegisterFilters &
   Record<string, string | number | boolean | undefined>;
+const MAX_TABLE_ROWS = 12;
+const MAX_SIGNALS = 6;
 
 type KpiCardProps = {
   label: string;
@@ -200,7 +202,7 @@ function VatSummaryPanel({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {data.entries.slice(0, 12).map((entry) => (
+                    {data.entries.slice(0, MAX_TABLE_ROWS).map((entry) => (
                       <tr key={`${entry.id}-${entry.documentLabel}`} className="bg-card">
                         <td className="px-4 py-3 font-medium text-foreground">{entry.documentLabel}</td>
                         <td className="px-4 py-3 text-muted-foreground">{entry.counterpartyLabel}</td>
@@ -228,7 +230,7 @@ function VatSummaryPanel({
               <CardDescription>Быстрый обзор бизнес-событий без полей 1C вроде Сторно, Строка и Record Type.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {data.entries.slice(0, 6).map((entry) => (
+              {data.entries.slice(0, MAX_SIGNALS).map((entry) => (
                 <div key={`signal-${entry.id}-${entry.periodLabel}`} className="rounded-xl border border-border bg-muted/30 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -350,7 +352,7 @@ function FixedAssetsPanel({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {data.assets.slice(0, 12).map((asset) => (
+                  {data.assets.slice(0, MAX_TABLE_ROWS).map((asset) => (
                     <tr key={asset.key} className="bg-card align-top">
                       <td className="px-4 py-3">
                         <div className="space-y-2">

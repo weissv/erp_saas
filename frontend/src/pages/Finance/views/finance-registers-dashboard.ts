@@ -191,7 +191,7 @@ function parseNumberish(value: unknown) {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
-function shortReference(value: string | number) {
+function formatShortReference(value: string | number) {
   const raw = String(value).trim();
   const tail = raw.slice(-6).toUpperCase();
   return tail ? `#${tail}` : "#—";
@@ -203,18 +203,18 @@ function resolveReferenceValue(key: string, value: string | number) {
   }
 
   if (matchesHints(key, DOCUMENT_HINTS)) {
-    return `Документ ${shortReference(value)}`;
+    return `Документ ${formatShortReference(value)}`;
   }
 
   if (matchesHints(key, ASSET_NAME_HINTS)) {
-    return `Актив ${shortReference(value)}`;
+    return `Актив ${formatShortReference(value)}`;
   }
 
   if (matchesHints(key, COUNTERPARTY_HINTS)) {
-    return `Контрагент ${shortReference(value)}`;
+    return `Контрагент ${formatShortReference(value)}`;
   }
 
-  return `Ссылка ${shortReference(value)}`;
+  return `Ссылка ${formatShortReference(value)}`;
 }
 
 function resolveDirection(
@@ -271,7 +271,7 @@ function createBusinessField(key: string, value: unknown): BusinessField | null 
   const label = humanizeKey(key);
   const numericValue = parseNumberish(value);
 
-  if (/(Key|Id)$/u.test(key) && (typeof value === "string" || typeof value === "number")) {
+  if (/(key|id)$/iu.test(key) && (typeof value === "string" || typeof value === "number")) {
     return {
       key,
       label,
@@ -405,7 +405,7 @@ export function buildVatDashboard(items: OneCRegisterItem[]): VatDashboardData {
         ]),
       );
       const documentLabel =
-        findStringValue(record.fields, DOCUMENT_HINTS) ?? `Документ ${shortReference(record.recordId)}`;
+        findStringValue(record.fields, DOCUMENT_HINTS) ?? `Документ ${formatShortReference(record.recordId)}`;
       const counterpartyLabel =
         findStringValue(record.fields, COUNTERPARTY_HINTS) ??
         findStringValue(record.fields, ["организац", "company"]) ??
@@ -413,7 +413,7 @@ export function buildVatDashboard(items: OneCRegisterItem[]): VatDashboardData {
       const currencyLabel = findStringValue(record.fields, ["валют", "currency"]) ?? "UZS";
 
       entries.push({
-        id: Number(record.recordId.replace(/[^\d]/gu, "")) || item.id,
+        id: Number(`${item.id}${record.recordId.replace(/[^\d]/gu, "").slice(-3)}`),
         documentLabel,
         counterpartyLabel,
         periodLabel: formatPeriod(record.period),
@@ -455,7 +455,7 @@ export function buildFixedAssetsDashboard(items: OneCRegisterItem[]): FixedAsset
 
     for (const record of records) {
       const assetName =
-        findStringValue(record.fields, ASSET_NAME_HINTS) ?? `Актив ${shortReference(record.recordId)}`;
+        findStringValue(record.fields, ASSET_NAME_HINTS) ?? `Актив ${formatShortReference(record.recordId)}`;
       const category =
         findStringValue(record.fields, CATEGORY_HINTS) ??
         (normalizeKey(record.registerType).includes("нма") ? "Нематериальный актив" : "Основное средство");
