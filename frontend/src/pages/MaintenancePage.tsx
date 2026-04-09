@@ -12,6 +12,8 @@ import { FormError} from '../components/ui/FormError';
 import { InventoryAutocomplete} from '../components/ui/InventoryAutocomplete';
 import { DataTable, Column} from '../components/DataTable/DataTable';
 import { Trash2, AlertCircle, Edit, Plus, Wrench, Package, ClipboardList, Filter, Sparkles, Settings, CheckCircle, Clock, Loader2, X, Check, PlusCircle, MinusCircle} from 'lucide-react';
+import { MacosAlertDialog } from '../components/MacosAlertDialog';
+import { Skeleton, SkeletonTable } from '../components/ui/LoadingState';
 import { useAuth} from '../hooks/useAuth';
 // Импортируем централизованные типы и схемы
 import {
@@ -76,6 +78,8 @@ export default function MaintenancePage() {
  const [actionRequest, setActionRequest] = useState<MaintenanceRequest | null>(null);
  const [rejectionReason, setRejectionReason] = useState('');
  const [actionLoading, setActionLoading] = useState(false);
+ const [cleaningToDelete, setCleaningToDelete] = useState<number | null>(null);
+ const [equipmentToDelete, setEquipmentToDelete] = useState<number | null>(null);
 
  // Cleaning state
  const [cleaningSchedules, setCleaningSchedules] = useState<CleaningSchedule[]>([]);
@@ -370,13 +374,14 @@ export default function MaintenancePage() {
 };
 
  const deleteCleaning = async (id: number) => {
- if (!confirm('Удалить запись об уборке?')) return;
  try {
  await api.delete(`/api/maintenance/cleaning/${id}`);
  toast.success('Удалено');
  fetchCleaningSchedules();
 } catch (error: any) {
  toast.error('Ошибка удаления', { description: error?.message});
+} finally {
+ setCleaningToDelete(null);
 }
 };
 
@@ -432,13 +437,14 @@ export default function MaintenancePage() {
 };
 
  const deleteEquipment = async (id: number) => {
- if (!confirm('Удалить оборудование?')) return;
  try {
  await api.delete(`/api/maintenance/equipment/${id}`);
  toast.success('Удалено');
  fetchEquipment();
 } catch (error: any) {
  toast.error('Ошибка удаления', { description: error?.message});
+} finally {
+ setEquipmentToDelete(null);
 }
 };
 
@@ -767,9 +773,8 @@ export default function MaintenancePage() {
 
  <Card>
  {loading ? (
- <div className="p-8 text-center">
- <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
- <p className="mt-2 text-secondary">Загрузка...</p>
+ <div className="p-4">
+ <SkeletonTable rows={5} columns={5} />
  </div>
  ) : filteredRequests.length === 0 ? (
  <div className="p-8 text-center text-secondary">
@@ -786,9 +791,8 @@ export default function MaintenancePage() {
  {activeTab === 'cleaning' && (
  <Card>
  {cleaningLoading ? (
- <div className="p-8 text-center">
- <Loader2 className="h-8 w-8 animate-spin mx-auto text-macos-blue"/>
- <p className="mt-2 text-secondary">Загрузка...</p>
+ <div className="p-4">
+ <SkeletonTable rows={4} columns={3} />
  </div>
  ) : cleaningSchedules.length === 0 ? (
  <div className="p-8 text-center text-secondary">
@@ -825,7 +829,7 @@ export default function MaintenancePage() {
  <Button size="sm"variant="outline"onClick={() => openCleaningModal(schedule)}>
  <Edit className="h-4 w-4"/>
  </Button>
- <Button size="sm"variant="destructive"onClick={() => deleteCleaning(schedule.id)}>
+ <Button size="sm"variant="destructive"onClick={() => setCleaningToDelete(schedule.id)}>
  <Trash2 className="h-4 w-4"/>
  </Button>
  </div>
@@ -840,10 +844,7 @@ export default function MaintenancePage() {
  {activeTab === 'equipment' && (
  <Card>
  {equipmentLoading ? (
- <div className="p-8 text-center">
- <Loader2 className="h-8 w-8 animate-spin mx-auto text-macos-blue"/>
- <p className="mt-2 text-secondary">Загрузка...</p>
- </div>
+ <div className="p-4"><SkeletonTable rows={4} columns={4} /></div>
  ) : equipment.length === 0 ? (
  <div className="p-8 text-center text-secondary">
  <Settings className="h-12 w-12 mx-auto mb-3 text-tertiary"/>

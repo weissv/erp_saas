@@ -22,6 +22,9 @@ import { Exam, ExamStatus} from"../types/exam";
 import { toast} from"sonner";
 import { Link, useNavigate} from"react-router-dom";
 import { Button} from"../components/ui/button";
+import { Skeleton} from"../components/ui/LoadingState";
+import { EmptyState} from"../components/ui/EmptyState";
+import { MacosAlertDialog} from"../components/MacosAlertDialog";
 
 const statusLabels: Record<ExamStatus, string> = {
  DRAFT:"Черновик",
@@ -43,6 +46,7 @@ export default function ExamsPage() {
  const [loading, setLoading] = useState(true);
  const [searchQuery, setSearchQuery] = useState("");
  const [statusFilter, setStatusFilter] = useState<string>("");
+ const [examToDelete, setExamToDelete] = useState<Exam | null>(null);
 
  useEffect(() => {
  fetchExams();
@@ -93,13 +97,14 @@ export default function ExamsPage() {
 };
 
  const handleDelete = async (examId: string) => {
- if (!confirm("Вы уверены, что хотите удалить контрольную?")) return;
  try {
  await examsApi.deleteExam(examId);
  toast.success("Контрольная удалена");
  fetchExams();
 } catch (error) {
  toast.error("Ошибка при удалении");
+} finally {
+ setExamToDelete(null);
 }
 };
 
@@ -120,9 +125,40 @@ export default function ExamsPage() {
 
  if (loading) {
  return (
- <div className="flex items-center justify-center min-h-[400px]">
- <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
- </div>
+ <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <Skeleton height={28} width="40%" className="mb-2" />
+          <Skeleton height={16} width="55%" />
+        </div>
+        <Skeleton height={36} width={160} />
+      </div>
+      <Skeleton height={56} rounded="lg" />
+      <div className="grid gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="border border-border rounded-xl p-6">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-3 mb-2">
+                  <Skeleton height={18} width="45%" />
+                  <Skeleton height={18} width={80} rounded="full" />
+                </div>
+                <Skeleton height={14} width="70%" />
+                <div className="flex gap-4 mt-2">
+                  {Array.from({ length: 3 }).map((_, j) => (
+                    <Skeleton key={j} height={12} width={80} />
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Skeleton height={32} width={120} rounded="md" />
+                <Skeleton height={32} width={100} rounded="md" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
  );
 }
 
@@ -169,54 +205,54 @@ export default function ExamsPage() {
 
       {/* Список контрольных */}
       {filteredExams.length === 0 ? (
-        <div className="bg-surface-primary rounded-xl shadow-subtle p-12 text-center border border-card">
-          <FileText className="h-16 w-16 text-tertiary mx-auto mb-4" />
-          <h3 className="text-[14px] font-semibold tracking-[-0.01em] text-primary mb-2">Нет контрольных</h3>
-          <p className="text-[14px] text-secondary mb-6">Создайте первую контрольную работу</p>
-          <Button onClick={() => navigate("/exams/new")}>
-            <Plus className="h-5 w-5 mr-1" />
-            Создать контрольную
-          </Button>
+        <div className="bg-card rounded-xl border border-border">
+          <EmptyState
+            icon={FileText}
+            title={searchQuery || statusFilter ? "Ничего не найдено" : "Нет контрольных работ"}
+            description={searchQuery || statusFilter ? "Попробуйте изменить параметры поиска" : "Создайте первую контрольную работу для учеников"}
+            action={{ label: "Создать контрольную", onClick: () => navigate("/exams/new"), icon: Plus }}
+            size="lg"
+          />
         </div>
  ) : (
         <div className="grid gap-4">
           {filteredExams.map((exam) => (
-            <div key={exam.id} className="bg-surface-primary border border-card rounded-xl shadow-subtle p-6">
+            <div key={exam.id} className="bg-card border border-border rounded-xl p-6 hover:bg-muted/50 transition-colors duration-200">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 {/* Основная информация */}
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-[14px] font-semibold tracking-[-0.01em] text-primary">{exam.title}</h3>
+                    <h3 className="text-foreground font-medium tracking-[-0.01em]">{exam.title}</h3>
                     <span className={`mezon-badge ${statusColors[exam.status]}`}>
                       {statusLabels[exam.status]}
                     </span>
                   </div>
                   {exam.description && (
-                    <p className="text-[14px] leading-relaxed text-secondary mb-3 line-clamp-2">{exam.description}</p>
+                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{exam.description}</p>
                   )}
-                  <div className="flex flex-wrap items-center gap-4 text-[11px] font-medium text-tertiary uppercase tracking-widest">
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
  {exam.subject && (
  <span className="flex items-center gap-1">
- <FileText className="h-4 w-4"/>
+ <FileText className="h-3.5 w-3.5"/>
  {exam.subject}
  </span>
  )}
- <span className="flex items-center gap-1">
- <FileText className="h-4 w-4"/>
+ <span className="flex items-center gap-1 tabular-nums">
+ <FileText className="h-3.5 w-3.5"/>
  {exam._count?.questions || 0} вопросов
  </span>
  {exam.timeLimit && (
- <span className="flex items-center gap-1">
- <Clock className="h-4 w-4"/>
+ <span className="flex items-center gap-1 tabular-nums">
+ <Clock className="h-3.5 w-3.5"/>
  {exam.timeLimit} мин
  </span>
  )}
- <span className="flex items-center gap-1">
- <Users className="h-4 w-4"/>
+ <span className="flex items-center gap-1 tabular-nums">
+ <Users className="h-3.5 w-3.5"/>
  {exam._count?.submissions || 0} прохождений
  </span>
  {exam.startDate && (
- <span className="flex items-center gap-1">
+ <span className="flex items-center gap-1 tabular-nums">
  Начало: {formatDate(exam.startDate)}
  </span>
  )}
@@ -286,7 +322,7 @@ export default function ExamsPage() {
  {exam.status ==="DRAFT"&& (
  <Button
  variant="destructive"size="sm"
- onClick={() => handleDelete(exam.id)}
+ onClick={() => setExamToDelete(exam)}
  >
  <Trash2 className="h-4 w-4 mr-1"/>
  Удалить
@@ -298,6 +334,15 @@ export default function ExamsPage() {
  ))}
  </div>
  )}
+
+      <MacosAlertDialog
+        isOpen={examToDelete !== null}
+        title="Удалить контрольную?"
+        description={`Контрольная «${examToDelete?.title}» будет безвозвратно удалена.`}
+        onClose={() => setExamToDelete(null)}
+        cancelAction={{ label: "Отмена", onClick: () => setExamToDelete(null) }}
+        primaryAction={{ label: "Удалить", onClick: () => examToDelete && handleDelete(examToDelete.id) }}
+      />
  </div>
  );
 }

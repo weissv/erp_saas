@@ -16,6 +16,8 @@ import {
 import { publicExamsApi} from"../lib/exams-api";
 import { PublicExam, PublicExamQuestion, ExamStartResponse, ExamResult} from"../types/exam";
 import { toast} from"sonner";
+import { MacosAlertDialog} from"../components/MacosAlertDialog";
+import { Spinner} from"../components/ui/LoadingState";
 
 type Stage ="intro"|"taking"|"completed";
 
@@ -28,6 +30,8 @@ export default function ExamTakePage() {
  
  // Данные экзамена
  const [exam, setExam] = useState<PublicExam | null>(null);
+ const [isSubmitConfirmOpen, setIsSubmitConfirmOpen] = useState(false);
+ const [unansweredCount, setUnansweredCount] = useState(0);
  const [submission, setSubmission] = useState<ExamStartResponse | null>(null);
  
  // Форма студента
@@ -115,12 +119,17 @@ export default function ExamTakePage() {
  
  const unanswered = exam.questions.filter(q => !answers[q.id]);
  if (unanswered.length > 0) {
- const confirm = window.confirm(
- `У вас ${unanswered.length} вопросов без ответа. Всё равно отправить?`
- );
- if (!confirm) return;
+ setUnansweredCount(unanswered.length);
+ setIsSubmitConfirmOpen(true);
+ return;
 }
  
+ await doSubmit();
+};
+
+ const doSubmit = async () => {
+ if (!submission || !exam) return;
+ setIsSubmitConfirmOpen(false);
  setLoading(true);
  try {
  const formattedAnswers = exam.questions.map(q => ({
@@ -159,7 +168,7 @@ export default function ExamTakePage() {
  if (loading && !exam) {
  return (
  <div className="min-h-screen flex items-center justify-center bg-fill-quaternary">
- <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+ <Spinner size="xl" />
  </div>
  );
 }
@@ -472,7 +481,19 @@ export default function ExamTakePage() {
  );
 }
 
- return null;
+ return (
+    <>
+      {null}
+      <MacosAlertDialog
+        isOpen={isSubmitConfirmOpen}
+        title="Отправить с пропущенными вопросами?"
+        description={`У вас ${unansweredCount} вопросов без ответа. Всё равно хотите сдать?`}
+        onClose={() => setIsSubmitConfirmOpen(false)}
+        cancelAction={{ label: "Вернуться", onClick: () => setIsSubmitConfirmOpen(false) }}
+        primaryAction={{ label: "Сдать работу", onClick: doSubmit }}
+      />
+    </>
+  );
 }
 
 // Компонент отображения вопроса
@@ -608,5 +629,5 @@ function QuestionView({
  />
  )}
  </div>
- );
+    );
 }

@@ -13,6 +13,9 @@ import { toast} from"sonner";
 import { useLmsClasses} from"../../hooks/lms/useLmsClasses";
 import { useLmsSubjects} from"../../hooks/lms/useLmsSubjects";
 import { useLmsSchedule} from"../../hooks/lms/useLmsSchedule";
+import { Skeleton} from"../../components/ui/LoadingState";
+import { MacosAlertDialog} from"../../components/MacosAlertDialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter} from"../../components/ui/sheet";
 
 const DAYS = ["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"];
 const TIME_SLOTS = [
@@ -34,6 +37,7 @@ export default function LmsSchedulePage() {
  const { schedule, loading: scheduleLoading, error: scheduleError, refetch: refetchSchedule} = useLmsSchedule(selectedClass);
  const [showAddModal, setShowAddModal] = useState(false);
  const [selectedSlot, setSelectedSlot] = useState<{ day: number; time: string} | null>(null);
+ const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
  const isAdmin = user && ["DIRECTOR","DEPUTY","ADMIN"].includes(user.role);
 
@@ -58,13 +62,14 @@ export default function LmsSchedulePage() {
 };
 
  const handleDeleteScheduleItem = async (id: string) => {
- if (!confirm("Удалить этот урок из расписания?")) return;
  try {
  await lmsApi.deleteScheduleItem(id);
  toast.success("Урок удален из расписания");
  refetchSchedule();
 } catch (error) {
  toast.error("Не удалось удалить урок");
+} finally {
+ setItemToDelete(null);
 }
 };
 
@@ -72,8 +77,29 @@ export default function LmsSchedulePage() {
 
  if (loading) {
  return (
- <div className="flex items-center justify-center min-h-[400px]">
- <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+ <div className="space-y-6">
+ <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+ <div>
+ <Skeleton height={28} width="50%" className="mb-2" />
+ <Skeleton height={16} width="40%" />
+ </div>
+ <Skeleton height={36} width={130} />
+ </div>
+ <Skeleton height={56} rounded="lg" />
+ <div className="rounded-xl border border-border overflow-hidden">
+ <div className="bg-muted/40 p-3 flex gap-2">
+ <Skeleton height={12} width={80} />
+ {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} height={12} className="flex-1" />)}
+ </div>
+ {Array.from({ length: 8 }).map((_, i) => (
+ <div key={i} className="p-3 flex gap-2 border-t border-border">
+ <Skeleton height={40} width={60} />
+ {Array.from({ length: 6 }).map((_, j) => (
+ <Skeleton key={j} height={60} className="flex-1" rounded="md" />
+ ))}
+ </div>
+ ))}
+ </div>
  </div>
  );
 }
@@ -193,8 +219,9 @@ export default function LmsSchedulePage() {
  </div>
  )}
 
- {showAddModal && selectedClass && (
+ {selectedClass && (
  <AddScheduleModal
+ isOpen={showAddModal}
  classId={selectedClass}
  subjects={subjects}
  defaultDay={selectedSlot?.day}
@@ -211,11 +238,21 @@ export default function LmsSchedulePage() {
 }}
  />
  )}
+
+ <MacosAlertDialog
+ isOpen={itemToDelete !== null}
+ title="Удалить урок?"
+ description="Этот урок будет удалён из расписания."
+ onClose={() => setItemToDelete(null)}
+ cancelAction={{ label: "Отмена", onClick: () => setItemToDelete(null) }}
+ primaryAction={{ label: "Удалить", onClick: () => itemToDelete && handleDeleteScheduleItem(itemToDelete) }}
+ />
  </div>
  );
 }
 
 function AddScheduleModal({
+ isOpen,
  classId,
  subjects,
  defaultDay,
@@ -224,6 +261,7 @@ function AddScheduleModal({
  onClose,
  onCreated,
 }: {
+ isOpen: boolean;
  classId: number;
  subjects: LmsSubject[];
  defaultDay?: number;
@@ -234,12 +272,12 @@ function AddScheduleModal({
 }) {
  const { user} = useAuth();
  const [formData, setFormData] = useState({
- subjectId: subjects[0]?.id ||"",
+ subjectId: subjects[0]?.id || "",
  teacherId: user?.id || 0,
  dayOfWeek: defaultDay || 1,
  startTime: defaultTime || timeSlots[0].start,
  endTime: timeSlots.find(t => t.start === defaultTime)?.end || timeSlots[0].end,
- room:"",
+ room: "",
 });
  const [loading, setLoading] = useState(false);
 
@@ -266,12 +304,15 @@ function AddScheduleModal({
 };
 
  return (
- <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
- <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
- <h2 className="text-[24px] font-bold tracking-[-0.025em] leading-tight text-primary mb-4">Добавить урок в расписание</h2>
+ <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+ <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+ <SheetHeader className="mb-6">
+ <SheetTitle>Добавить урок в расписание</SheetTitle>
+ <SheetDescription>Выберите предмет, время и кабинет</SheetDescription>
+ </SheetHeader>
  <form onSubmit={handleSubmit} className="space-y-4">
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-1">
+ <label className="block text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-1">
  Предмет
  </label>
  <select
@@ -288,7 +329,7 @@ function AddScheduleModal({
  </div>
  <div className="grid grid-cols-2 gap-4">
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-1">
+ <label className="block text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-1">
  День недели
  </label>
  <select
@@ -304,15 +345,15 @@ function AddScheduleModal({
  </select>
  </div>
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-1">
+ <label className="block text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-1">
  Время
  </label>
  <select
  value={formData.startTime}
  onChange={(e) => {
  const slot = timeSlots.find(t => t.start === e.target.value);
- setFormData({ 
- ...formData, 
+ setFormData({
+ ...formData,
  startTime: e.target.value,
  endTime: slot?.end || e.target.value,
 });
@@ -328,7 +369,7 @@ function AddScheduleModal({
  </div>
  </div>
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest text-primary mb-1">
+ <label className="block text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-1">
  Кабинет
  </label>
  <input
@@ -339,24 +380,24 @@ function AddScheduleModal({
  placeholder="Каб. 101"
  />
  </div>
- <div className="flex gap-3 pt-4">
+ <SheetFooter className="pt-4">
  <button
  type="button"
  onClick={onClose}
- className="flex-1 px-4 py-2 mezon-field rounded-lg text-primary hover:bg-fill-quaternary macos-transition"
+ className="flex-1 px-4 py-2 border border-border rounded-lg text-foreground hover:bg-muted/50 transition-colors duration-200"
  >
  Отмена
  </button>
  <button
  type="submit"
  disabled={loading}
- className="flex-1 px-4 py-2 bg-macos-blue text-white rounded-lg font-medium hover:bg-macos-blue macos-transition disabled:opacity-50"
+ className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50"
  >
- {loading ?"Добавление...":"Добавить"}
+ {loading ? "Добавление..." : "Добавить"}
  </button>
- </div>
+ </SheetFooter>
  </form>
- </div>
- </div>
+ </SheetContent>
+ </Sheet>
  );
 }

@@ -8,8 +8,11 @@ import { Search, BookOpen, Tag, Plus, Trash2, Edit, Clock, Sparkles} from"lucide
 import { knowledgeBaseApi} from"../../lib/api";
 import { useAuth} from"../../hooks/useAuth";
 import type { KnowledgeBaseArticle, CreateArticleInput} from"../../types/knowledge-base";
-import { Modal} from"../../components/Modal";
 import { Button} from"../../components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter} from"../../components/ui/sheet";
+import { Skeleton} from"../../components/ui/LoadingState";
+import { EmptyState} from"../../components/ui/EmptyState";
+import { MacosAlertDialog} from"../../components/MacosAlertDialog";
 
 // Debounce hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -44,6 +47,9 @@ export default function ArticleList() {
 });
  const [creating, setCreating] = useState(false);
  const [tagInput, setTagInput] = useState("");
+
+ // Удаление
+ const [articleToDelete, setArticleToDelete] = useState<KnowledgeBaseArticle | null>(null);
 
  // Права на создание (ADMIN, DEPUTY, DIRECTOR, DEVELOPER)
  const canCreate = user && ["ADMIN","DEPUTY","DIRECTOR","DEVELOPER"].includes(user.role);
@@ -118,16 +124,21 @@ export default function ArticleList() {
 };
 
  // ========== Удаление ==========
- const handleDelete = async (id: number, e: React.MouseEvent) => {
- e.stopPropagation();
- if (!confirm("Вы уверены, что хотите удалить эту статью?")) return;
+ const handleDelete = async (id: number) => {
  try {
  await knowledgeBaseApi.delete(id);
  toast.success("Статья удалена");
  fetchArticles();
 } catch (err) {
  toast.error("Не удалось удалить статью");
+} finally {
+ setArticleToDelete(null);
 }
+};
+
+ const requestDelete = (article: KnowledgeBaseArticle, e: React.MouseEvent) => {
+ e.stopPropagation();
+ setArticleToDelete(article);
 };
 
  // ========== Рендер ==========
@@ -172,21 +183,35 @@ export default function ArticleList() {
 
  {/* Результаты */}
  {loading ? (
- <div className="flex justify-center py-20">
- <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"/>
+ <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+ {Array.from({ length: 6 }).map((_, i) => (
+ <div key={i} className="border border-border rounded-xl p-5 space-y-3">
+ <Skeleton height={18} width="75%" />
+ <Skeleton height={14} width="90%" />
+ <Skeleton height={14} width="65%" />
+ <div className="flex gap-1 pt-1">
+ <Skeleton height={20} width={60} rounded="full" />
+ <Skeleton height={20} width={50} rounded="full" />
+ </div>
+ <div className="flex justify-between pt-2 border-t border-border">
+ <Skeleton height={12} width={70} />
+ <Skeleton height={12} width={60} />
+ </div>
+ </div>
+ ))}
  </div>
  ) : articles.length === 0 ? (
- <div className="text-center py-20 text-secondary">
- <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-50"/>
- <p className="text-lg mb-1">Статьи не найдены</p>
- <p className="text-sm">
- {query ?"Попробуйте изменить запрос":"Пока нет ни одной статьи"}
- </p>
- </div>
+ <EmptyState
+ icon={BookOpen}
+ title={query ? "Ничего не найдено" : "База знаний пуста"}
+ description={query ? "Попробуйте изменить поисковый запрос или фильтры" : "Создайте первую статью, чтобы начать работу"}
+ action={canCreate ? { label: "Новая статья", onClick: () => setIsCreateOpen(true), icon: Plus } : undefined}
+ size="lg"
+ />
  ) : (
  <>
- <p className="text-sm text-secondary mb-4">
- Найдено: {total} {total === 1 ?"статья": total < 5 ?"статьи":"статей"}
+ <p className="text-sm text-muted-foreground mb-4 tabular-nums">
+ Найдено: {total} {total === 1 ? "статья" : total < 5 ? "статьи" : "статей"}
  </p>
 
  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -194,21 +219,21 @@ export default function ArticleList() {
  <div
  key={article.id}
  onClick={() => navigate(`/knowledge-base/${article.slug}`)}
- className="border border-[rgba(0,0,0,0.08)] rounded-xl p-5 hover:shadow-md hover:border-blue-300 macos-transition cursor-pointer group bg-white"
+ className="border border-border rounded-xl p-5 hover:bg-muted/50 transition-colors duration-200 cursor-pointer group bg-card"
  >
  {/* Скор сходства (при семантическом поиске) */}
  {article.similarity !== undefined && article.similarity !== null && (
  <div className="flex items-center gap-1 text-xs text-macos-blue mb-2">
  <Sparkles className="h-3 w-3"/>
- <span>{(article.similarity * 100).toFixed(0)}% совпадение</span>
+ <span className="tabular-nums">{(article.similarity * 100).toFixed(0)}% совпадение</span>
  </div>
  )}
 
- <h3 className="font-semibold text-lg mb-2 group-hover:text-macos-blue macos-transition line-clamp-2">
+ <h3 className="text-foreground font-medium mb-2 group-hover:text-macos-blue transition-colors duration-200 line-clamp-2">
  {article.title}
  </h3>
 
- <p className="text-secondary text-sm mb-3 line-clamp-3">
+ <p className="text-muted-foreground text-sm mb-3 line-clamp-3">
  {article.summary}
  </p>
 
@@ -224,7 +249,7 @@ export default function ArticleList() {
  </span>
  ))}
  {article.tags.length > 4 && (
- <span className="text-xs text-tertiary">
+ <span className="text-xs text-muted-foreground tabular-nums">
  +{article.tags.length - 4}
  </span>
  )}
@@ -232,8 +257,8 @@ export default function ArticleList() {
  )}
 
  {/* Мета */}
- <div className="flex items-center justify-between text-xs text-tertiary mt-auto pt-2 border-t border-[rgba(0,0,0,0.04)]">
- <div className="flex items-center gap-1">
+ <div className="flex items-center justify-between text-xs text-muted-foreground mt-auto pt-2 border-t border-border">
+ <div className="flex items-center gap-1 tabular-nums">
  <Clock className="h-3 w-3"/>
  {new Date(article.updatedAt).toLocaleDateString("ru-RU")}
  </div>
@@ -246,8 +271,8 @@ export default function ArticleList() {
 
  {canCreate && (
  <button
- onClick={(e) => handleDelete(article.id, e)}
- className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-macos-red transition-opacity"
+ onClick={(e) => requestDelete(article, e)}
+ className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-destructive transition-opacity duration-200"
  title="Удалить"
  >
  <Trash2 className="h-4 w-4"/>
@@ -260,47 +285,48 @@ export default function ArticleList() {
  </>
  )}
 
- {/* ===== Модалка создания ===== */}
- <Modal
- isOpen={isCreateOpen}
- onClose={() => setIsCreateOpen(false)}
- title="Новая статья"
- >
+ {/* ===== Drawer создания ===== */}
+ <Sheet open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+ <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+ <SheetHeader className="mb-6">
+ <SheetTitle>Новая статья</SheetTitle>
+ <SheetDescription>Заполните заголовок и содержимое в формате Markdown</SheetDescription>
+ </SheetHeader>
  <div className="space-y-4">
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest mb-1">Заголовок *</label>
+ <label className="block text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-1">Заголовок *</label>
  <input
  type="text"
  value={createForm.title}
  onChange={(e) => setCreateForm((p) => ({ ...p, title: e.target.value}))}
- className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+ className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-ring outline-none bg-background text-foreground"
  placeholder="Название статьи"
  />
  </div>
 
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest mb-1">Содержимое (Markdown) *</label>
+ <label className="block text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-1">Содержимое (Markdown) *</label>
  <textarea
  value={createForm.content}
  onChange={(e) => setCreateForm((p) => ({ ...p, content: e.target.value}))}
  rows={10}
- className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono text-sm"
- placeholder="# Заголовок&#10;&#10;Текст статьи в формате Markdown..."
+ className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-ring outline-none font-mono text-sm bg-background text-foreground"
+ placeholder={"# Заголовок\n\nТекст статьи в формате Markdown..."}
  />
  </div>
 
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest mb-1">Теги</label>
+ <label className="block text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-1">Теги</label>
  <div className="flex gap-2">
  <input
  type="text"
  value={tagInput}
  onChange={(e) => setTagInput(e.target.value)}
- onKeyDown={(e) => e.key ==="Enter"&& (e.preventDefault(), addTag())}
- className="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+ onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
+ className="flex-1 px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-ring outline-none bg-background text-foreground"
  placeholder="Введите тег и нажмите Enter"
  />
- <Button variant="outline"onClick={addTag} type="button">
+ <Button variant="outline" onClick={addTag} type="button">
  Добавить
  </Button>
  </div>
@@ -314,7 +340,7 @@ export default function ArticleList() {
  {tag}
  <button
  onClick={() => removeTag(tag)}
- className="hover:text-macos-red"
+ className="hover:text-destructive"
  >
  ×
  </button>
@@ -323,17 +349,26 @@ export default function ArticleList() {
  </div>
  )}
  </div>
-
- <div className="flex justify-end gap-2 pt-2">
- <Button variant="outline"onClick={() => setIsCreateOpen(false)}>
+ </div>
+ <SheetFooter className="mt-6">
+ <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
  Отмена
  </Button>
  <Button onClick={handleCreate} disabled={creating}>
- {creating ?"Создание...":"Создать статью"}
+ {creating ? "Создание..." : "Создать статью"}
  </Button>
- </div>
- </div>
- </Modal>
+ </SheetFooter>
+ </SheetContent>
+ </Sheet>
+
+ <MacosAlertDialog
+ isOpen={articleToDelete !== null}
+ title="Удалить статью?"
+ description={`Статья «${articleToDelete?.title}» будет безвозвратно удалена.`}
+ onClose={() => setArticleToDelete(null)}
+ cancelAction={{ label: "Отмена", onClick: () => setArticleToDelete(null) }}
+ primaryAction={{ label: "Удалить", onClick: () => articleToDelete && handleDelete(articleToDelete.id) }}
+ />
  </div>
  );
 }
