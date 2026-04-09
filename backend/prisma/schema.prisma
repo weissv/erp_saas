@@ -1,11 +1,13 @@
 generator client {
-  provider = "prisma-client-js"
-  binaryTargets = ["native"]
+  provider        = "prisma-client-js"
+  binaryTargets   = ["native"]
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
 }
 
 /// Роли пользователей. Права описаны в middleware checkRole.
@@ -800,16 +802,20 @@ model Feedback {
 // --- 8. RAG / AI ASSISTANT ---
 model KnowledgeBaseDocument {
   id        Int                         @id @default(autoincrement())
+  tenantId  String                      @default("default")
   content   String                      @db.Text
   metadata  Json? // { title, subject, grade, tags, source }
   embedding Unsupported("vector(768)")?
   createdAt DateTime                    @default(now())
   updatedAt DateTime                    @updatedAt
+
+  @@index([tenantId])
 }
 
 // --- 8.1. БАЗА ЗНАНИЙ (СТАТЬИ) ---
 model KnowledgeBaseArticle {
   id        Int      @id @default(autoincrement())
+  tenantId  String   @default("default")
   title     String
   slug      String   @unique
   content   String   @db.Text // Markdown контент
@@ -827,6 +833,7 @@ model KnowledgeBaseArticle {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([tenantId])
   @@index([slug])
   @@index([authorId])
   @@index([tags])
@@ -1659,4 +1666,75 @@ model OneCRegister {
   @@index([registerType])
   @@index([registerType, period])
   @@index([recorder])
+}
+
+// ══════════════════════════════════════════════════════════════
+// TENANT INTEGRATIONS — Per-tenant API keys & credentials
+// ══════════════════════════════════════════════════════════════
+
+/// Stores third-party integration credentials for each tenant.
+/// Services fetch the active row at runtime instead of reading .env.
+model TenantIntegrations {
+  id        Int     @id @default(autoincrement())
+  tenantId  String  @unique          // Logical tenant identifier
+
+  // Telegram
+  telegramBotToken String? @db.Text  // Telegram BOT_TOKEN
+
+  // AI – Embeddings (Gemini)
+  geminiApiKey String? @db.Text
+
+  // AI – Chat (Groq / OpenAI-compatible)
+  groqApiKey    String? @db.Text
+  groqModel     String? @default("qwen/qwen3-32b")
+  groqBlitzModel String? @default("llama-3.1-8b-instant")
+  groqHeavyModel String? @default("openai/gpt-oss-120b")
+
+  // Google Drive sync
+  googleDriveApiKey  String? @db.Text
+  googleDriveFolderId String?
+
+  // 1C OData Integration
+  oneCBaseUrl    String?
+  oneCUser       String?
+  oneCPassword   String? @db.Text
+  oneCTimeoutMs  Int?     @default(60000)
+  oneCCronSchedule String? @default("*/15 * * * *")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+// MULTI-TENANT: Integration Credentials per Tenant
+// ══════════════════════════════════════════════════════════════
+
+/// Stores per-tenant integration credentials so that each tenant can
+/// have its own Telegram bot, 1C OData connection, AI API keys, etc.
+/// Secrets are stored encrypted at the application level.
+model TenantIntegrations {
+  id        Int    @id @default(autoincrement())
+  tenantId  String @unique // Logical tenant identifier
+
+  // --- Telegram ---
+  telegramBotToken String? // Telegram Bot API token
+
+  // --- 1C OData ---
+  oneCBaseUrl    String? // e.g. http://host/db/odata/standard.odata
+  oneCUser       String? // Basic-auth username (may contain Cyrillic)
+  oneCPassword   String? // Basic-auth password
+  oneCTimeoutMs  Int     @default(60000)
+  oneCCronSchedule String @default("*/15 * * * *")
+
+  // --- AI: Embeddings (Gemini) ---
+  geminiApiKey String?
+
+  // --- AI: Chat / Grading (Groq) ---
+  groqApiKey String?
+
+  // --- Google Drive (optional document sync) ---
+  googleDriveApiKey  String?
+  googleDriveFolderId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

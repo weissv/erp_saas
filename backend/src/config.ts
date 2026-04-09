@@ -2,8 +2,6 @@
 const defaultOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
-  "https://mezon-admin-frontend.onrender.com",
-  "https://erp.mezon.uz",
 ];
 
 const resolveOrigins = () => {
@@ -21,6 +19,24 @@ export const config = {
   jwtExpiresIn: "12h",
   nodeEnv: process.env.NODE_ENV || "development",
   corsOrigins: resolveOrigins(),
+
+  // Stripe
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
+  stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
+
+  // SMTP (for tenant data export emails)
+  smtpHost: process.env.SMTP_HOST || "localhost",
+  smtpPort: parseInt(process.env.SMTP_PORT || "587", 10),
+  smtpSecure: process.env.SMTP_SECURE === "true",
+  smtpUser: process.env.SMTP_USER || "",
+  smtpPass: process.env.SMTP_PASS || "",
+  smtpFrom: process.env.SMTP_FROM || "noreply@erp-saas.com",
+
+  // ── Multi-tenant / Control Plane ──────────────────────────────────
+  /** Connection string for the Control Plane (master) database. */
+  masterDatabaseUrl: process.env.MASTER_DATABASE_URL || "",
+  /** Base domain used to extract tenant subdomains (e.g. "mezon.app"). */
+  baseDomain: process.env.BASE_DOMAIN || "mezon.app",
   // Groq API для AI проверки контрольных
   groqApiKey: process.env.GROQ_API_KEY || "",
   groqModel: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
@@ -30,9 +46,9 @@ export const config = {
   publicExamBaseUrl: process.env.PUBLIC_EXAM_BASE_URL || "http://localhost:5173/exam",
 
   // 1C OData Integration
-  oneCBaseUrl: process.env.ONEC_BASE_URL || "http://100.66.251.128/mezon_db/odata/standard.odata",
-  oneCUser: process.env.ONEC_USER || "Главный бухгалтер",
+  oneCBaseUrl: process.env.ONEC_BASE_URL || "",
+  oneCUser: process.env.ONEC_USER || "",
   oneCPassword: process.env.ONEC_PASSWORD || "",
   oneCTimeoutMs: parseInt(process.env.ONEC_TIMEOUT_MS || "60000", 10),
-  oneCCronSchedule: process.env.ONEC_CRON_SCHEDULE || "*/15 * * * *", // каждые 15 минут
+  oneCCronSchedule: process.env.ONEC_CRON_SCHEDULE || "*/15 * * * *",
 };

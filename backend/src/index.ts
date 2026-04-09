@@ -1,8 +1,15 @@
 // src/index.ts
+import { createServer } from "http";
+import http from "http";
 import app from "./app";
 import { config } from "./config";
 import { AiService } from "./services/AiService";
 import { initTelegramBot } from "./services/TelegramService";
+import { setIntervalWithJitter } from "./services/CronJitterService";
+import { initSocketIO } from "./lib/socketio";
+import { startOneCWorker } from "./modules/onec/queue/onec-sync.worker";
+import { createIOServer } from "./io";
+import { startOneCWorker } from "./queues/onec-sync.worker";
 
 // Интервал синхронизации Google Drive (30 минут)
 const SYNC_INTERVAL_MS = 30 * 60 * 1000;
@@ -19,21 +26,47 @@ async function startGoogleDriveSync() {
     console.error("❌ Initial Google Drive sync failed:", error);
   }
 
-  // Запускаем периодическую синхронизацию
-  setInterval(async () => {
-    console.log("🔄 Running periodic Google Drive sync...");
-    try {
+  // Запускаем периодическую синхронизацию с jitter
+  setIntervalWithJitter(
+    SYNC_INTERVAL_MS,
+    async () => {
+      console.log("🔄 Running periodic Google Drive sync...");
       const result = await AiService.syncGoogleDriveDocuments();
       if (result.synced > 0 || result.updated > 0 || result.errors > 0) {
         console.log(`✅ Periodic sync: ${result.synced} new, ${result.updated} updated, ${result.errors} errors`);
       }
-    } catch (error) {
-      console.error("❌ Periodic Google Drive sync failed:", error);
-    }
-  }, SYNC_INTERVAL_MS);
+    },
+    { label: "GoogleDriveSync", maxJitterMs: 60_000 },
+  );
 }
 
-app.listen(config.port, () => {
+// Create an HTTP server so Socket.IO can share the same port
+const httpServer = createServer(app);
+
+// Initialise Socket.IO for real-time events (e.g. 1C sync progress)
+initSocketIO(httpServer);
+
+// Start BullMQ worker for background 1C sync (best-effort: if Redis is unavailable the worker silently fails)
+try {
+  startOneCWorker();
+} catch (err) {
+  console.warn("⚠️ Could not start 1C BullMQ worker (Redis may be unavailable):", (err as Error).message);
+}
+
+httpServer.listen(config.port, () => {
+const server = http.createServer(app);
+
+// Attach Socket.io to the HTTP server
+const io = createIOServer(server);
+
+// Start the BullMQ worker for 1C sync (non-blocking — gracefully no-ops if Redis is down)
+try {
+  startOneCWorker(io);
+} catch (err) {
+  console.warn("⚠️ Could not start 1C sync worker (Redis may be unavailable):", err);
+}
+
+server.listen(config.port, () => {
   console.log(`API running on http://0.0.0.0:${config.port}`);
   
   // Инициализируем Telegram бота

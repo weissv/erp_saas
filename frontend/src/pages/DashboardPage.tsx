@@ -123,7 +123,7 @@ export default function DashboardPage() {
         <div className="min-w-0">
           <h1 className="text-[22px] font-bold tracking-[-0.03em] text-primary leading-tight">Дашборд</h1>
           <p className="text-[13px] text-secondary mt-0.5">
-            {activeView ? `Вид: ${activeView.name}` : 'Mezon ERP — операционная рабочая поверхность'}
+            {activeView ? `Вид: ${activeView.name}` : 'Операционная рабочая поверхность'}
           </p>
         </div>
 

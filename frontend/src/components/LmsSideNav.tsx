@@ -1,13 +1,15 @@
 import { useState, useRef} from"react";
 import { Link, useLocation, useNavigate} from"react-router-dom";
 import clsx from"clsx";
-import { Facebook, Instagram, Send, X} from"lucide-react";
+import { X} from"lucide-react";
 import { Button} from"./ui/button";
 import { useAuth} from"../hooks/useAuth";
+import { useTenant} from"../contexts/TenantContext";
 import type { UserRole} from"../types/auth";
 
 export default function LmsSideNav() {
  const { user, logout} = useAuth();
+ const { tenant} = useTenant();
  const loc = useLocation();
  const navigate = useNavigate();
  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -49,12 +51,6 @@ export default function LmsSideNav() {
  navigate("/auth/login");
 };
 
- const socialLinks = [
- { icon: Facebook, href:"https://www.facebook.com/MezonSchool/"},
- { icon: Instagram, href:"https://instagram.com/mezonschool"},
- { icon: Send, href:"http://t.me/mezon_school"},
- ];
-
  // Define LMS Navigation Links based on Role
  const links = [
  { path:"/lms/school", label:"Дашборд", roles: ["DEVELOPER","ADMIN","DIRECTOR","DEPUTY","TEACHER","ACCOUNTANT","ZAVHOZ"]},
@@ -84,8 +80,8 @@ export default function LmsSideNav() {
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-3 cursor-pointer"onClick={handleLogoClick}>
  <img 
- src="/logo.png"
- alt="Mezon"
+ src={tenant.logoUrl}
+ alt={tenant.name}
  className={clsx(
 "transition-transform 0",
  isLogoSpinning &&"animate-spin-flip"
@@ -126,13 +122,6 @@ export default function LmsSideNav() {
  </div>
 
  <div className="mezon-sidenav__footer">
- <div className="mt-2 mezon-top-bar__social">
- {socialLinks.map(({ icon: Icon, href}) => (
- <a key={href} href={href} target="_blank"rel="noreferrer">
- <Icon className="h-4 w-4"/>
- </a>
- ))}
- </div>
  <Button type="button"className="mt-4 w-full"variant="outline"onClick={handleLogout}>
  Выйти
  </Button>
