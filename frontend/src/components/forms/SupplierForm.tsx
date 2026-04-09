@@ -2,6 +2,7 @@ import { useForm} from 'react-hook-form';
 import { z} from 'zod';
 import { zodResolver} from '@hookform/resolvers/zod';
 import { toast} from 'sonner';
+import { Loader2} from 'lucide-react';
 import { api} from '../../lib/api';
 import { Button} from '../ui/button';
 import { Input} from '../ui/input';
@@ -55,36 +56,37 @@ export function SupplierForm({ initialData, onSuccess, onCancel}: SupplierFormPr
  return (
  <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest mb-1">Название поставщика *</label>
- <Input {...register('name')} placeholder="ООО Продукты"/>
- <FormError message={errors.name?.message} />
+ <label htmlFor="supplier-name" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Название поставщика *</label>
+ <Input id="supplier-name" {...register('name')} placeholder="ООО Продукты" error={!!errors.name} aria-describedby={errors.name ? 'supplier-name-error' : undefined}/>
+ <FormError message={errors.name?.message} id="supplier-name-error" />
  </div>
 
  <div className="grid grid-cols-2 gap-4">
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest mb-1">Телефон</label>
- <Input {...register('phone')} placeholder="+998 90 123-45-67"/>
+ <label htmlFor="supplier-phone" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Телефон</label>
+ <Input id="supplier-phone" {...register('phone')} placeholder="+998 90 123-45-67"/>
  </div>
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest mb-1">Email</label>
- <Input {...register('email')} type="email"placeholder="info@example.com"/>
- <FormError message={errors.email?.message} />
+ <label htmlFor="supplier-email" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Email</label>
+ <Input id="supplier-email" {...register('email')} type="email"placeholder="info@example.com" error={!!errors.email} aria-describedby={errors.email ? 'supplier-email-error' : undefined}/>
+ <FormError message={errors.email?.message} id="supplier-email-error" />
  </div>
  </div>
 
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest mb-1">ИНН</label>
- <Input {...register('inn')} placeholder="123456789"/>
+ <label htmlFor="supplier-inn" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">ИНН</label>
+ <Input id="supplier-inn" {...register('inn')} placeholder="123456789"/>
  </div>
 
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest mb-1">Адрес</label>
- <Input {...register('address')} placeholder="г. Ташкент, ул. ..."/>
+ <label htmlFor="supplier-address" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Адрес</label>
+ <Input id="supplier-address" {...register('address')} placeholder="г. Ташкент, ул. ..."/>
  </div>
 
  <div>
- <label className="block text-[11px] font-medium uppercase tracking-widest mb-1">Контактная информация</label>
+ <label htmlFor="supplier-contactInfo" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Контактная информация</label>
  <textarea
+ id="supplier-contactInfo"
  {...register('contactInfo')}
  className="w-full p-2 border rounded-md text-sm"
  rows={2}
@@ -93,13 +95,14 @@ export function SupplierForm({ initialData, onSuccess, onCancel}: SupplierFormPr
  </div>
 
  <div className="flex items-center gap-2">
- <input type="checkbox"id="isActive"{...register('isActive')} className="h-4 w-4"/>
- <label htmlFor="isActive"className="text-[11px] font-medium uppercase tracking-widest">Активный поставщик</label>
+ <input type="checkbox"id="supplier-isActive"{...register('isActive')} className="h-4 w-4"/>
+ <label htmlFor="supplier-isActive"className="text-xs font-medium uppercase tracking-widest">Активный поставщик</label>
  </div>
 
  <div className="flex justify-end gap-2 pt-4">
- <Button type="button"variant="ghost"onClick={onCancel}>Отмена</Button>
+ <Button type="button"variant="ghost"onClick={onCancel} disabled={isSubmitting}>Отмена</Button>
  <Button type="submit"disabled={isSubmitting}>
+ {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
  {isSubmitting ? 'Сохранение...' : initialData ? 'Обновить' : 'Добавить'}
  </Button>
  </div>

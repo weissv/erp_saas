@@ -4,7 +4,7 @@ import { z} from 'zod';
 import { zodResolver} from '@hookform/resolvers/zod';
 import { toast} from 'sonner';
 import clsx from 'clsx';
-import { UploadCloud} from 'lucide-react';
+import { Loader2, UploadCloud} from 'lucide-react';
 import { api} from '../../lib/api';
 import { ModalNotice, ModalSection} from '../Modal';
 import { Button} from '../ui/button';
@@ -172,15 +172,15 @@ export function DocumentForm({ initialData, onSuccess, onCancel}: DocumentFormPr
  <form onSubmit={handleSubmit(onSubmit)} className="mezon-modal-form">
  <ModalSection title="Карточка документа" description="Заполните название и файл, чтобы документ было легко найти в каталоге и открыть без лишних уточнений.">
  <div>
- <label className="mezon-form-label">Название документа</label>
- <Input {...register('name')} placeholder="Договор №123"/>
- <FormError message={errors.name?.message} />
+ <label htmlFor="doc-name" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Название документа</label>
+ <Input id="doc-name" {...register('name')} placeholder="Договор №123" error={!!errors.name} aria-describedby={errors.name ? 'doc-name-error' : undefined}/>
+ <FormError message={errors.name?.message} id="doc-name-error" />
  </div>
 
  <div>
- <label className="mezon-form-label">Ссылка на файл</label>
- <Input {...register('fileUrl')} placeholder="/uploads/document.pdf"/>
- <FormError message={errors.fileUrl?.message} />
+ <label htmlFor="doc-fileUrl" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Ссылка на файл</label>
+ <Input id="doc-fileUrl" {...register('fileUrl')} placeholder="/uploads/document.pdf" error={!!errors.fileUrl} aria-describedby={errors.fileUrl ? 'doc-fileUrl-error' : undefined}/>
+ <FormError message={errors.fileUrl?.message} id="doc-fileUrl-error" />
 
  <div className="mt-3 space-y-3">
  <div
@@ -230,54 +230,61 @@ export function DocumentForm({ initialData, onSuccess, onCancel}: DocumentFormPr
 
  <ModalSection title="Привязка документа" description="Связи помогают быстро находить документы в карточках сотрудников и учеников.">
  <div>
- <label className="mezon-form-label">Шаблон</label>
+ <label htmlFor="doc-templateId" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Шаблон</label>
  <select
+ id="doc-templateId"
  className="mezon-field"
  {...register('templateId', { valueAsNumber: true})}
  disabled={isLoading}
+ aria-describedby={errors.templateId ? 'doc-templateId-error' : undefined}
  >
  <option value="">Без шаблона</option>
  {templates.map((t) => (
  <option key={t.id} value={t.id}>{t.name}</option>
  ))}
  </select>
- <FormError message={errors.templateId?.message} />
+ <FormError message={errors.templateId?.message} id="doc-templateId-error" />
  </div>
 
  <div>
- <label className="mezon-form-label">Сотрудник</label>
+ <label htmlFor="doc-employeeId" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Сотрудник</label>
  <select
+ id="doc-employeeId"
  className="mezon-field"
  {...register('employeeId', { valueAsNumber: true})}
  disabled={isLoading}
+ aria-describedby={errors.employeeId ? 'doc-employeeId-error' : undefined}
  >
  <option value="">Не привязан к сотруднику</option>
  {employees.map((e) => (
  <option key={e.id} value={e.id}>{e.lastName} {e.firstName} — {e.position}</option>
  ))}
  </select>
- <FormError message={errors.employeeId?.message} />
+ <FormError message={errors.employeeId?.message} id="doc-employeeId-error" />
  </div>
 
  <div>
- <label className="mezon-form-label">Ученик</label>
+ <label htmlFor="doc-childId" className="block text-xs font-medium uppercase tracking-widest text-text-primary mb-1">Ученик</label>
  <select
+ id="doc-childId"
  className="mezon-field"
  {...register('childId', { valueAsNumber: true})}
  disabled={isLoading}
+ aria-describedby={errors.childId ? 'doc-childId-error' : undefined}
  >
  <option value="">Не привязан к ученику</option>
  {children.map((c) => (
  <option key={c.id} value={c.id}>{c.lastName} {c.firstName}</option>
  ))}
  </select>
- <FormError message={errors.childId?.message} />
+ <FormError message={errors.childId?.message} id="doc-childId-error" />
  </div>
  </ModalSection>
 
  <div className="mezon-modal-inline-actions">
- <Button type="button"variant="ghost"onClick={onCancel}>Отмена</Button>
+ <Button type="button"variant="ghost"onClick={onCancel} disabled={isSubmitting}>Отмена</Button>
  <Button type="submit"disabled={isSubmitting}>
+ {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
  {isSubmitting ? 'Сохранение...' : 'Сохранить'}
  </Button>
  </div>
