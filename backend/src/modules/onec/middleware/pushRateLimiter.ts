@@ -17,6 +17,16 @@ const WINDOW_SECONDS = 60;
 // ── In-memory fallback ──────────────────────────────────────────────────
 const memoryBuckets = new Map<string, { count: number; expiresAt: number }>();
 
+/** Evict expired entries every 5 minutes to prevent unbounded growth. */
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of memoryBuckets) {
+    if (entry.expiresAt <= now) {
+      memoryBuckets.delete(key);
+    }
+  }
+}, 5 * 60 * 1000).unref();
+
 function memoryIncrement(key: string): { count: number; ttl: number } {
   const now = Date.now();
   const existing = memoryBuckets.get(key);

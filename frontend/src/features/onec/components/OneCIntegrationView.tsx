@@ -160,15 +160,13 @@ export function OneCIntegrationView() {
       totalRecords: number;
       errors: number;
     }) => {
-      setSyncLogs((prev) => {
-        const updated = prev.map((l) =>
+      setSyncLogs((prev) =>
+        prev.map((l) =>
           l.jobId === data.jobId
             ? { ...l, status: data.errors > 0 ? "failed" : "success", totalRecords: data.totalRecords, errors: data.errors, processedAt: data.processedAt }
             : l,
-        );
-        const changed = updated.some((l, i) => l !== prev[i]);
-        return changed ? updated : prev;
-      });
+        ),
+      );
     });
 
     socket.on("onec:push:error", (data: { jobId: string; error: string }) => {
