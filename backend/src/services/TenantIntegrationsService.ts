@@ -5,6 +5,7 @@
 import { prisma } from "../prisma";
 import { config } from "../config";
 import { logger } from "../utils/logger";
+import { EncryptionService } from "./EncryptionService";
 
 /** Default tenant ID for single-tenant / legacy deployments. */
 export const DEFAULT_TENANT_ID = "default";
@@ -149,9 +150,40 @@ export function invalidateAllCache(): void {
   cache.clear();
 }
 
+/**
+ * Retrieves and decrypts the tenant's OpenAI API key.
+ * Returns null if no key is configured (callers should throw MissingOpenAiKeyError).
+ */
+export async function getDecryptedOpenAiKey(tenantId: string): Promise<string | null> {
+  try {
+    const row = await prisma.tenantIntegrations.findUnique({
+      where: { tenantId },
+      select: {
+        openAiKeyEncrypted: true,
+        openAiKeyIv: true,
+        openAiKeyAuthTag: true,
+      },
+    });
+
+    if (!row?.openAiKeyEncrypted || !row.openAiKeyIv || !row.openAiKeyAuthTag) {
+      return null;
+    }
+
+    return EncryptionService.decrypt({
+      encrypted: row.openAiKeyEncrypted,
+      iv: row.openAiKeyIv,
+      authTag: row.openAiKeyAuthTag,
+    });
+  } catch (error) {
+    logger.error(`[TenantIntegrations] Failed to decrypt OpenAI key for tenant ${tenantId}:`, error);
+    return null;
+  }
+}
+
 export const TenantIntegrationsService = {
   getCredentials,
   getTenantIntegrations,
   invalidateCache,
   invalidateAllCache,
+  getDecryptedOpenAiKey,
 };
