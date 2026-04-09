@@ -54,9 +54,8 @@ export const logAction =
  */
 function resolveTenantId(req: Request): string {
   // 1. Middleware-injected value (e.g. from tenantResolver)
-  const reqAny = req as unknown as Record<string, unknown>;
-  if (reqAny.tenantId) {
-    return String(reqAny.tenantId);
+  if (req.tenantId) {
+    return String(req.tenantId);
   }
 
   // 2. Explicit header
