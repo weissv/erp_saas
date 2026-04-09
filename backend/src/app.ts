@@ -40,12 +40,13 @@ import lmsSchoolRoutes from "./routes/lms-school.routes";
 import permissionsRoutes from "./routes/permissions.routes";
 import examsRoutes from "./routes/exams.routes";
 import publicExamsRoutes from "./routes/public-exams.routes";
+import tenantRoutes from "./routes/tenant.routes";
 import knowledgeBaseRoutes from "./routes/knowledge-base.routes";
 
 const app = express();
 
 const allowedOrigins = new Set(config.corsOrigins);
-const allowPattern = [/\.onrender\.com$/, /mezon\.uz$/, /\.trycloudflare\.com$/, /\.loca\.lt$/];
+const allowPattern = [/\.onrender\.com$/, /\.trycloudflare\.com$/, /\.loca\.lt$/];
 
 const corsOptions: cors.CorsOptions = {
   origin(origin, callback) {
@@ -81,6 +82,7 @@ app.get("/api/health", (_req, res) => {
 // Публичные роуты
 app.use("/api/auth", authRoutes);
 app.use("/api/public/exams", publicExamsRoutes); // Публичный доступ к контрольным для студентов
+app.use("/api/tenant", tenantRoutes); // Public tenant branding (no auth)
 
 // Защита всех последующих роутов
 app.use(authMiddleware);

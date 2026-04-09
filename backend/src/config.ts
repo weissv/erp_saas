@@ -2,8 +2,6 @@
 const defaultOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
-  "https://mezon-admin-frontend.onrender.com",
-  "https://erp.mezon.uz",
 ];
 
 const resolveOrigins = () => {
@@ -30,9 +28,9 @@ export const config = {
   publicExamBaseUrl: process.env.PUBLIC_EXAM_BASE_URL || "http://localhost:5173/exam",
 
   // 1C OData Integration
-  oneCBaseUrl: process.env.ONEC_BASE_URL || "http://100.66.251.128/mezon_db/odata/standard.odata",
-  oneCUser: process.env.ONEC_USER || "Главный бухгалтер",
+  oneCBaseUrl: process.env.ONEC_BASE_URL || "",
+  oneCUser: process.env.ONEC_USER || "",
   oneCPassword: process.env.ONEC_PASSWORD || "",
   oneCTimeoutMs: parseInt(process.env.ONEC_TIMEOUT_MS || "60000", 10),
-  oneCCronSchedule: process.env.ONEC_CRON_SCHEDULE || "*/15 * * * *", // каждые 15 минут
+  oneCCronSchedule: process.env.ONEC_CRON_SCHEDULE || "*/15 * * * *",
 };
