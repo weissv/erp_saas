@@ -18,6 +18,10 @@ vi.mock('bcryptjs', () => ({
   default: { hash: vi.fn().mockResolvedValue('hashed_password') },
 }));
 
+vi.mock('@prisma/client', () => ({
+  PrismaClient: class PrismaClient {},
+}));
+
 // Mock prisma (master DB) – not used directly since we inject mockMasterDb
 vi.mock('../../../prisma', () => ({
   prisma: {
