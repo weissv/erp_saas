@@ -2,7 +2,7 @@
 // Общие схемы валидации для backend API
 
 import { z } from 'zod';
-import { PAGINATION_DEFAULTS, SORT_ORDERS } from '../constants';
+import { PAGINATION, SORT_ORDERS } from '../constants';
 
 // ============================================================================
 // БАЗОВЫЕ СХЕМЫ
@@ -196,13 +196,13 @@ export const paginationSchema = z.object({
     .number()
     .int()
     .positive()
-    .default(PAGINATION_DEFAULTS.PAGE),
+    .default(PAGINATION.DEFAULT_PAGE),
   pageSize: z.coerce
     .number()
     .int()
     .positive()
-    .max(PAGINATION_DEFAULTS.MAX_PAGE_SIZE)
-    .default(PAGINATION_DEFAULTS.PAGE_SIZE),
+    .max(PAGINATION.MAX_PAGE_SIZE)
+    .default(PAGINATION.DEFAULT_PAGE_SIZE),
 });
 
 export const sortOrderSchema = z.enum([SORT_ORDERS.ASC, SORT_ORDERS.DESC] as const);
