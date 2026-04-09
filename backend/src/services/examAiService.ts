@@ -1,9 +1,12 @@
 // src/services/examAiService.ts
-// Сервис для AI проверки открытых вопросов и задач
+// AI-powered exam answer checking service.
+// Uses per-tenant Groq API credentials fetched at runtime (BYOK).
+// Falls back to OpenAI BYOK key when Groq is not available.
 
 import { config } from "../config";
 import { getTenantIntegrations, DEFAULT_TENANT_ID } from "./TenantIntegrationsService";
-import { TenantIntegrationsService } from "./TenantIntegrationsService";
+import { createTenantOpenAiClient } from "./OpenAiClientFactory";
+import { MissingOpenAiKeyError } from "../utils/errors";
 import { logger } from "../utils/logger";
 
 export interface AiCheckResult {
@@ -23,7 +26,6 @@ export async function checkExamAnswerWithAI(
   maxPoints: number,
   questionType?: string,
   tenantId: string = DEFAULT_TENANT_ID,
-  tenantId: string = "default"
 ): Promise<AiCheckResult> {
   try {
     // Fetch per-tenant API credentials
@@ -79,10 +81,6 @@ ${studentAnswer || '(ответ не предоставлен)'}
     }
 
     // Fetch Groq API key from tenant credentials at runtime
-    const creds = await TenantIntegrationsService.getCredentials(tenantId);
-    const groqApiKey = creds.groqApiKey || config.groqApiKey;
-
-    // Используем Groq API для AI проверки
     const groqApiKey = creds.groqApiKey;
     if (groqApiKey) {
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -125,10 +123,48 @@ ${studentAnswer || '(ответ не предоставлен)'}
       }
     }
 
+    // ── OpenAI BYOK fallback ──────────────────────────────────────────────
+    // If Groq is not configured, try the tenant's own OpenAI key (BYOK).
+    try {
+      const openai = await createTenantOpenAiClient(tenantId);
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        temperature: 0.3,
+      });
+
+      const content = completion.choices[0]?.message?.content;
+      if (content) {
+        try {
+          const jsonText = content.includes('{')
+            ? content.slice(content.indexOf('{'), content.lastIndexOf('}') + 1)
+            : content;
+          const result = JSON.parse(jsonText);
+          return {
+            score: Math.min(maxPoints, Math.max(0, Number(result.score) || 0)),
+            feedback: result.feedback || 'Ответ проверен автоматически.',
+            confidence: Number(result.confidence) || 0.5,
+          };
+        } catch (e) {
+          logger.error("Failed to parse OpenAI response:", content);
+        }
+      }
+    } catch (err) {
+      // If it's a MissingOpenAiKeyError, propagate it so the controller can
+      // return a 428 to the client, prompting the admin to configure BYOK.
+      if (err instanceof MissingOpenAiKeyError) throw err;
+      logger.error("OpenAI BYOK fallback error:", err);
+    }
+
     // Фолбэк на локальную эвристическую проверку
     return fallbackCheck(questionContent, expectedAnswer, studentAnswer, keyPoints, maxPoints);
     
   } catch (error) {
+    // Propagate MISSING_OPENAI_KEY so controllers return 428 to the client
+    if (error instanceof MissingOpenAiKeyError) throw error;
     logger.error("AI check error:", error);
     // При ошибке AI возвращаем результат для ручной проверки
     return {
@@ -172,7 +208,6 @@ function fallbackCheck(
   // Проверяем ключевые точки
   if (keyPoints.length > 0) {
     let matchedPoints = 0;
-    const matchedList: string[] = [];
     const missedList: string[] = [];
 
     for (const point of keyPoints) {
@@ -183,7 +218,6 @@ function fallbackCheck(
       
       if (matchedWords.length >= Math.ceil(words.length * 0.6)) {
         matchedPoints++;
-        matchedList.push(point);
       } else {
         missedList.push(point);
       }
