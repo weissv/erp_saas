@@ -485,6 +485,13 @@ router.get(
     const worksheet = workbook.addWorksheet(entity.toUpperCase());
 
     if (rows.length > 0) {
+      // Add header row from keys of first object
+      const headers = Object.keys(rows[0]);
+      worksheet.addRow(headers);
+
+      // Add data rows
+      for (const row of rows) {
+        worksheet.addRow(headers.map((h) => row[h] ?? ""));
       // Use the keys of the first row as column headers
       const headers = Object.keys(rows[0]);
       worksheet.columns = headers.map((h) => ({ header: h, key: h }));
@@ -514,6 +521,15 @@ router.post(
     }
 
     const fileBase64 = sanitizeBase64(req.body.fileBase64);
+    const nodeBuffer = Buffer.from(fileBase64, "base64");
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(nodeBuffer as unknown as ArrayBuffer);
+    const worksheet = workbook.worksheets[0];
+    if (!worksheet) {
+      return res.status(400).json({ message: "Не удалось прочитать Excel-файл" });
+    }
+
+    let rows = excelSheetToJson(worksheet);
     const buffer = Buffer.from(fileBase64, "base64");
     const workbook = new ExcelJS.Workbook();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -542,6 +558,12 @@ router.post(
       if (!hasStandardHeaders) {
         // Find the header row by scanning raw data (first 10 rows)
         let headerRowIndex = -1;
+        worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+          if (headerRowIndex >= 0 || rowNumber > 11) return;
+          row.eachCell((cell) => {
+            const val = cell.text ?? String(cell.value ?? "");
+            if (val.includes("Ф.И.О.") || val.includes("ребенка")) {
+              headerRowIndex = rowNumber;
         const maxScanRows = Math.min(sheet.rowCount, 11);
         for (let r = 1; r <= maxScanRows; r++) {
           const row = sheet.getRow(r);
@@ -551,10 +573,10 @@ router.post(
               headerRowIndex = r;
               break;
             }
-          }
-          if (headerRowIndex >= 0) break;
-        }
+          });
+        });
         if (headerRowIndex >= 0) {
+          rows = excelSheetToJson(worksheet, headerRowIndex);
           rows = excelSheetToJson(sheet, headerRowIndex);
         const headerRowIndex = findHeaderRow(worksheet, ["Ф.И.О.", "ребенка"]);
         if (headerRowIndex >= 0) {
@@ -797,6 +819,40 @@ function fetchCsv(targetUrl: string, redirectCount = 0): Promise<string> {
 }
 
 /**
+ * Converts an ExcelJS Worksheet to an array of JSON objects.
+ * The first row (or the row at `headerRowNumber`) is used as keys.
+ * Empty-string values are used as defaults (like xlsx's `{ defval: "" }`).
+ */
+function excelSheetToJson(worksheet: ExcelJS.Worksheet, headerRowNumber = 1): ImportRow[] {
+  const headerRow = worksheet.getRow(headerRowNumber);
+  const headers: string[] = [];
+  headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+    headers[colNumber] = String(cell.value ?? "").trim();
+  });
+
+  const rows: ImportRow[] = [];
+  worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+    if (rowNumber <= headerRowNumber) return;
+    const obj: ImportRow = {};
+    let hasValue = false;
+    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      const key = headers[colNumber];
+      if (!key) return;
+      const rawValue = cell.value;
+      if (rawValue instanceof Date) {
+        obj[key] = rawValue;
+      } else {
+        obj[key] = rawValue !== null && rawValue !== undefined ? String(rawValue) : "";
+      }
+      if (obj[key] !== "") hasValue = true;
+    });
+    // Fill in missing headers with empty string
+    for (const h of headers) {
+      if (h && !(h in obj)) obj[h] = "";
+    }
+    if (hasValue) rows.push(obj);
+  });
+
  * Converts an ExcelJS worksheet to an array of key-value row objects,
  * replicating the behaviour of the old `XLSX.utils.sheet_to_json()`.
  *
