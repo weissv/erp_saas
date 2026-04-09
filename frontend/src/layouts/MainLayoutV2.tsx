@@ -173,24 +173,6 @@ const DEMO_TENANTS: Tenant[] = [
   { id: "greenhill", name: "Greenhill Academy" },
 ];
 
-// ─── Command Palette Searchable Items ────────────────────────────────────────
-
-type SearchableItem = {
-  label: string;
-  path: string;
-  group: string;
-};
-
-function buildSearchItems(): SearchableItem[] {
-  const items: SearchableItem[] = [];
-  for (const mod of MODULES) {
-    for (const sub of mod.subLinks) {
-      items.push({ label: sub.label, path: sub.path, group: mod.label });
-    }
-  }
-  return items;
-}
-
 // ─── Sidebar Rail (Tier 1) ───────────────────────────────────────────────────
 
 function SidebarRail({
@@ -584,8 +566,6 @@ export default function MainLayoutV2() {
     () => MODULES.find((m) => m.id === activeModuleId) ?? MODULES[0],
     [activeModuleId],
   );
-
-  const searchItems = useMemo(() => buildSearchItems(), []);
 
   const handleModuleSelect = useCallback(
     (id: string) => {

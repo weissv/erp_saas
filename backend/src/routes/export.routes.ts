@@ -406,7 +406,7 @@ router.post(
     const fileBase64 = sanitizeBase64(req.body.fileBase64);
     const nodeBuffer = Buffer.from(fileBase64, "base64");
     const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(nodeBuffer.buffer.slice(nodeBuffer.byteOffset, nodeBuffer.byteOffset + nodeBuffer.byteLength));
+    await workbook.xlsx.load(nodeBuffer as unknown as ArrayBuffer);
     const worksheet = workbook.worksheets[0];
     if (!worksheet) {
       return res.status(400).json({ message: "Не удалось прочитать Excel-файл" });
@@ -679,7 +679,7 @@ function excelSheetToJson(worksheet: ExcelJS.Worksheet, headerRowNumber = 1): Im
   const headerRow = worksheet.getRow(headerRowNumber);
   const headers: string[] = [];
   headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-    headers[colNumber] = (cell.text ?? String(cell.value ?? "")).trim();
+    headers[colNumber] = String(cell.value ?? "").trim();
   });
 
   const rows: ImportRow[] = [];
