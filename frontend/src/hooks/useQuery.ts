@@ -9,7 +9,7 @@ export interface UseQueryOptions<TData> {
   /** URL эндпоинта */
   url: string;
   /** Параметры запроса */
-  params?: Record<string, any>;
+  params?: Record<string, string | number | boolean | undefined>;
   /** Включить запрос */
   enabled?: boolean;
   /** Показывать toast при ошибке */
@@ -29,7 +29,7 @@ export interface UseQueryOptions<TData> {
   /** Начальные данные */
   initialData?: TData;
   /** Трансформация данных */
-  select?: (data: any) => TData;
+  select?: (data: unknown) => TData;
 }
 
 export interface UseQueryReturn<TData> {
@@ -51,7 +51,7 @@ export interface UseQueryReturn<TData> {
   reset: () => void;
 }
 
-export function useQuery<TData = any>(
+export function useQuery<TData = unknown>(
   options: UseQueryOptions<TData>
 ): UseQueryReturn<TData> {
   const {
@@ -208,7 +208,7 @@ export interface UsePaginatedQueryOptions<TItem> extends Omit<UseQueryOptions<Pa
   /** Порядок сортировки */
   sortOrder?: 'asc' | 'desc';
   /** Фильтры */
-  filters?: Record<string, any>;
+  filters?: Record<string, string | number | boolean>;
   /** Поисковый запрос */
   search?: string;
   /** Поля для поиска */
@@ -224,7 +224,7 @@ export interface UsePaginatedQueryReturn<TItem> extends UseQueryReturn<Paginated
 /**
  * Хук для пагинированных запросов
  */
-export function usePaginatedQuery<TItem = any>(
+export function usePaginatedQuery<TItem = unknown>(
   options: UsePaginatedQueryOptions<TItem>
 ): UsePaginatedQueryReturn<TItem> {
   const {
@@ -240,7 +240,7 @@ export function usePaginatedQuery<TItem = any>(
   } = options;
 
   const params = useMemo(() => {
-    const result: Record<string, any> = {
+    const result: Record<string, string | number | boolean> = {
       page,
       pageSize,
     };
