@@ -21,6 +21,19 @@ export const config = {
   jwtExpiresIn: "12h",
   nodeEnv: process.env.NODE_ENV || "development",
   corsOrigins: resolveOrigins(),
+
+  // Stripe
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
+  stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
+
+  // SMTP (for tenant data export emails)
+  smtpHost: process.env.SMTP_HOST || "localhost",
+  smtpPort: parseInt(process.env.SMTP_PORT || "587", 10),
+  smtpSecure: process.env.SMTP_SECURE === "true",
+  smtpUser: process.env.SMTP_USER || "",
+  smtpPass: process.env.SMTP_PASS || "",
+  smtpFrom: process.env.SMTP_FROM || "noreply@erp-saas.com",
+
   // Groq API для AI проверки контрольных
   groqApiKey: process.env.GROQ_API_KEY || "",
   groqModel: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
