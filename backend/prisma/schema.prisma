@@ -1694,12 +1694,15 @@ model TenantIntegrations {
   googleDriveApiKey  String? @db.Text
   googleDriveFolderId String?
 
-  // 1C OData Integration
+  // 1C OData Integration (Pull — legacy VPN-based sync)
   oneCBaseUrl    String?
   oneCUser       String?
   oneCPassword   String? @db.Text
   oneCTimeoutMs  Int?     @default(60000)
   oneCCronSchedule String? @default("*/15 * * * *")
+
+  // 1C Push Integration (new REST API — 1C pushes data to us)
+  oneCPushApiKey String?  @db.Text  // Bearer token for inbound 1C push API
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1718,12 +1721,15 @@ model TenantIntegrations {
   // --- Telegram ---
   telegramBotToken String? // Telegram Bot API token
 
-  // --- 1C OData ---
+  // --- 1C OData (Pull — legacy VPN-based sync) ---
   oneCBaseUrl    String? // e.g. http://host/db/odata/standard.odata
   oneCUser       String? // Basic-auth username (may contain Cyrillic)
   oneCPassword   String? // Basic-auth password
   oneCTimeoutMs  Int     @default(60000)
   oneCCronSchedule String @default("*/15 * * * *")
+
+  // --- 1C Push Integration (new REST API — 1C pushes data to us) ---
+  oneCPushApiKey String?  // Bearer token for inbound 1C push API
 
   // --- AI: Embeddings (Gemini) ---
   geminiApiKey String?

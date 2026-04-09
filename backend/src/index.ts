@@ -8,6 +8,7 @@ import { initTelegramBot } from "./services/TelegramService";
 import { setIntervalWithJitter } from "./services/CronJitterService";
 import { initSocketIO } from "./lib/socketio";
 import { startOneCWorker } from "./modules/onec/queue/onec-sync.worker";
+import { startOneCPushWorker } from "./modules/onec/queue/onec-push.worker";
 
 // Validate critical configuration before starting the server
 validateConfig();
@@ -55,6 +56,13 @@ try {
   startOneCWorker();
 } catch (err) {
   logger.warn("Could not start 1C BullMQ worker (Redis may be unavailable):", (err as Error).message);
+}
+
+// Start BullMQ worker for inbound 1C push data
+try {
+  startOneCPushWorker();
+} catch (err) {
+  logger.warn("Could not start 1C Push BullMQ worker (Redis may be unavailable):", (err as Error).message);
 }
 
 httpServer.listen(config.port, () => {

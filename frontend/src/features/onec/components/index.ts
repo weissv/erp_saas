@@ -8,3 +8,4 @@ export { PayrollTab } from "./payroll-tab";
 export { ExtraCatalogsTab } from "./extra-catalogs-tab";
 export { RegistersTab } from "./registers-tab";
 export { ScopedRegistersTab } from "./scoped-registers-tab";
+export { OneCIntegrationSettings } from "./OneCIntegrationSettings";
