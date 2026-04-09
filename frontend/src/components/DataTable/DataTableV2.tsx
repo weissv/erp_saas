@@ -13,7 +13,7 @@
 //   • Beautiful empty state with CTA
 // ──────────────────────────────────────────────────────────────────────────────
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -263,10 +263,6 @@ export function DataTableV2<TData>({
     onRowSelectionChange: (updater) => {
       const next = typeof updater === "function" ? updater(rowSelection) : updater;
       setRowSelection(next);
-      if (onSelectionChange) {
-        const selectedIndices = Object.keys(next).filter((k) => next[k]);
-        onSelectionChange(selectedIndices.map((i) => data[Number(i)]));
-      }
     },
     onGlobalFilterChange: setGlobalFilter,
     onPaginationChange: setPagination,
@@ -277,6 +273,14 @@ export function DataTableV2<TData>({
   });
 
   const visibleColumns = table.getAllColumns().filter((col) => col.getCanHide());
+
+  // Notify parent of selection changes using the table model (safe after sorting/filtering)
+  useEffect(() => {
+    if (onSelectionChange) {
+      const selected = table.getSelectedRowModel().rows.map((r) => r.original);
+      onSelectionChange(selected);
+    }
+  }, [rowSelection, table, onSelectionChange]);
 
   return (
     <div className="rounded-lg border border-border bg-card shadow-sm overflow-hidden">

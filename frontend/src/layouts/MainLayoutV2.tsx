@@ -10,7 +10,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BookOpen,
@@ -552,6 +552,7 @@ export default function MainLayoutV2() {
   const [commandOpen, setCommandOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [currentTenant, setCurrentTenant] = useState<Tenant>(DEMO_TENANTS[0]);
+  const navigate = useNavigate();
 
   // Derive active module from URL
   useEffect(() => {
@@ -693,9 +694,7 @@ export default function MainLayoutV2() {
                   key={link.path}
                   onSelect={() => {
                     setCommandOpen(false);
-                    // Navigate programmatically — using window.location
-                    // as CommandDialog runs outside Router context sometimes
-                    window.location.href = link.path;
+                    navigate(link.path);
                   }}
                 >
                   <mod.icon className="mr-2 h-4 w-4" />
