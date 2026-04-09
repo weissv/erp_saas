@@ -1,5 +1,6 @@
 // src/services/KnowledgeBaseService.ts
 // Сервис для управления статьями Базы Знаний с поддержкой векторного поиска (RAG)
+// ALL queries enforce mandatory tenantId filtering to prevent cross-tenant data leakage.
 
 import { PrismaClient, Role } from "@prisma/client";
 import { AiService } from "./AiService";
@@ -114,6 +115,12 @@ function safeTenantId(tenantId: string): string {
     throw new Error("Invalid tenantId");
   }
   return tenantId;
+ * Validates a tenantId to prevent SQL injection when used in $queryRawUnsafe.
+ * Only alphanumeric, hyphens, and underscores are allowed.
+ */
+function sanitizeTenantId(tenantId: string): string {
+  const cleaned = tenantId.replace(/[^a-zA-Z0-9_-]/g, "");
+  return cleaned || "default";
 }
 
 /**
@@ -121,6 +128,7 @@ function safeTenantId(tenantId: string): string {
  */
 async function createArticle(input: CreateArticleInput): Promise<ArticleResult> {
   const { title, content, tags = [], roles = [], authorId, tenantId = DEFAULT_TENANT_ID } = input;
+  const { title, content, tags = [], roles = [], authorId, tenantId = "default" } = input;
 
   const slug = generateSlug(title);
   const summary = generateSummary(content);
@@ -128,6 +136,7 @@ async function createArticle(input: CreateArticleInput): Promise<ArticleResult> 
   // 1. Создаём статью без embedding (Prisma не поддерживает Unsupported напрямую)
   const article = await prisma.knowledgeBaseArticle.create({
     data: {
+      tenantId,
       title,
       slug,
       content,
@@ -169,6 +178,10 @@ async function createArticle(input: CreateArticleInput): Promise<ArticleResult> 
  */
 async function updateArticle(id: number, input: UpdateArticleInput, tenantId: string = DEFAULT_TENANT_ID): Promise<ArticleResult> {
   const existing = await prisma.knowledgeBaseArticle.findUnique({ where: { id } });
+ * Обновление статьи с перегенерацией embedding (tenant-scoped)
+ */
+async function updateArticle(id: number, input: UpdateArticleInput, tenantId: string = "default"): Promise<ArticleResult> {
+  const existing = await prisma.knowledgeBaseArticle.findFirst({ where: { id, tenantId } });
   if (!existing) {
     throw new Error("Статья не найдена");
   }
@@ -224,6 +237,8 @@ async function search(
   userRole: Role
 ): Promise<ArticleListResult> {
   const { q, tags, limit = 20, offset = 0, tenantId = DEFAULT_TENANT_ID } = params;
+  const { q, tags, limit = 20, offset = 0, tenantId: rawTenantId = "default" } = params;
+  const tenantId = sanitizeTenantId(rawTenantId);
 
   // ========== Семантический поиск (если есть запрос) ==========
   if (q && q.trim().length > 0) {
@@ -235,6 +250,10 @@ async function search(
       const conditions: string[] = [
         `embedding IS NOT NULL`,
         `"tenantId" = '${safeTenantId(tenantId)}'`,
+      // Строим WHERE-условия: mandatory tenantId + ролевой фильтр + теги
+      const conditions: string[] = [
+        `embedding IS NOT NULL`,
+        `"tenantId" = '${tenantId}'`,
       ];
 
       // Пользователь видит статьи: без ограничений по ролям ИЛИ его роль в списке
@@ -291,6 +310,7 @@ async function search(
   // ========== Текстовый поиск / листинг ==========
   const where: Record<string, unknown> = {
     tenantId, // MANDATORY tenant filter
+    tenantId,
   };
 
   // Фильтр по ролям
@@ -340,6 +360,11 @@ async function search(
 async function getBySlug(slug: string, userRole: Role, tenantId: string = DEFAULT_TENANT_ID): Promise<ArticleResult | null> {
   const article = await prisma.knowledgeBaseArticle.findUnique({
     where: { slug },
+ * Получение статьи по slug (tenant-scoped)
+ */
+async function getBySlug(slug: string, userRole: Role, tenantId: string = "default"): Promise<ArticleResult | null> {
+  const article = await prisma.knowledgeBaseArticle.findFirst({
+    where: { slug, tenantId },
     include: {
       author: {
         select: { id: true, email: true, employee: { select: { firstName: true, lastName: true } } },
@@ -365,11 +390,16 @@ async function getBySlug(slug: string, userRole: Role, tenantId: string = DEFAUL
  * MANDATORY tenantId filter prevents cross-tenant data leakage.
  */
 async function getRelated(articleId: number, userRole: Role, limit: number = 5, tenantId: string = DEFAULT_TENANT_ID): Promise<ArticleResult[]> {
+ * Поиск похожих статей на основе embedding текущей статьи (tenant-scoped)
+ */
+async function getRelated(articleId: number, userRole: Role, limit: number = 5, tenantId: string = "default"): Promise<ArticleResult[]> {
+  const safeTenantId = sanitizeTenantId(tenantId);
   try {
     const conditions = [
       `id != ${articleId}`,
       `embedding IS NOT NULL`,
       `"tenantId" = '${safeTenantId(tenantId)}'`,
+      `"tenantId" = '${safeTenantId}'`,
       `(roles = '{}' OR '${userRole}' = ANY(roles))`,
     ];
     const whereClause = conditions.join(" AND ");
@@ -400,6 +430,10 @@ async function getRelated(articleId: number, userRole: Role, limit: number = 5, 
  */
 async function deleteArticle(id: number, tenantId: string = DEFAULT_TENANT_ID): Promise<boolean> {
   const existing = await prisma.knowledgeBaseArticle.findUnique({ where: { id } });
+ * Удаление статьи (tenant-scoped)
+ */
+async function deleteArticle(id: number, tenantId: string = "default"): Promise<boolean> {
+  const existing = await prisma.knowledgeBaseArticle.findFirst({ where: { id, tenantId } });
   if (!existing) {
     throw new Error("Статья не найдена");
   }

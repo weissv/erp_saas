@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Технические работы | Mezon Admin</title>
+    <title>Технические работы</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --mezon-bg: #FEF9F4;
-            --mezon-accent: #A04A84;
-            --mezon-teal: #00859E;
-            --mezon-dark: #222222;
-            --mezon-shadow: 0 18px 45px rgba(160, 74, 132, 0.25);
-            --mezon-gradient: linear-gradient(135deg, #fef3e6 0%, #f9e2f0 40%, #f0f6ff 100%);
+            --maint-bg: #F5F5F7;
+            --maint-accent: #007AFF;
+            --maint-teal: #5AC8FA;
+            --maint-dark: #1D1D1F;
+            --maint-shadow: 0 18px 45px rgba(0, 122, 255, 0.15);
+            --maint-gradient: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 40%, #f0f6ff 100%);
         }
 
         body {
@@ -22,10 +22,10 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: var(--mezon-bg);
-            background-image: var(--mezon-gradient);
+            background: var(--maint-bg);
+            background-image: var(--maint-gradient);
             font-family: 'Roboto', sans-serif;
-            color: var(--mezon-dark);
+            color: var(--maint-dark);
             overflow: hidden;
         }
 
@@ -35,7 +35,7 @@
             padding: 3rem 4rem;
             border-radius: 24px;
             text-align: center;
-            box-shadow: var(--mezon-shadow);
+            box-shadow: var(--maint-shadow);
             max-width: 500px;
             width: 90%;
             z-index: 1;
@@ -48,7 +48,7 @@
             inset: 0;
             border-radius: 24px;
             padding: 2px;
-            background: linear-gradient(120deg, var(--mezon-accent), var(--mezon-teal));
+            background: linear-gradient(120deg, var(--maint-accent), var(--maint-teal));
             -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor;
             mask-composite: exclude;
@@ -60,7 +60,7 @@
             font-size: 2.2rem;
             font-weight: 700;
             margin: 0 0 1rem 0;
-            background: linear-gradient(120deg, var(--mezon-accent), var(--mezon-teal));
+            background: linear-gradient(120deg, var(--maint-accent), var(--maint-teal));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -82,8 +82,8 @@
         .spinner {
             width: 100%;
             height: 100%;
-            border: 4px solid rgba(160, 74, 132, 0.1);
-            border-top: 4px solid var(--mezon-accent);
+            border: 4px solid rgba(0, 122, 255, 0.1);
+            border-top: 4px solid var(--maint-accent);
             border-radius: 50%;
             animation: spin 1s cubic-bezier(0.55, 0.055, 0.675, 0.19) infinite;
         }
@@ -106,14 +106,14 @@
             left: -10%;
             width: 300px;
             height: 300px;
-            background: rgba(160, 74, 132, 0.3);
+            background: rgba(0, 122, 255, 0.3);
         }
         .blob-2 {
             bottom: -10%;
             right: -10%;
             width: 300px;
             height: 300px;
-            background: rgba(0, 133, 158, 0.3);
+            background: rgba(90, 200, 250, 0.3);
         }
     </style>
 </head>

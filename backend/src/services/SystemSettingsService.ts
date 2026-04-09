@@ -19,6 +19,13 @@ export enum SettingKey {
   AI_MODEL = "ai_model",
   AI_TEMPERATURE = "ai_temperature",
   SESSION_TIMEOUT = "session_timeout",
+  // Tenant branding
+  TENANT_NAME = "tenant_name",
+  TENANT_LOGO_URL = "tenant_logo_url",
+  TENANT_FAVICON_URL = "tenant_favicon_url",
+  TENANT_PRIMARY_COLOR = "tenant_primary_color",
+  TENANT_SUPPORT_EMAIL = "tenant_support_email",
+  TENANT_SUPPORT_PHONE = "tenant_support_phone",
 }
 
 // Дефолтные значения
@@ -47,6 +54,13 @@ const DEFAULT_VALUES: Record<string, string> = {
   [SettingKey.AI_MODEL]: "qwen/qwen3-32b",
   [SettingKey.AI_TEMPERATURE]: "0.7",
   [SettingKey.SESSION_TIMEOUT]: "86400",
+  // Tenant branding defaults
+  [SettingKey.TENANT_NAME]: "ERP Platform",
+  [SettingKey.TENANT_LOGO_URL]: "/logo.png",
+  [SettingKey.TENANT_FAVICON_URL]: "/favicon.ico",
+  [SettingKey.TENANT_PRIMARY_COLOR]: "#007AFF",
+  [SettingKey.TENANT_SUPPORT_EMAIL]: "",
+  [SettingKey.TENANT_SUPPORT_PHONE]: "",
 };
 
 // Кэш настроек в памяти для быстрого доступа
@@ -307,6 +321,30 @@ async function resetAiSystemPrompt(updatedBy?: number): Promise<string> {
   return defaultPrompt;
 }
 
+/**
+ * Returns public tenant branding settings (no auth required).
+ */
+async function getTenantSettings(): Promise<{
+  name: string;
+  logoUrl: string;
+  faviconUrl: string;
+  primaryColor: string;
+  supportEmail: string;
+  supportPhone: string;
+}> {
+  const [name, logoUrl, faviconUrl, primaryColor, supportEmail, supportPhone] =
+    await Promise.all([
+      get(SettingKey.TENANT_NAME),
+      get(SettingKey.TENANT_LOGO_URL),
+      get(SettingKey.TENANT_FAVICON_URL),
+      get(SettingKey.TENANT_PRIMARY_COLOR),
+      get(SettingKey.TENANT_SUPPORT_EMAIL),
+      get(SettingKey.TENANT_SUPPORT_PHONE),
+    ]);
+
+  return { name, logoUrl, faviconUrl, primaryColor, supportEmail, supportPhone };
+}
+
 export const SystemSettingsService = {
   get,
   set,
@@ -322,6 +360,7 @@ export const SystemSettingsService = {
   getAiSystemPrompt,
   setAiSystemPrompt,
   resetAiSystemPrompt,
+  getTenantSettings,
   SettingKey,
   SettingCategory,
   DEFAULT_VALUES,

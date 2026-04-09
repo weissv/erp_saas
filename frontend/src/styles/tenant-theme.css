@@ -1,6 +1,6 @@
 /* ============================================================================
    macOS Sequoia — Design System
-   Mezon ERP · Clean Surfaces, Warm Neutrals, Professional Depth
+   Tenant Theme · Clean Surfaces, Warm Neutrals, Professional Depth
    ============================================================================ */
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -58,6 +58,10 @@
   --mezon-bg:             var(--bg-canvas);
   --mezon-panel-muted:    var(--surface-primary);
   --mezon-separator:      var(--separator);
+
+  /* Primary-color alias — overridden at runtime by TenantProvider */
+  --primary-color:        var(--color-blue);
+  --primary-tint:         rgba(0, 122, 255, 0.08);
   --macos-blue:   var(--color-blue);
   --macos-green:  var(--color-green);
   --macos-red:    var(--color-red);
@@ -162,7 +166,7 @@
   --macos-duration-slow:  var(--duration-slow);
 
   /* ── Gradients ── */
-  --mezon-hero-glow: linear-gradient(135deg, rgba(10, 132, 255, 0.03) 0%, transparent 50%);
+  --hero-glow: linear-gradient(135deg, rgba(10, 132, 255, 0.03) 0%, transparent 50%);
 }
 
 

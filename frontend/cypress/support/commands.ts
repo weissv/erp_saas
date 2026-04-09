@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-const BACKEND_URL = 'https://mezon-admin.onrender.com'
+const BACKEND_URL = 'http://localhost:4000'
 const TOKEN_STORAGE_KEY = 'auth_token'
 const USER_STORAGE_KEY = 'auth_user'
 
@@ -37,7 +37,7 @@ Cypress.Commands.add('loginViaAPI', (username: string, password: string) => {
       body: { login: username, password },
       headers: {
         'Content-Type': 'application/json',
-        Origin: 'https://erp.mezon.uz',
+        Origin: 'http://localhost:5173',
       },
       failOnStatusCode: false,
     }).then((response) => {

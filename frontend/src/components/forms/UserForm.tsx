@@ -11,7 +11,7 @@ import { User, AvailableEmployee} from '../../types/user';
 import { Eye, EyeOff, MessageCircle, ExternalLink} from 'lucide-react';
 
 // Имя бота для Telegram Deep Link (из Vite env переменных)
-const TELEGRAM_BOT_NAME = import.meta.env.VITE_TELEGRAM_BOT_NAME || 'mezon_erpbot';
+const TELEGRAM_BOT_NAME = import.meta.env.VITE_TELEGRAM_BOT_NAME || 'erp_bot';
 
 const ROLES = [
  { value: 'DEVELOPER', label: 'Разработчик'},

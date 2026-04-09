@@ -5,7 +5,7 @@ type UsersFixture = {
   director: { username: string; password: string }
 }
 
-const API_ORIGIN = 'https://erp.mezon.uz'
+const API_ORIGIN = 'http://localhost:5173'
 
 const buildAuthHeaders = () => {
   const token = Cypress.env('authToken') as string | null | undefined
@@ -17,7 +17,7 @@ const buildAuthHeaders = () => {
 }
 
 describe('Children CRUD regression', () => {
-  const BACKEND_URL = 'https://mezon-admin.onrender.com'
+  const BACKEND_URL = 'http://localhost:4000'
   let users: UsersFixture
 
   before(() => {

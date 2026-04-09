@@ -3,6 +3,7 @@
 
 import { config } from "../config";
 import { getTenantIntegrations, DEFAULT_TENANT_ID } from "./TenantIntegrationsService";
+import { TenantIntegrationsService } from "./TenantIntegrationsService";
 
 export interface AiCheckResult {
   score: number;
@@ -21,6 +22,7 @@ export async function checkExamAnswerWithAI(
   maxPoints: number,
   questionType?: string,
   tenantId: string = DEFAULT_TENANT_ID,
+  tenantId: string = "default"
 ): Promise<AiCheckResult> {
   try {
     // Fetch per-tenant API credentials
@@ -74,6 +76,10 @@ ${studentAnswer || '(ответ не предоставлен)'}
     if (normalizedType === 'TEXT_LONG' || normalizedType === 'PROBLEM') {
       model = creds.groqHeavyModel || config.groqHeavyModel || model;
     }
+
+    // Fetch Groq API key from tenant credentials at runtime
+    const creds = await TenantIntegrationsService.getCredentials(tenantId);
+    const groqApiKey = creds.groqApiKey || config.groqApiKey;
 
     // Используем Groq API для AI проверки
     const groqApiKey = creds.groqApiKey;

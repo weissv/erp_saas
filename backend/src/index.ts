@@ -1,11 +1,14 @@
 // src/index.ts
 import { createServer } from "http";
+import http from "http";
 import app from "./app";
 import { config } from "./config";
 import { AiService } from "./services/AiService";
 import { initTelegramBot } from "./services/TelegramService";
 import { initSocketIO } from "./lib/socketio";
 import { startOneCWorker } from "./modules/onec/queue/onec-sync.worker";
+import { createIOServer } from "./io";
+import { startOneCWorker } from "./queues/onec-sync.worker";
 
 // Интервал синхронизации Google Drive (30 минут)
 const SYNC_INTERVAL_MS = 30 * 60 * 1000;
@@ -50,6 +53,19 @@ try {
 }
 
 httpServer.listen(config.port, () => {
+const server = http.createServer(app);
+
+// Attach Socket.io to the HTTP server
+const io = createIOServer(server);
+
+// Start the BullMQ worker for 1C sync (non-blocking — gracefully no-ops if Redis is down)
+try {
+  startOneCWorker(io);
+} catch (err) {
+  console.warn("⚠️ Could not start 1C sync worker (Redis may be unavailable):", err);
+}
+
+server.listen(config.port, () => {
   console.log(`API running on http://0.0.0.0:${config.port}`);
   
   // Инициализируем Telegram бота

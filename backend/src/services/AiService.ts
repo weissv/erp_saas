@@ -7,6 +7,7 @@ import { EventEmitter } from "events";
 import { SystemSettingsService } from "./SystemSettingsService";
 import { config } from "../config";
 import { getTenantIntegrations, DEFAULT_TENANT_ID, type TenantCredentials } from "./TenantIntegrationsService";
+import { TenantIntegrationsService, type TenantCredentials } from "./TenantIntegrationsService";
 
 const prisma = new PrismaClient();
 
@@ -57,6 +58,20 @@ async function getGeminiClient(tenantId: string = DEFAULT_TENANT_ID): Promise<Go
     throw new Error("GEMINI_API_KEY не установлен — embeddings и семантический поиск не будут работать");
   }
   const client = new GoogleGenerativeAI(creds.geminiApiKey);
+// Lazy-init client caches per tenant
+const geminiClients = new Map<string, GoogleGenerativeAI>();
+const groqClients = new Map<string, OpenAI>();
+
+async function getGeminiClient(tenantId: string = "default"): Promise<GoogleGenerativeAI> {
+  const existing = geminiClients.get(tenantId);
+  if (existing) return existing;
+
+  const creds = await TenantIntegrationsService.getCredentials(tenantId);
+  const key = creds.geminiApiKey;
+  if (!key) {
+    throw new Error("GEMINI_API_KEY не установлен в переменных окружения");
+  }
+  const client = new GoogleGenerativeAI(key);
   geminiClients.set(tenantId, client);
   return client;
 }
@@ -71,6 +86,17 @@ async function getGroqClient(tenantId: string = DEFAULT_TENANT_ID): Promise<Open
   }
   const client = new OpenAI({
     apiKey: creds.groqApiKey,
+async function getGroqClient(tenantId: string = "default"): Promise<OpenAI> {
+  const existing = groqClients.get(tenantId);
+  if (existing) return existing;
+
+  const creds = await TenantIntegrationsService.getCredentials(tenantId);
+  const key = creds.groqApiKey;
+  if (!key) {
+    throw new Error("GROQ_API_KEY не установлен в переменных окружения");
+  }
+  const client = new OpenAI({
+    apiKey: key,
     baseURL: "https://api.groq.com/openai/v1",
   });
   groqClients.set(tenantId, client);
@@ -146,6 +172,12 @@ interface GoogleDriveFile {
 async function getGoogleDriveFiles(tenantId: string = DEFAULT_TENANT_ID): Promise<GoogleDriveFile[]> {
   const creds = await getTenantIntegrations(tenantId);
   if (!creds.googleDriveApiKey || !creds.googleDriveFolderId) {
+async function getGoogleDriveFiles(tenantId: string = "default"): Promise<GoogleDriveFile[]> {
+  const creds = await TenantIntegrationsService.getCredentials(tenantId);
+  const driveApiKey = creds.googleDriveApiKey;
+  const driveFolderId = creds.googleDriveFolderId;
+
+  if (!driveApiKey || !driveFolderId) {
     console.log("ℹ️  Google Drive не настроен (GOOGLE_DRIVE_API_KEY или GOOGLE_DRIVE_FOLDER_ID отсутствуют)");
     return [];
   }
@@ -153,6 +185,7 @@ async function getGoogleDriveFiles(tenantId: string = DEFAULT_TENANT_ID): Promis
   try {
     // Используем Google Drive API v3 для получения файлов из публичной папки
     const url = `https://www.googleapis.com/drive/v3/files?q='${creds.googleDriveFolderId}'+in+parents&key=${creds.googleDriveApiKey}&fields=files(id,name,mimeType,webViewLink)`;
+    const url = `https://www.googleapis.com/drive/v3/files?q='${driveFolderId}'+in+parents&key=${driveApiKey}&fields=files(id,name,mimeType,webViewLink)`;
     
     const response = await fetch(url);
     if (!response.ok) {
@@ -235,6 +268,7 @@ async function getGoogleDriveFileContent(fileId: string, mimeType: string, tenan
   const creds = await getTenantIntegrations(tenantId);
   const driveApiKey = creds.googleDriveApiKey;
 
+async function getGoogleDriveFileContent(fileId: string, mimeType: string, driveApiKey: string): Promise<string | null> {
   try {
     // Для Google Docs используем export в текстовый формат
     if (mimeType === "application/vnd.google-apps.document") {
@@ -281,6 +315,7 @@ async function addDocumentFromText(
   subject?: string,
   grade?: string,
   tenantId: string = DEFAULT_TENANT_ID,
+  tenantId: string = "default"
 ): Promise<{ id: number; success: boolean; chunksCreated: number }> {
   try {
     const metadata: DocumentMetadata = {
@@ -594,6 +629,7 @@ function updateSyncStatus(updates: Partial<SyncStatus>): void {
 async function syncGoogleDriveDocuments(
   tenantId: string = DEFAULT_TENANT_ID,
 ): Promise<{ synced: number; updated: number; errors: number; skipped: number }> {
+async function syncGoogleDriveDocuments(tenantId: string = "default"): Promise<{ synced: number; updated: number; errors: number; skipped: number }> {
   // Проверяем, не запущена ли уже синхронизация
   if (syncStatus.isRunning) {
     throw new Error("Синхронизация уже выполняется");
@@ -608,6 +644,8 @@ async function syncGoogleDriveDocuments(
   
   try {
     const files = await getGoogleDriveFiles(tenantId);
+    const creds = await TenantIntegrationsService.getCredentials(tenantId);
+    const driveApiKey = creds.googleDriveApiKey || "";
     console.log(`📂 Found ${files.length} files in Google Drive folder`);
     
     updateSyncStatus({ total: files.length });
@@ -629,13 +667,14 @@ async function syncGoogleDriveDocuments(
         
         // Получаем содержимое файла
         const content = await getGoogleDriveFileContent(file.id, file.mimeType, tenantId);
+        const content = await getGoogleDriveFileContent(file.id, file.mimeType, driveApiKey);
         if (!content || content.trim().length < 10) {
           console.log(`⏭️ File ${file.name} has no content or is too short`);
           updateSyncStatus({ skipped: syncStatus.skipped + 1 });
           continue;
         }
         
-        // Проверяем, есть ли уже этот документ в базе
+        // Проверяем, есть ли уже этот документ в базе (tenant-scoped)
         const existing = await prisma.$queryRaw<{ id: number; content: string }[]>`
           SELECT id, content FROM "KnowledgeBaseDocument" 
           WHERE metadata->>'googleDriveFileId' = ${file.id}
@@ -651,7 +690,7 @@ async function syncGoogleDriveDocuments(
             continue; // Содержимое не изменилось
           }
           
-          // Удаляем старые версии документа для обновления
+          // Удаляем старые версии документа для обновления (tenant-scoped)
           await prisma.$executeRaw`
             DELETE FROM "KnowledgeBaseDocument" 
             WHERE metadata->>'googleDriveFileId' = ${file.id}
@@ -738,6 +777,7 @@ async function syncGoogleDriveDocuments(
  * Запускает синхронизацию в фоновом режиме (не блокирует запрос)
  */
 function startBackgroundSync(tenantId: string = DEFAULT_TENANT_ID): { started: boolean; message: string } {
+function startBackgroundSync(tenantId: string = "default"): { started: boolean; message: string } {
   if (syncStatus.isRunning) {
     return { started: false, message: "Синхронизация уже выполняется" };
   }
@@ -761,6 +801,7 @@ function sleep(ms: number): Promise<void> {
  * Генерирует эмбеддинг для текста через Gemini API
  */
 async function generateEmbedding(text: string, tenantId: string = DEFAULT_TENANT_ID): Promise<number[]> {
+async function generateEmbedding(text: string, tenantId: string = "default"): Promise<number[]> {
   try {
     const client = await getGeminiClient(tenantId);
     const model = client.getGenerativeModel({ model: EMBEDDING_MODEL });
@@ -785,6 +826,7 @@ async function addDocument(
   text: string,
   metadata: DocumentMetadata = {},
   tenantId: string = DEFAULT_TENANT_ID,
+  tenantId: string = "default"
 ): Promise<{ id: number; success: boolean }> {
   try {
     // Генерируем эмбеддинг
@@ -794,7 +836,9 @@ async function addDocument(
     // Используем raw query для вставки вектора, т.к. Prisma плохо типизирует векторы
     const result = await prisma.$executeRaw`
       INSERT INTO "KnowledgeBaseDocument" (content, metadata, embedding, "tenantId", "createdAt", "updatedAt")
+      INSERT INTO "KnowledgeBaseDocument" ("tenantId", content, metadata, embedding, "createdAt", "updatedAt")
       VALUES (
+        ${tenantId},
         ${text},
         ${JSON.stringify(metadata)}::jsonb,
         ${embeddingString}::vector,
@@ -807,7 +851,7 @@ async function addDocument(
 
     // Получаем ID вставленной записи
     const inserted = await prisma.$queryRaw<{ id: number }[]>`
-      SELECT id FROM "KnowledgeBaseDocument" ORDER BY id DESC LIMIT 1
+      SELECT id FROM "KnowledgeBaseDocument" WHERE "tenantId" = ${tenantId} ORDER BY id DESC LIMIT 1
     `;
 
     return { id: inserted[0].id, success: true };
@@ -820,11 +864,13 @@ async function addDocument(
 /**
  * Поиск похожих документов по косинусному сходству.
  * MANDATORY tenantId filter prevents cross-tenant data leakage.
+ * MANDATORY tenantId filter guarantees cross-tenant isolation.
  */
 async function findSimilarDocuments(
   queryEmbedding: number[],
   limit: number = 5,
   tenantId: string = DEFAULT_TENANT_ID,
+  tenantId: string = "default"
 ): Promise<KnowledgeDocument[]> {
   try {
     const embeddingString = `[${queryEmbedding.join(",")}]`;
@@ -877,6 +923,7 @@ async function chatWithAssistant(
   userQuery: string,
   conversationHistory: ChatMessage[] = [],
   tenantId: string = DEFAULT_TENANT_ID,
+  tenantId: string = "default"
 ): Promise<{ response: string; sources: KnowledgeDocument[] }> {
   try {
     // 1. Генерируем эмбеддинг для запроса пользователя
@@ -933,6 +980,10 @@ async function chatWithAssistant(
  */
 async function getAllDocuments(
   tenantId: string = DEFAULT_TENANT_ID,
+ * Получает все документы из базы знаний (без эмбеддингов) — tenant-scoped
+ */
+async function getAllDocuments(
+  tenantId: string = "default"
 ): Promise<
   { id: number; content: string; metadata: DocumentMetadata | null; createdAt: Date }[]
 > {
@@ -957,6 +1008,9 @@ async function getAllDocuments(
  * MANDATORY tenantId filter prevents cross-tenant deletion.
  */
 async function deleteDocument(id: number, tenantId: string = DEFAULT_TENANT_ID): Promise<boolean> {
+ * Удаляет документ из базы знаний — tenant-scoped
+ */
+async function deleteDocument(id: number, tenantId: string = "default"): Promise<boolean> {
   try {
     await prisma.$executeRaw`
       DELETE FROM "KnowledgeBaseDocument" WHERE id = ${id} AND "tenantId" = ${tenantId}

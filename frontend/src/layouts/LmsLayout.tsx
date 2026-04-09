@@ -1,24 +1,15 @@
 // src/layouts/LmsLayout.tsx
 import { useState} from"react";
 import { Link, Outlet} from"react-router-dom";
-import { Phone, Mail, Facebook, Instagram, Send, Menu, LayoutDashboard} from"lucide-react";
+import { Menu, LayoutDashboard} from"lucide-react";
 import LmsSideNav from"../components/LmsSideNav";
 import { Toaster} from"sonner";
 import { useAuth} from"../hooks/useAuth";
+import { useTenant} from"../contexts/TenantContext";
 
 export default function LmsLayout() {
  const { user, isLoading} = useAuth();
-
- const contacts = [
- { icon: Phone, label:"+ 71 // 207 17 30"},
- { icon: Mail, label:"info@mezon.uz"},
- ];
-
- const socials = [
- { icon: Facebook, href:"https://www.facebook.com/MezonSchool/"},
- { icon: Instagram, href:"https://instagram.com/mezonschool"},
- { icon: Send, href:"http://t.me/mezon_school"},
- ];
+ const { tenant} = useTenant();
 
   if (isLoading) {
     return (
@@ -64,12 +55,12 @@ export default function LmsLayout() {
       </button>
       
       <div className="mezon-top-bar__cluster mezon-top-bar__cluster--compact">
-        {contacts.map(({ icon: Icon, label }) => (
-          <span key={label} className="mezon-chip">
-            <Icon className="h-3.5 w-3.5" />
-            {label}
-          </span>
-        ))}
+        {tenant.supportPhone && (
+          <span className="mezon-chip">{tenant.supportPhone}</span>
+        )}
+        {tenant.supportEmail && (
+          <span className="mezon-chip">{tenant.supportEmail}</span>
+        )}
       </div>
       <div className="mezon-top-bar__cluster">
         {/* Кнопка "Вернуться в ERP" доступна всем ролям включая учителей */}
@@ -80,13 +71,6 @@ export default function LmsLayout() {
           <LayoutDashboard className="h-3.5 w-3.5" />
           Вернуться в ERP
         </Link>
-        <div className="mezon-top-bar__social">
-          {socials.map(({ icon: Icon, href }) => (
-            <a key={href} href={href} target="_blank" rel="noreferrer">
-              <Icon className="h-4 w-4" />
-            </a>
-          ))}
-        </div>
       </div>
     </header>
     <div className="mezon-shell">

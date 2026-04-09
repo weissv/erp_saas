@@ -4,8 +4,12 @@ import cors from "cors";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import { authMiddleware } from "./middleware/auth";
+import { tenantResolver } from "./middleware/tenantResolver";
 import { errorHandler } from "./middleware/errorHandler";
 import { config } from "./config";
+
+// SaaS module
+import stripeWebhookRoutes from "./modules/saas/routes/stripe-webhook.routes";
 
 // Импорты роутов
 import authRoutes from "./routes/auth.routes";
@@ -40,12 +44,14 @@ import lmsSchoolRoutes from "./routes/lms-school.routes";
 import permissionsRoutes from "./routes/permissions.routes";
 import examsRoutes from "./routes/exams.routes";
 import publicExamsRoutes from "./routes/public-exams.routes";
+import tenantRoutes from "./routes/tenant.routes";
+import uploadRoutes from "./routes/upload.routes";
 import knowledgeBaseRoutes from "./routes/knowledge-base.routes";
 
 const app = express();
 
 const allowedOrigins = new Set(config.corsOrigins);
-const allowPattern = [/\.onrender\.com$/, /mezon\.uz$/, /\.trycloudflare\.com$/, /\.loca\.lt$/];
+const allowPattern = [/\.onrender\.com$/, /\.trycloudflare\.com$/, /\.loca\.lt$/];
 
 const corsOptions: cors.CorsOptions = {
   origin(origin, callback) {
@@ -69,18 +75,33 @@ const corsOptions: cors.CorsOptions = {
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
+// Stripe webhook needs the raw body for signature verification – must be
+// mounted BEFORE the global express.json() middleware.
+app.use(
+  "/api/webhooks/stripe",
+  express.raw({ type: "application/json" }),
+  stripeWebhookRoutes,
+);
+
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 app.use(morgan("dev"));
 
-// Health check endpoint (public)
+// Health check endpoint (public, no tenant resolution needed)
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
+// ── Tenant resolution ──────────────────────────────────────────────────
+// Every request below this point is scoped to a specific tenant.
+// The middleware parses the subdomain, looks up the Control Plane, and
+// injects req.tenantId + req.prisma for downstream handlers.
+app.use(tenantResolver);
+
 // Публичные роуты
 app.use("/api/auth", authRoutes);
 app.use("/api/public/exams", publicExamsRoutes); // Публичный доступ к контрольным для студентов
+app.use("/api/tenant", tenantRoutes); // Public tenant branding (no auth)
 
 // Защита всех последующих роутов
 app.use(authMiddleware);
@@ -117,6 +138,7 @@ app.use("/api/lms/school", lmsSchoolRoutes);
 app.use("/api/permissions", permissionsRoutes);
 app.use("/api/exams", examsRoutes); // Управление контрольными для учителей/админов
 app.use("/api/knowledge-base", knowledgeBaseRoutes); // База знаний
+app.use("/api/uploads", uploadRoutes); // Tenant-scoped file uploads
 
 // Обработчик ошибок
 app.use(errorHandler);

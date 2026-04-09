@@ -5,6 +5,9 @@ import { Role } from '@prisma/client';
 import { getTenantIntegrations, DEFAULT_TENANT_ID } from './TenantIntegrationsService';
 
 // Telegram Bot instances keyed by tenantId
+import { TenantIntegrationsService } from './TenantIntegrationsService';
+
+// Telegram Bot instances per tenant
 const bots = new Map<string, Telegraf>();
 
 function looksLikeTelegramToken(token: string): boolean {
@@ -30,11 +33,26 @@ export async function initTelegramBot(tenantId: string = DEFAULT_TENANT_ID): Pro
   
   if (!token) {
     console.warn(`⚠️ TELEGRAM_BOT_TOKEN не установлен для tenant=${tenantId}. Telegram уведомления отключены.`);
+ * Инициализация Telegram бота для конкретного тенанта.
+ * Загружает BOT_TOKEN из TenantIntegrations, а не из .env.
+ */
+export async function initTelegramBot(tenantId: string = 'default'): Promise<void> {
+  const creds = await TenantIntegrationsService.getCredentials(tenantId);
+  const token = creds.telegramBotToken?.trim();
+  
+  if (!token) {
+    console.warn(`⚠️ [${tenantId}] TELEGRAM_BOT_TOKEN не установлен. Telegram уведомления отключены.`);
     return;
   }
 
   if (!looksLikeTelegramToken(token)) {
     console.warn(`⚠️ TELEGRAM_BOT_TOKEN имеет некорректный формат для tenant=${tenantId}. Telegram уведомления отключены.`);
+    console.warn(`⚠️ [${tenantId}] TELEGRAM_BOT_TOKEN имеет некорректный формат. Telegram уведомления отключены.`);
+    return;
+  }
+
+  // Already running for this tenant
+  if (bots.has(tenantId)) {
     return;
   }
 
@@ -196,6 +214,7 @@ export async function initTelegramBot(tenantId: string = DEFAULT_TENANT_ID): Pro
     bots.set(tenantId, telegramBot);
 
     console.log(`🤖 Telegram бот успешно запущен для tenant=${tenantId}${me.username ? ` как @${me.username}` : ''}`);
+    console.log(`🤖 [${tenantId}] Telegram бот успешно запущен${me.username ? ` как @${me.username}` : ''}`);
 
     // Graceful shutdown
     process.once('SIGINT', () => telegramBot.stop('SIGINT'));
@@ -206,11 +225,13 @@ export async function initTelegramBot(tenantId: string = DEFAULT_TENANT_ID): Pro
 
     if (isTelegramUnauthorizedError(error)) {
       console.warn(`⚠️ TELEGRAM_BOT_TOKEN недействителен для tenant=${tenantId}. Telegram уведомления отключены.`);
+      console.warn(`⚠️ [${tenantId}] TELEGRAM_BOT_TOKEN недействителен. Telegram уведомления отключены.`);
       return;
     }
 
     console.error(
       `❌ Ошибка инициализации Telegram бота (tenant=${tenantId}):`,
+      `❌ [${tenantId}] Ошибка инициализации Telegram бота:`,
       error instanceof Error ? error.message : String(error),
     );
   }
@@ -226,6 +247,12 @@ export async function notifyRole(role: Role, message: string, tenantId: string =
   const bot = bots.get(tenantId) ?? null;
   if (!bot) {
     console.warn(`⚠️ Telegram бот не инициализирован для tenant=${tenantId}. Уведомление не отправлено.`);
+ * @param tenantId - ID тенанта (по умолчанию 'default')
+ */
+export async function notifyRole(role: Role, message: string, tenantId: string = 'default'): Promise<void> {
+  const bot = bots.get(tenantId) ?? null;
+  if (!bot) {
+    console.warn(`⚠️ [${tenantId}] Telegram бот не инициализирован. Уведомление не отправлено.`);
     return;
   }
 
@@ -282,6 +309,12 @@ export async function sendTelegramMessage(userId: number, message: string, tenan
   const bot = bots.get(tenantId) ?? null;
   if (!bot) {
     console.warn(`⚠️ Telegram бот не инициализирован для tenant=${tenantId}. Сообщение не отправлено.`);
+ * @param tenantId - ID тенанта (по умолчанию 'default')
+ */
+export async function sendTelegramMessage(userId: number, message: string, tenantId: string = 'default'): Promise<boolean> {
+  const bot = bots.get(tenantId) ?? null;
+  if (!bot) {
+    console.warn(`⚠️ [${tenantId}] Telegram бот не инициализирован. Сообщение не отправлено.`);
     return false;
   }
 
@@ -319,6 +352,12 @@ export async function sendMessageToChatId(chatId: string, message: string, tenan
   const bot = bots.get(tenantId) ?? null;
   if (!bot) {
     console.warn(`⚠️ Telegram бот не инициализирован для tenant=${tenantId}. Сообщение не отправлено.`);
+ * @param tenantId - ID тенанта (по умолчанию 'default')
+ */
+export async function sendMessageToChatId(chatId: string, message: string, tenantId: string = 'default'): Promise<boolean> {
+  const bot = bots.get(tenantId) ?? null;
+  if (!bot) {
+    console.warn(`⚠️ [${tenantId}] Telegram бот не инициализирован. Сообщение не отправлено.`);
     return false;
   }
 
@@ -335,7 +374,9 @@ export async function sendMessageToChatId(chatId: string, message: string, tenan
 
 /**
  * Получить экземпляр бота (для расширенного использования)
+ * @param tenantId - ID тенанта (по умолчанию 'default')
  */
 export function getTelegramBot(tenantId: string = DEFAULT_TENANT_ID): Telegraf | null {
+export function getTelegramBot(tenantId: string = 'default'): Telegraf | null {
   return bots.get(tenantId) ?? null;
 }
