@@ -1,6 +1,6 @@
 // src/components/ui/button.tsx
 import { ButtonHTMLAttributes, forwardRef } from "react";
-import clsx from "clsx";
+import { cn } from "../../lib/utils";
 
 export type ButtonVariant = "default" | "outline" | "ghost" | "secondary" | "destructive";
 export type ButtonSize = "sm" | "md" | "lg" | "icon";
@@ -12,7 +12,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const base = [
   "inline-flex items-center justify-center gap-2 font-medium",
-  "macos-transition rounded-[8px] outline-none",
+  "transition-all duration-150 ease-out rounded-lg outline-none",
   "disabled:opacity-40 disabled:cursor-not-allowed",
   "active:scale-[0.97] touch-manipulation",
   "tracking-[-0.01em] leading-none",
@@ -56,7 +56,7 @@ const sizes: Record<ButtonSize, string> = {
   sm: "text-[12px] px-2.5 py-1 min-h-[28px]",
   md: "text-[13px] px-3.5 py-1.5 min-h-[32px]",
   lg: "text-[14px] px-5 py-2 min-h-[36px]",
-  icon: "h-8 w-8 px-0",
+  icon: "h-9 w-9 p-0 min-h-[44px] min-w-[44px]",
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -64,7 +64,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
-        className={clsx(base, variants[variant], sizes[size], className)}
+        className={cn(base, variants[variant], sizes[size], className)}
         {...props}
       />
     );

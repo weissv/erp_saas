@@ -2,6 +2,7 @@
 import Papa from "papaparse";
 import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { EmptyListState } from "../ui/EmptyState";
 
 export type Column<T> = {
   key: string;
@@ -82,11 +83,11 @@ export function DataTable<T extends Record<string, any>>({
           <tbody>
             {data.length === 0 ? (
               <tr>
-                <td
-                  className="p-10 text-center text-tertiary text-[14px]"
-                  colSpan={columns.length}
-                >
-                  Нет данных
+                <td colSpan={columns.length}>
+                  <EmptyListState
+                    title="Нет данных"
+                    description="Данные ещё не добавлены"
+                  />
                 </td>
               </tr>
             ) : (

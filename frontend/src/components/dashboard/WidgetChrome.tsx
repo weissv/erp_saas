@@ -3,6 +3,7 @@
 
 import { ReactNode } from 'react';
 import { ChevronDown, ChevronUp, RefreshCw, ExternalLink, AlertCircle } from 'lucide-react';
+import { Button } from '../ui/button';
 
 interface WidgetChromeProps {
   title: string;
@@ -84,6 +85,12 @@ export default function WidgetChrome({
           <div className="bento-card__error">
             <AlertCircle className="h-5 w-5 text-macos-red" />
             <p>{error}</p>
+            {onRefresh && (
+              <Button variant="outline" size="sm" onClick={onRefresh} className="mt-1">
+                <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                Повторить
+              </Button>
+            )}
           </div>
         ) : isLoading && !children ? (
           <div className="bento-card__skeleton">
