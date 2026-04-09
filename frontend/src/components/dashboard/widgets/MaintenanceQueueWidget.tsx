@@ -49,12 +49,12 @@ export default function MaintenanceQueueWidget({ data }: { data: MaintenanceQueu
         ))}
       </div>
 
-      <div className="bento-list" style={{ gap: '5px' }}>
+      <div className="bento-list">
         {recent.slice(0, 4).map(req => {
           const Icon = STATUS_ICONS[req.status] ?? Clock;
           return (
             <div key={req.id} className="bento-list-item">
-              <div className="bento-list-icon" style={{ background: 'rgba(255,255,255,0.7)' }}>
+              <div className="bento-list-icon">
                 <Icon className="h-3.5 w-3.5 text-secondary" />
               </div>
               <div className="bento-list-item__main">

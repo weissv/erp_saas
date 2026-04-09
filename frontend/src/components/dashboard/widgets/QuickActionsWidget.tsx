@@ -13,19 +13,19 @@ const ICON_MAP: Record<string, LucideIcon> = {
 };
 
 const ACTION_COLORS: Record<string, { bg: string; color: string }> = {
-  'add-child':          { bg: '#EFF6FF', color: '#2563EB' },
-  'add-employee':       { bg: '#ECFDF5', color: '#059669' },
-  'add-finance':        { bg: '#F0FDF4', color: '#16A34A' },
-  'mark-attendance':    { bg: '#F5F3FF', color: '#7C3AED' },
-  'create-order':       { bg: '#FFF7ED', color: '#EA580C' },
-  'create-maintenance': { bg: '#FEF2F2', color: '#DC2626' },
-  'view-menu':          { bg: '#FFFBEB', color: '#D97706' },
-  'view-schedule':      { bg: '#ECFEFF', color: '#0891B2' },
-  'view-inventory':     { bg: '#EEF2FF', color: '#4F46E5' },
-  'ai-assistant':       { bg: '#FDF4FF', color: '#A21CAF' },
+  'add-child':          { bg: 'var(--tint-blue)',       color: 'var(--color-blue)' },
+  'add-employee':       { bg: 'var(--tint-green)',      color: 'var(--color-green)' },
+  'add-finance':        { bg: 'var(--tint-green)',      color: 'var(--color-green)' },
+  'mark-attendance':    { bg: 'var(--tint-purple)',     color: 'var(--color-purple)' },
+  'create-order':       { bg: 'var(--tint-orange)',     color: 'var(--color-orange)' },
+  'create-maintenance': { bg: 'var(--tint-red)',        color: 'var(--color-red)' },
+  'view-menu':          { bg: 'var(--tint-orange)',     color: 'var(--color-orange)' },
+  'view-schedule':      { bg: 'var(--tint-blue)',       color: 'var(--color-blue)' },
+  'view-inventory':     { bg: 'var(--tint-purple)',     color: 'var(--color-indigo)' },
+  'ai-assistant':       { bg: 'var(--tint-purple)',     color: 'var(--color-purple)' },
 };
 
-const DEFAULT_COLOR = { bg: '#F8FAFC', color: '#64748B' };
+const DEFAULT_COLOR = { bg: 'var(--fill-quaternary)', color: 'var(--text-secondary)' };
 
 export default function QuickActionsWidget({ data }: { data: { actions: QuickAction[]; pinnedActions?: string[] } | undefined }) {
   const navigate = useNavigate();
@@ -53,6 +53,7 @@ export default function QuickActionsWidget({ data }: { data: { actions: QuickAct
             onClick={() => navigate(action.path)}
             className={`bento-action-btn${isPinned ? ' bento-action-btn--pinned' : ''}`}
             title={action.label}
+            aria-label={action.label}
           >
             {isPinned && <span className="bento-action-btn__pin" />}
             <div className="bento-action-btn__icon" style={{ background: bg }}>

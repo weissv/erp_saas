@@ -30,11 +30,11 @@ export default function HrAlertsWidget({ data }: { data: HrAlertsData | undefine
     <div className="bento-hr">
       <div className="bento-hr__counts">
         <div className="bento-hr__count-cell">
-          <p className="bento-hr__count-num" style={{ color: '#DC2626' }}>{data.medicalExpiring ?? 0}</p>
+          <p className="bento-hr__count-num" style={{ color: 'var(--status-negative)' }}>{data.medicalExpiring ?? 0}</p>
           <p className="bento-hr__count-lbl">Мед. осмотры</p>
         </div>
         <div className="bento-hr__count-cell">
-          <p className="bento-hr__count-num" style={{ color: '#D97706' }}>{data.contractsExpiring}</p>
+          <p className="bento-hr__count-num" style={{ color: 'var(--status-warning)' }}>{data.contractsExpiring}</p>
           <p className="bento-hr__count-lbl">Договоры</p>
         </div>
       </div>
@@ -45,7 +45,7 @@ export default function HrAlertsWidget({ data }: { data: HrAlertsData | undefine
           const Icon = cfg.icon;
           return (
             <div key={i} className="bento-list-item">
-              <div className="bento-list-icon" style={{ background: 'rgba(255,255,255,0.7)' }}>
+              <div className="bento-list-icon">
                 <Icon className="h-3.5 w-3.5 text-secondary" />
               </div>
               <div className="bento-list-item__main">
@@ -53,10 +53,10 @@ export default function HrAlertsWidget({ data }: { data: HrAlertsData | undefine
                 <p className="bento-list-item__sub">{alert.detail}</p>
               </div>
               <div className="flex items-center gap-2">
-                <span className={`text-[10px] whitespace-nowrap ${alert.overdue ? 'text-red-600 font-semibold' : 'text-tertiary'}`}>
+                <span className={`text-[10px] whitespace-nowrap ${alert.overdue ? 'text-macos-red font-semibold' : 'text-tertiary'}`}>
                   {new Date(alert.dueDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
                 </span>
-                {alert.overdue && <AlertTriangle className="h-3 w-3 text-red-500 flex-shrink-0" />}
+                {alert.overdue && <AlertTriangle className="h-3 w-3 text-macos-red flex-shrink-0" />}
               </div>
             </div>
           );

@@ -37,14 +37,14 @@ export default function FinanceOverviewWidget({ data }: { data: FinanceData | un
       <div className="bento-finance__row">
         <div className="bento-finance__cell">
           <div className="bento-finance__cell-icon">
-            <TrendingUp className="h-4 w-4 text-emerald-600" />
+            <TrendingUp className="h-4 w-4 text-macos-green" />
           </div>
           <p className="bento-finance__cell-value">{formatCompact(data.income.total)}</p>
           <p className="bento-finance__cell-meta">{data.income.count} опер. · доход</p>
         </div>
         <div className="bento-finance__cell">
           <div className="bento-finance__cell-icon">
-            <TrendingDown className="h-4 w-4 text-red-500" />
+            <TrendingDown className="h-4 w-4 text-macos-red" />
           </div>
           <p className="bento-finance__cell-value">{formatCompact(data.expense.total)}</p>
           <p className="bento-finance__cell-meta">{data.expense.count} опер. · расход</p>
@@ -57,7 +57,7 @@ export default function FinanceOverviewWidget({ data }: { data: FinanceData | un
           {data.balances!.cash != null && (
             <div className="bento-finance__cell">
               <div className="bento-finance__cell-icon">
-                <Wallet className="h-3.5 w-3.5 text-amber-600" />
+                <Wallet className="h-3.5 w-3.5 text-macos-orange" />
               </div>
               <p className="bento-finance__cell-value">{formatCompact(data.balances!.cash!)}</p>
               <p className="bento-finance__cell-meta">Касса</p>
@@ -66,7 +66,7 @@ export default function FinanceOverviewWidget({ data }: { data: FinanceData | un
           {data.balances!.bank != null && (
             <div className="bento-finance__cell">
               <div className="bento-finance__cell-icon">
-                <Landmark className="h-3.5 w-3.5 text-blue-600" />
+                <Landmark className="h-3.5 w-3.5 text-macos-blue" />
               </div>
               <p className="bento-finance__cell-value">{formatCompact(data.balances!.bank!)}</p>
               <p className="bento-finance__cell-meta">Банк</p>

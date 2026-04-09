@@ -8,11 +8,11 @@ interface ProcurementData {
 }
 
 const STATUS_CFG: Record<string, { icon: typeof Clock; color: string }> = {
-  pending:   { icon: Clock,        color: '#D97706' },
-  approved:  { icon: CheckCircle,  color: '#3B82F6' },
-  ordered:   { icon: ShoppingCart, color: '#6366F1' },
-  delivered: { icon: Truck,        color: '#10B981' },
-  cancelled: { icon: XCircle,      color: '#EF4444' },
+  pending:   { icon: Clock,        color: 'var(--color-orange)' },
+  approved:  { icon: CheckCircle,  color: 'var(--color-blue)' },
+  ordered:   { icon: ShoppingCart, color: 'var(--color-indigo)' },
+  delivered: { icon: Truck,        color: 'var(--color-green)' },
+  cancelled: { icon: XCircle,      color: 'var(--color-red)' },
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -48,7 +48,7 @@ export default function ProcurementStatusWidget({ data }: { data: ProcurementDat
         })}
       </div>
 
-      <div className="bento-list" style={{ gap: '5px' }}>
+      <div className="bento-list">
         {recentOrders.slice(0, 4).map(order => (
           <div key={order.id} className="bento-list-item">
             <div className="bento-list-item__main">

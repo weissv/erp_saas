@@ -16,11 +16,11 @@ interface CalendarTodayData {
 }
 
 const TYPE_STRIPE: Record<string, string> = {
-  lesson:   '#3B82F6',
-  meeting:  '#8B5CF6',
-  event:    '#10B981',
-  holiday:  '#EF4444',
-  deadline: '#F59E0B',
+  lesson:   'var(--color-blue)',
+  meeting:  'var(--color-purple)',
+  event:    'var(--color-green)',
+  holiday:  'var(--color-red)',
+  deadline: 'var(--color-orange)',
 };
 
 const timeFmt = (iso: string) =>
@@ -41,7 +41,7 @@ export default function CalendarTodayWidget({ data }: { data: CalendarTodayData 
         <div key={ev.id} className="bento-calendar-event">
           <div
             className="bento-calendar-event__stripe"
-            style={{ background: TYPE_STRIPE[ev.type] ?? '#94A3B8' }}
+            style={{ background: TYPE_STRIPE[ev.type] ?? 'var(--text-tertiary)' }}
           />
           <div className="bento-calendar-event__body">
             <p className="bento-calendar-event__title">{ev.title}</p>

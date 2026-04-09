@@ -45,7 +45,7 @@ export default function NotificationsFeedWidget({ data }: { data: NotificationsF
         const cfg = TYPE_CFG[n.type] ?? TYPE_CFG.default;
         const Icon = cfg.icon;
         return (
-          <div key={n.id} className={`bento-list-item${!n.read ? ' ' : ''}`} style={!n.read ? { background: 'var(--tint-blue)' } : undefined}>
+          <div key={n.id} className={`bento-list-item${!n.read ? ' bg-tint-blue' : ''}`}>
             <div className="bento-list-icon" style={{ background: cfg.bg }}>
               <Icon className="h-3.5 w-3.5" style={{ color: cfg.color }} />
             </div>

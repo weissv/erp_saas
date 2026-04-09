@@ -24,7 +24,7 @@ export default function InventoryRiskWidget({ data }: { data: InventoryRiskData 
   return (
     <div className="bento-inventory">
       <div className="bento-inventory__header">
-        <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+        <AlertTriangle className="h-5 w-5 text-macos-orange flex-shrink-0" />
         <div>
           <p className="bento-inventory__total">{data.totalLow}</p>
           <p className="bento-inventory__total-lbl">позиций с низким запасом</p>
@@ -36,7 +36,7 @@ export default function InventoryRiskWidget({ data }: { data: InventoryRiskData 
         const isCritical = item.daysLeft <= 2;
         return (
           <div key={item.id} className="bento-inventory-row">
-            <Package className={`h-3.5 w-3.5 flex-shrink-0 ${isCritical ? 'text-red-500' : 'text-amber-500'}`} />
+            <Package className={`h-3.5 w-3.5 flex-shrink-0 ${isCritical ? 'text-macos-red' : 'text-macos-orange'}`} />
             <span className="bento-inventory-row__name">{item.name}</span>
             <div className="bento-inventory-row__track">
               <div
