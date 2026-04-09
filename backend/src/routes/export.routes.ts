@@ -63,6 +63,8 @@ async function excelBufferToJson<T extends Record<string, any> = Record<string, 
   }
 
   // Determine headers from the designated header row
+  // NOTE: ExcelJS eachCell provides 1-based colNumber, so headers[0] is unused.
+  // Both the population and read loops use the same 1-based indexing consistently.
   const headerRow = worksheet.getRow(headerRowIndex + 1); // ExcelJS rows are 1-based
   const headers: string[] = [];
   headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
