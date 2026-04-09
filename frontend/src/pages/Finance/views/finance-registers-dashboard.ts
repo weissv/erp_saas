@@ -181,7 +181,7 @@ function parseNumberish(value: unknown) {
     return undefined;
   }
 
-  const normalized = value.replace(/\s+/gu, "").replace(",", ".");
+  const normalized = value.replace(/\s+/gu, "").replace(/,/gu, ".");
   if (!normalized || /[a-zа-яё]/iu.test(normalized)) {
     return undefined;
   }

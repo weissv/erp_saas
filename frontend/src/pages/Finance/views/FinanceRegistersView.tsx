@@ -25,6 +25,8 @@ import {
 } from "./finance-registers-dashboard";
 
 type FinanceRegSubTab = "vat-summary" | "fixed-assets";
+type RegisterDashboardFilters = OneCRegisterFilters &
+  Record<string, string | number | boolean | undefined>;
 
 type KpiCardProps = {
   label: string;
@@ -380,21 +382,17 @@ export default function FinanceRegistersView() {
   const [subTab, setSubTab] = useState<FinanceRegSubTab>("vat-summary");
   const { data: summary } = useOneCSummary();
   const loadRegisterPage = useCallback(
-    (params: OneCRegisterFilters & { page: number; pageSize: number }) =>
-      listOneCRegisters(
-        params as unknown as OneCRegisterFilters &
-          Record<string, string | number | boolean | undefined>,
-      ),
+    (params: RegisterDashboardFilters & { page: number; pageSize: number }) => listOneCRegisters(params),
     [],
   );
 
-  const vatResource = usePaginatedOneCResource<OneCRegisterItem, OneCRegisterFilters>({
+  const vatResource = usePaginatedOneCResource<OneCRegisterItem, RegisterDashboardFilters>({
     loader: loadRegisterPage,
     initialFilters: { registerTypes: FINANCE_REGISTER_TYPES.join(",") },
     initialPageSize: BUSINESS_PAGE_SIZE,
   });
 
-  const fixedAssetsResource = usePaginatedOneCResource<OneCRegisterItem, OneCRegisterFilters>({
+  const fixedAssetsResource = usePaginatedOneCResource<OneCRegisterItem, RegisterDashboardFilters>({
     loader: loadRegisterPage,
     initialFilters: { registerTypes: FIXED_ASSETS_REGISTER_TYPES.join(",") },
     initialPageSize: BUSINESS_PAGE_SIZE,
