@@ -222,7 +222,9 @@ export function startOneCPushWorker(): Worker<OneCPushJobData, OneCPushJobResult
         return result;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        logger.error(`[1C-Push-Worker] Job ${jobId} failed: ${message}`);
+        logger.error(
+          `[1C-Push-Worker] Job ${jobId} failed after ${processedRecords}/${totalPayloadRecords} records: ${message}`,
+        );
 
         // Update sync log with failure
         try {
@@ -230,7 +232,7 @@ export function startOneCPushWorker(): Worker<OneCPushJobData, OneCPushJobResult
             where: { jobId },
             data: {
               status: "failed",
-              totalRecords: processedRecords,
+              totalRecords: totalPayloadRecords,
               errors,
               errorMessage: message.slice(0, 4096),
               processedAt: new Date(),
