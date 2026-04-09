@@ -4,7 +4,7 @@ import { toast} from 'sonner';
 import { PlusCircle, Trash2, Edit, Users, AlertTriangle, UserCircle, BookOpen} from 'lucide-react';
 import { Link} from 'react-router-dom';
 import { api} from '../lib/api';
-import { Card} from '../components/Card';
+import { Card} from '../components/ui/Card';
 import { Button} from '../components/ui/button';
 import { Input} from '../components/ui/input';
 import {

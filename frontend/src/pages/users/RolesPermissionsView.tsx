@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState} from 'react';
 import { Check, Edit3, Lock, ShieldAlert, X} from 'lucide-react';
 import { toast} from 'sonner';
-import { Card} from '../../components/Card';
+import { Card} from '../../components/ui/Card';
 import { Button} from '../../components/ui/button';
 import { api} from '../../lib/api';
 import { PERMISSION_MODULES, ROLE_COLORS, ROLE_LABELS} from '../../lib/roles';

@@ -1,7 +1,7 @@
 import { useEffect, useState} from 'react';
 import { toast} from 'sonner';
 import { api} from '../lib/api';
-import { Card} from '../components/Card';
+import { Card} from '../components/ui/Card';
 import { FileText, User, Clock} from 'lucide-react';
 
 type Log = { 

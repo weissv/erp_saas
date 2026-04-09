@@ -1,6 +1,6 @@
 import React, { useState} from"react";
 import { DataTable, Column} from"../../../components/DataTable/DataTable";
-import { Card} from"../../../components/Card";
+import { Card} from"../../../components/ui/Card";
 import { useOneCInvoices} from"../../../features/onec";
 import type { Invoice} from"../../../types/finance";
 import { INVOICE_DIRECTIONS} from"../../../lib/constants";

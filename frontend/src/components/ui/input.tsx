@@ -1,19 +1,28 @@
 // src/components/ui/input.tsx
 import { InputHTMLAttributes, forwardRef } from "react";
-import clsx from "clsx";
+import { cn } from "../../lib/utils";
 
-export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
-  function Input({ className, ...props }, ref) {
+export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+  error?: boolean;
+}
+
+export const Input = forwardRef<HTMLInputElement, InputProps>(
+  function Input({ className, error, ...props }, ref) {
     return (
       <input
         ref={ref}
-        className={clsx(
+        className={cn(
           "mezon-field",
-          "disabled:opacity-50",
+          "transition-colors duration-150",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+          "disabled:cursor-not-allowed disabled:opacity-50",
+          error && "border-destructive focus-visible:ring-destructive",
           className
         )}
+        aria-invalid={error || undefined}
         {...props}
       />
     );
   }
 );
+Input.displayName = "Input";

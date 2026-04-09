@@ -5,7 +5,7 @@ import { DataTable, Column} from '../components/DataTable/DataTable';
 import { Button} from '../components/ui/button';
 import { Modal, ModalActions, ModalNotice, ModalSection} from '../components/Modal';
 import { Input} from '../components/ui/input';
-import { Card} from '../components/Card';
+import { Card} from '../components/ui/Card';
 import { PlusCircle, AlertTriangle, Star, BarChart3, Users, FileText, Loader2} from 'lucide-react';
 import { api} from '../lib/api';
 

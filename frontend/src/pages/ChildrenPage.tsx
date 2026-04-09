@@ -19,7 +19,7 @@ import { DataTable, Column} from '../components/DataTable/DataTable';
 import { Button} from '../components/ui/button';
 import { Input} from '../components/ui/input';
 import { Modal, ModalActions, ModalNotice, ModalSection} from '../components/Modal';
-import { Card} from '../components/Card';
+import { Card} from '../components/ui/Card';
 import { ChildForm} from '../components/forms/ChildForm';
 import { useChildren, useChildMutations, useGroups} from '../hooks/useChildren';
 import { api} from '../lib/api';

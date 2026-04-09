@@ -5,7 +5,7 @@ import { zodResolver} from '@hookform/resolvers/zod';
 import { z} from 'zod';
 import { toast} from 'sonner';
 import { api} from '../lib/api';
-import { Card} from '../components/Card';
+import { Card} from '../components/ui/Card';
 import { Modal} from '../components/Modal';
 import { Button} from '../components/ui/button';
 import { Input} from '../components/ui/input';

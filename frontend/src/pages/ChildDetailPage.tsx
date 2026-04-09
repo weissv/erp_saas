@@ -4,7 +4,7 @@ import React, { useState} from 'react';
 import { useParams, useNavigate} from 'react-router-dom';
 import { ArrowLeft, Edit, Archive, CalendarX, Users, BookOpen} from 'lucide-react';
 import { Button} from '../components/ui/button';
-import { Card} from '../components/Card';
+import { Card} from '../components/ui/Card';
 import { Modal, ModalNotice, ModalSection} from '../components/Modal';
 import { ChildForm} from '../components/forms/ChildForm';
 import { AbsencesView} from '../components/children/AbsencesView';
