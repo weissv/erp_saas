@@ -8,6 +8,9 @@ import { tenantResolver } from "./middleware/tenantResolver";
 import { errorHandler } from "./middleware/errorHandler";
 import { config } from "./config";
 
+// SaaS module
+import stripeWebhookRoutes from "./modules/saas/routes/stripe-webhook.routes";
+
 // Импорты роутов
 import authRoutes from "./routes/auth.routes";
 import dashboardRoutes from "./routes/dashboard.routes";
@@ -69,6 +72,14 @@ const corsOptions: cors.CorsOptions = {
 
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
+
+// Stripe webhook needs the raw body for signature verification – must be
+// mounted BEFORE the global express.json() middleware.
+app.use(
+  "/api/webhooks/stripe",
+  express.raw({ type: "application/json" }),
+  stripeWebhookRoutes,
+);
 
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());

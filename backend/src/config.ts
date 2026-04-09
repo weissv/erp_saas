@@ -22,6 +22,18 @@ export const config = {
   nodeEnv: process.env.NODE_ENV || "development",
   corsOrigins: resolveOrigins(),
 
+  // Stripe
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
+  stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
+
+  // SMTP (for tenant data export emails)
+  smtpHost: process.env.SMTP_HOST || "localhost",
+  smtpPort: parseInt(process.env.SMTP_PORT || "587", 10),
+  smtpSecure: process.env.SMTP_SECURE === "true",
+  smtpUser: process.env.SMTP_USER || "",
+  smtpPass: process.env.SMTP_PASS || "",
+  smtpFrom: process.env.SMTP_FROM || "noreply@erp-saas.com",
+
   // ── Multi-tenant / Control Plane ──────────────────────────────────
   /** Connection string for the Control Plane (master) database. */
   masterDatabaseUrl: process.env.MASTER_DATABASE_URL || "",
