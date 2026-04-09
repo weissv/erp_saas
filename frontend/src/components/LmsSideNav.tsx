@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import clsx from "clsx";
 import { X } from "lucide-react";
@@ -19,12 +19,14 @@ export default function LmsSideNav() {
  const role = (user?.role ||"TEACHER") as UserRole;
 
  const closeMobileMenu = () => setIsMobileMenuOpen(false);
- 
- if (typeof window !== 'undefined') {
- (window as any).toggleMobileMenu = () => setIsMobileMenuOpen(prev => !prev);
-}
 
- const handleLogoClick = (e: React.MouseEvent) => {
+  useEffect(() => {
+    const handler = () => setIsMobileMenuOpen((prev) => !prev);
+    window.addEventListener('toggle-mobile-menu', handler);
+    return () => window.removeEventListener('toggle-mobile-menu', handler);
+  }, []);
+
+  const handleLogoClick = (e: React.MouseEvent) => {
  e.preventDefault();
  const newClickCount = logoClicks + 1;
  setLogoClicks(newClickCount);
@@ -92,11 +94,11 @@ export default function LmsSideNav() {
  />
  </div>
  <button 
- className="mezon-mobile-close"
+ className="mezon-mobile-close p-2 min-h-[44px] min-w-[44px]"
  onClick={closeMobileMenu}
  aria-label="Закрыть меню"
  >
- <X className="h-6 w-6"/>
+ <X className="h-5 w-5"/>
  </button>
         </div>
         <p className="font-semibold text-[13px] mt-2 text-macos-blue">ШКОЛА (LMS)</p>

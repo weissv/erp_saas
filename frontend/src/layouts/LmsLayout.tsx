@@ -49,9 +49,7 @@ export default function LmsLayout() {
       <button 
         className="mezon-mobile-menu-btn"
         onClick={() => {
-          if (typeof window !== 'undefined' && (window as any).toggleMobileMenu) {
-            (window as any).toggleMobileMenu();
-          }
+          window.dispatchEvent(new CustomEvent('toggle-mobile-menu'));
         }}
         aria-label="Toggle menu"
       >

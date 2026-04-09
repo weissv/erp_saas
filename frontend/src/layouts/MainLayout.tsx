@@ -73,7 +73,7 @@ export default function MainLayout() {
           <button
             className="mezon-mobile-menu-btn"
             onClick={() => {
-              (window as any).toggleMobileMenu?.();
+              window.dispatchEvent(new CustomEvent('toggle-mobile-menu'));
             }}
             aria-label="Toggle menu"
           >

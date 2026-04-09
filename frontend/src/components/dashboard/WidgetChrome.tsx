@@ -82,7 +82,7 @@ export default function WidgetChrome({
       <div className={`bento-card__body${isCollapsed ? ' bento-card__body--collapsed' : ''}`}>
         {error ? (
           <div className="bento-card__error">
-            <AlertCircle className="h-5 w-5 text-red-400" />
+            <AlertCircle className="h-5 w-5 text-macos-red" />
             <p>{error}</p>
           </div>
         ) : isLoading && !children ? (

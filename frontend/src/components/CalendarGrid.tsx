@@ -142,7 +142,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ events, onEdit, onDe
           className="px-3 py-1.5 text-[13px] font-medium rounded-lg border macos-transition hover:bg-fill-quaternary active:bg-fill-tertiary"
           style={{
             color: 'var(--color-blue)',
-            borderColor: 'rgba(0, 122, 255, 0.35)',
+            borderColor: 'var(--color-blue)',
           }}
         >
           Сегодня
@@ -186,7 +186,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ events, onEdit, onDe
                 background: !day
                   ? 'var(--bg-inset)'
                   : weekend
-                  ? 'rgba(120,120,128,0.025)'
+                  ? 'var(--fill-quaternary)'
                   : 'var(--surface-primary)',
               }}
             >
@@ -198,7 +198,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ events, onEdit, onDe
                       className="w-7 h-7 flex items-center justify-center rounded-full text-[13px] select-none"
                       style={
                         today
-                          ? { background: 'var(--color-blue)', color: '#FFFFFF', fontWeight: 600 }
+                          ? { background: 'var(--color-blue)', color: 'white', fontWeight: 600 }
                           : {
                               color: weekend ? 'var(--color-red)' : 'var(--text-primary)',
                               fontWeight: 400,
@@ -238,7 +238,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ events, onEdit, onDe
                             type="button"
                             aria-label="Удалить событие"
                             onClick={(e) => { e.stopPropagation(); onDelete(evt); }}
-                            className="opacity-0 group-hover/pill:opacity-100 p-0.5 rounded macos-transition hover:bg-[rgba(255,59,48,0.15)]"
+                            className="opacity-0 group-hover/pill:opacity-100 p-0.5 rounded macos-transition hover:bg-[var(--tint-red)]"
                           >
                             <Trash2
                               className="w-2.5 h-2.5"
@@ -273,7 +273,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ events, onEdit, onDe
       {overflowDay && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center"
-          style={{ background: 'rgba(0,0,0,0.25)' }}
+          style={{ background: 'rgba(0, 0, 0, 0.25)' }}
         >
           <div
             ref={popoverRef}
@@ -333,7 +333,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ events, onEdit, onDe
                       type="button"
                       aria-label="Удалить событие"
                       onClick={(e) => { e.stopPropagation(); setOverflowDay(null); onDelete(evt); }}
-                      className="opacity-0 group-hover/popitem:opacity-100 p-0.5 rounded macos-transition hover:bg-[rgba(255,59,48,0.15)]"
+                      className="opacity-0 group-hover/popitem:opacity-100 p-0.5 rounded macos-transition hover:bg-[var(--tint-red)]"
                     >
                       <Trash2 className="w-3 h-3" style={{ color: 'var(--color-red)' }} />
                     </button>
