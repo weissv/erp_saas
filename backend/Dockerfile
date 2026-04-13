@@ -42,8 +42,7 @@ FROM node:20 AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npx prisma generate
-RUN npm run build
+RUN npm run prisma:generate
 RUN npm prune --omit=dev
 
 # Этап 3: Запуск в продакшене
@@ -51,10 +50,11 @@ FROM node:20-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 # Копируем только то, что нужно для запуска
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/src ./src
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules ./node_modules
-COPY package*.json ./
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
+COPY --from=builder /app/package*.json ./
 # Keep network-heavy apt-get after builder artifacts are copied.
 # This prevents BuildKit from contending with npm registry downloads in deps stage.
 RUN apt-get update \
@@ -63,4 +63,4 @@ RUN apt-get update \
 
 EXPOSE 4000
 # Run migrations, seed database, then start server
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run start:runtime"]

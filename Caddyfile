@@ -1,0 +1,17 @@
+{
+  auto_https off
+}
+
+mirai.mezon.uz {
+  encode zstd gzip
+  reverse_proxy 127.0.0.1:3000
+}
+
+api.mirai.mezon.uz {
+  encode zstd gzip
+  reverse_proxy 127.0.0.1:4000 {
+    header_up X-Tenant-Subdomain mirai
+    header_up X-Forwarded-Host {host}
+    header_up X-Forwarded-Proto https
+  }
+}

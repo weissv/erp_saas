@@ -11,6 +11,9 @@ import { config } from "../config";
 import { HTTP_STATUS, TENANT_STATUS } from "../constants";
 import { logger } from "../utils/logger";
 
+const TENANT_SUBDOMAIN_HEADER = "x-tenant-subdomain";
+const SUBDOMAIN_PATTERN = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
+
 // ─── Extend Express Request ────────────────────────────────────────────────
 declare global {
   namespace Express {
@@ -50,11 +53,39 @@ export function extractSubdomain(host: string | undefined): string | null {
   const subdomain = hostname.slice(0, -suffix.length);
 
   // Subdomains must be non-empty, lowercase, alphanumeric (plus hyphens).
-  if (!subdomain || !/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(subdomain)) {
+  if (!isValidSubdomain(subdomain)) {
     return null;
   }
 
   return subdomain;
+}
+
+export function extractTenantSubdomain(req: Request): string | null {
+  const proxiedSubdomain = normalizeHeaderValue(req.headers[TENANT_SUBDOMAIN_HEADER]);
+
+  if (proxiedSubdomain && isValidSubdomain(proxiedSubdomain)) {
+    return proxiedSubdomain;
+  }
+
+  return extractSubdomain(req.headers.host);
+}
+
+function normalizeHeaderValue(value: string | string[] | undefined): string | null {
+  if (Array.isArray(value)) {
+    const firstNonEmpty = value.find((entry) => entry.trim().length > 0);
+    return firstNonEmpty ? firstNonEmpty.trim() : null;
+  }
+
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function isValidSubdomain(value: string): boolean {
+  return SUBDOMAIN_PATTERN.test(value);
 }
 
 // ─── Middleware ─────────────────────────────────────────────────────────────
@@ -78,7 +109,7 @@ export const tenantResolver = async (
     return;
   }
 
-  const subdomain = extractSubdomain(req.headers.host);
+  const subdomain = extractTenantSubdomain(req);
 
   if (!subdomain) {
     res.status(HTTP_STATUS.BAD_REQUEST).json({

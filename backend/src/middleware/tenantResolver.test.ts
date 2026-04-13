@@ -30,14 +30,21 @@ vi.mock("../lib/tenantPrisma", () => ({
 }));
 
 // Import after mocks are in place
-import { extractSubdomain, tenantResolver } from "./tenantResolver";
+import { extractSubdomain, extractTenantSubdomain, tenantResolver } from "./tenantResolver";
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
-function mockReq(host?: string, method = "GET"): Request {
+function mockReq(options: {
+  host?: string;
+  method?: string;
+  tenantHeader?: string;
+} = {}): Request {
   return {
-    headers: { host },
-    method,
+    headers: {
+      host: options.host,
+      ...(options.tenantHeader ? { "x-tenant-subdomain": options.tenantHeader } : {}),
+    },
+    method: options.method || "GET",
   } as unknown as Request;
 }
 
@@ -86,6 +93,32 @@ describe("extractSubdomain", () => {
   });
 });
 
+describe("extractTenantSubdomain", () => {
+  it("prefers x-tenant-subdomain when present and valid", () => {
+    const req = mockReq({
+      host: "api.mirai.mezon.uz",
+      tenantHeader: "mirai",
+    });
+
+    expect(extractTenantSubdomain(req)).toBe("mirai");
+  });
+
+  it("falls back to host parsing when the proxy header is missing", () => {
+    const req = mockReq({ host: "hogwarts.mezon.app" });
+
+    expect(extractTenantSubdomain(req)).toBe("hogwarts");
+  });
+
+  it("falls back to host parsing when the proxy header is invalid", () => {
+    const req = mockReq({
+      host: "hogwarts.mezon.app",
+      tenantHeader: "INVALID",
+    });
+
+    expect(extractTenantSubdomain(req)).toBe("hogwarts");
+  });
+});
+
 describe("tenantResolver middleware", () => {
   let next: NextFunction;
 
@@ -96,7 +129,7 @@ describe("tenantResolver middleware", () => {
   });
 
   it("passes OPTIONS requests through without resolution", async () => {
-    const req = mockReq("hogwarts.mezon.app", "OPTIONS");
+    const req = mockReq({ host: "hogwarts.mezon.app", method: "OPTIONS" });
     const res = mockRes();
 
     await tenantResolver(req, res, next);
@@ -106,7 +139,7 @@ describe("tenantResolver middleware", () => {
   });
 
   it("returns 400 when no subdomain can be extracted", async () => {
-    const req = mockReq("mezon.app");
+    const req = mockReq({ host: "mezon.app" });
     const res = mockRes();
 
     await tenantResolver(req, res, next);
@@ -122,7 +155,7 @@ describe("tenantResolver middleware", () => {
 
   it("returns 404 when tenant is not found in master DB", async () => {
     mockFindUnique.mockResolvedValue(null);
-    const req = mockReq("unknown.mezon.app");
+    const req = mockReq({ host: "unknown.mezon.app" });
     const res = mockRes();
 
     await tenantResolver(req, res, next);
@@ -141,7 +174,7 @@ describe("tenantResolver middleware", () => {
       dbUrl: "postgres://...",
       status: "SUSPENDED",
     });
-    const req = mockReq("hogwarts.mezon.app");
+    const req = mockReq({ host: "hogwarts.mezon.app" });
     const res = mockRes();
 
     await tenantResolver(req, res, next);
@@ -160,7 +193,7 @@ describe("tenantResolver middleware", () => {
       dbUrl: "postgres://...",
       status: "DEACTIVATED",
     });
-    const req = mockReq("hogwarts.mezon.app");
+    const req = mockReq({ host: "hogwarts.mezon.app" });
     const res = mockRes();
 
     await tenantResolver(req, res, next);
@@ -179,7 +212,7 @@ describe("tenantResolver middleware", () => {
       dbUrl: "postgres://active-db",
       status: "ACTIVE",
     });
-    const req = mockReq("hogwarts.mezon.app");
+    const req = mockReq({ host: "hogwarts.mezon.app" });
     const res = mockRes();
 
     await tenantResolver(req, res, next);
@@ -196,7 +229,7 @@ describe("tenantResolver middleware", () => {
       dbUrl: "postgres://trial-db",
       status: "TRIAL",
     });
-    const req = mockReq("school123.mezon.app");
+    const req = mockReq({ host: "school123.mezon.app" });
     const res = mockRes();
 
     await tenantResolver(req, res, next);
@@ -205,9 +238,31 @@ describe("tenantResolver middleware", () => {
     expect(next).toHaveBeenCalled();
   });
 
+  it("uses x-tenant-subdomain for a dedicated API host", async () => {
+    mockFindUnique.mockResolvedValue({
+      id: "t-mirai",
+      dbUrl: "postgres://mirai-db",
+      status: "ACTIVE",
+    });
+    const req = mockReq({
+      host: "api.mirai.mezon.uz",
+      tenantHeader: "mirai",
+    });
+    const res = mockRes();
+
+    await tenantResolver(req, res, next);
+
+    expect(mockFindUnique).toHaveBeenCalledWith({
+      where: { subdomain: "mirai" },
+      select: { id: true, dbUrl: true, status: true },
+    });
+    expect(req.tenantId).toBe("t-mirai");
+    expect(next).toHaveBeenCalled();
+  });
+
   it("returns 500 when master DB lookup throws", async () => {
     mockFindUnique.mockRejectedValue(new Error("DB down"));
-    const req = mockReq("hogwarts.mezon.app");
+    const req = mockReq({ host: "hogwarts.mezon.app" });
     const res = mockRes();
 
     await tenantResolver(req, res, next);

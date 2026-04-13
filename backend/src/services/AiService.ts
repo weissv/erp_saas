@@ -147,12 +147,6 @@ interface GoogleDriveFile {
 async function getGoogleDriveFiles(tenantId: string = DEFAULT_TENANT_ID): Promise<GoogleDriveFile[]> {
   const creds = await getTenantIntegrations(tenantId);
   if (!creds.googleDriveApiKey || !creds.googleDriveFolderId) {
-async function getGoogleDriveFiles(tenantId: string = "default"): Promise<GoogleDriveFile[]> {
-  const creds = await TenantIntegrationsService.getCredentials(tenantId);
-  const driveApiKey = creds.googleDriveApiKey;
-  const driveFolderId = creds.googleDriveFolderId;
-
-  if (!driveApiKey || !driveFolderId) {
     logger.info("ℹ️  Google Drive не настроен (GOOGLE_DRIVE_API_KEY или GOOGLE_DRIVE_FOLDER_ID отсутствуют)");
     return [];
   }
@@ -160,7 +154,6 @@ async function getGoogleDriveFiles(tenantId: string = "default"): Promise<Google
   try {
     // Используем Google Drive API v3 для получения файлов из публичной папки
     const url = `https://www.googleapis.com/drive/v3/files?q='${creds.googleDriveFolderId}'+in+parents&key=${creds.googleDriveApiKey}&fields=files(id,name,mimeType,webViewLink)`;
-    const url = `https://www.googleapis.com/drive/v3/files?q='${driveFolderId}'+in+parents&key=${driveApiKey}&fields=files(id,name,mimeType,webViewLink)`;
     
     const response = await fetch(url);
     if (!response.ok) {
@@ -242,8 +235,6 @@ async function parseDocxContent(buffer: Buffer): Promise<string | null> {
 async function getGoogleDriveFileContent(fileId: string, mimeType: string, tenantId: string = DEFAULT_TENANT_ID): Promise<string | null> {
   const creds = await getTenantIntegrations(tenantId);
   const driveApiKey = creds.googleDriveApiKey;
-
-async function getGoogleDriveFileContent(fileId: string, mimeType: string, driveApiKey: string): Promise<string | null> {
   try {
     // Для Google Docs используем export в текстовый формат
     if (mimeType === "application/vnd.google-apps.document") {
@@ -290,7 +281,6 @@ async function addDocumentFromText(
   subject?: string,
   grade?: string,
   tenantId: string = DEFAULT_TENANT_ID,
-  tenantId: string = "default"
 ): Promise<{ id: number; success: boolean; chunksCreated: number }> {
   try {
     const metadata: DocumentMetadata = {
@@ -604,7 +594,6 @@ function updateSyncStatus(updates: Partial<SyncStatus>): void {
 async function syncGoogleDriveDocuments(
   tenantId: string = DEFAULT_TENANT_ID,
 ): Promise<{ synced: number; updated: number; errors: number; skipped: number }> {
-async function syncGoogleDriveDocuments(tenantId: string = "default"): Promise<{ synced: number; updated: number; errors: number; skipped: number }> {
   // Проверяем, не запущена ли уже синхронизация
   if (syncStatus.isRunning) {
     throw new Error("Синхронизация уже выполняется");
@@ -619,8 +608,6 @@ async function syncGoogleDriveDocuments(tenantId: string = "default"): Promise<{
   
   try {
     const files = await getGoogleDriveFiles(tenantId);
-    const creds = await TenantIntegrationsService.getCredentials(tenantId);
-    const driveApiKey = creds.googleDriveApiKey || "";
     logger.info(`📂 Found ${files.length} files in Google Drive folder`);
     
     updateSyncStatus({ total: files.length });
@@ -751,7 +738,6 @@ async function syncGoogleDriveDocuments(tenantId: string = "default"): Promise<{
  * Запускает синхронизацию в фоновом режиме (не блокирует запрос)
  */
 function startBackgroundSync(tenantId: string = DEFAULT_TENANT_ID): { started: boolean; message: string } {
-function startBackgroundSync(tenantId: string = "default"): { started: boolean; message: string } {
   if (syncStatus.isRunning) {
     return { started: false, message: "Синхронизация уже выполняется" };
   }
@@ -775,7 +761,6 @@ function sleep(ms: number): Promise<void> {
  * Генерирует эмбеддинг для текста через Gemini API
  */
 async function generateEmbedding(text: string, tenantId: string = DEFAULT_TENANT_ID): Promise<number[]> {
-async function generateEmbedding(text: string, tenantId: string = "default"): Promise<number[]> {
   try {
     const client = await getGeminiClient(tenantId);
     const model = client.getGenerativeModel({ model: EMBEDDING_MODEL });
@@ -800,19 +785,14 @@ async function addDocument(
   text: string,
   metadata: DocumentMetadata = {},
   tenantId: string = DEFAULT_TENANT_ID,
-  tenantId: string = "default"
 ): Promise<{ id: number; success: boolean }> {
   try {
-    // Генерируем эмбеддинг
     const embedding = await generateEmbedding(text, tenantId);
     const embeddingString = `[${embedding.join(",")}]`;
 
-    // Используем raw query для вставки вектора, т.к. Prisma плохо типизирует векторы
-    const result = await prisma.$executeRaw`
+    await prisma.$executeRaw`
       INSERT INTO "KnowledgeBaseDocument" (content, metadata, embedding, "tenantId", "createdAt", "updatedAt")
-      INSERT INTO "KnowledgeBaseDocument" ("tenantId", content, metadata, embedding, "createdAt", "updatedAt")
       VALUES (
-        ${tenantId},
         ${text},
         ${JSON.stringify(metadata)}::jsonb,
         ${embeddingString}::vector,
@@ -823,7 +803,6 @@ async function addDocument(
       RETURNING id
     `;
 
-    // Получаем ID вставленной записи
     const inserted = await prisma.$queryRaw<{ id: number }[]>`
       SELECT id FROM "KnowledgeBaseDocument" WHERE "tenantId" = ${tenantId} ORDER BY id DESC LIMIT 1
     `;
@@ -844,13 +823,10 @@ async function findSimilarDocuments(
   queryEmbedding: number[],
   limit: number = 5,
   tenantId: string = DEFAULT_TENANT_ID,
-  tenantId: string = "default"
 ): Promise<KnowledgeDocument[]> {
   try {
     const embeddingString = `[${queryEmbedding.join(",")}]`;
 
-    // Поиск с использованием оператора <=> для косинусного расстояния
-    // tenantId filter is ALWAYS applied to prevent cross-tenant data leakage
     const results = await prisma.$queryRaw<KnowledgeDocument[]>`
       SELECT 
         id,
@@ -897,29 +873,19 @@ async function chatWithAssistant(
   userQuery: string,
   conversationHistory: ChatMessage[] = [],
   tenantId: string = DEFAULT_TENANT_ID,
-  tenantId: string = "default"
 ): Promise<{ response: string; sources: KnowledgeDocument[] }> {
   try {
-    // 1. Генерируем эмбеддинг для запроса пользователя
     const queryEmbedding = await generateEmbedding(userQuery, tenantId);
-
-    // 2. Поиск похожих документов в базе знаний (tenant-scoped)
     const relevantDocs = await findSimilarDocuments(queryEmbedding, 5, tenantId);
-
-    // 3. Формируем контекст
     const context = buildContext(relevantDocs);
-
-    // 4. Получаем системный промт из БД
     const systemPrompt = await getSystemPrompt();
 
-    // 5. Собираем сообщения для LLM
     const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
       { role: "system", content: systemPrompt },
       {
         role: "system",
         content: `КОНТЕКСТ из базы знаний учебных программ:\n\n${context}`,
       },
-      // Добавляем историю разговора
       ...conversationHistory.map((msg) => ({
         role: msg.role as "user" | "assistant",
         content: msg.content,
@@ -927,7 +893,6 @@ async function chatWithAssistant(
       { role: "user", content: userQuery },
     ];
 
-    // 5. Отправляем запрос в LLM (Groq)
     const client = await getGroqClient(tenantId);
     const completion = await client.chat.completions.create({
       model: CHAT_MODEL,
@@ -954,10 +919,6 @@ async function chatWithAssistant(
  */
 async function getAllDocuments(
   tenantId: string = DEFAULT_TENANT_ID,
- * Получает все документы из базы знаний (без эмбеддингов) — tenant-scoped
- */
-async function getAllDocuments(
-  tenantId: string = "default"
 ): Promise<
   { id: number; content: string; metadata: DocumentMetadata | null; createdAt: Date }[]
 > {
@@ -982,9 +943,6 @@ async function getAllDocuments(
  * MANDATORY tenantId filter prevents cross-tenant deletion.
  */
 async function deleteDocument(id: number, tenantId: string = DEFAULT_TENANT_ID): Promise<boolean> {
- * Удаляет документ из базы знаний — tenant-scoped
- */
-async function deleteDocument(id: number, tenantId: string = "default"): Promise<boolean> {
   try {
     await prisma.$executeRaw`
       DELETE FROM "KnowledgeBaseDocument" WHERE id = ${id} AND "tenantId" = ${tenantId}

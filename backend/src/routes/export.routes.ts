@@ -481,26 +481,6 @@ router.get(
     }
 
     const rows = await exporter();
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet(entity.toUpperCase());
-
-    if (rows.length > 0) {
-      // Add header row from keys of first object
-      const headers = Object.keys(rows[0]);
-      worksheet.addRow(headers);
-
-      // Add data rows
-      for (const row of rows) {
-        worksheet.addRow(headers.map((h) => row[h] ?? ""));
-      // Use the keys of the first row as column headers
-      const headers = Object.keys(rows[0]);
-      worksheet.columns = headers.map((h) => ({ header: h, key: h }));
-      for (const row of rows) {
-        worksheet.addRow(row);
-      }
-    }
-
-    const buffer = await workbook.xlsx.writeBuffer();
     const buffer = await jsonToExcelBuffer(rows, entity.toUpperCase());
 
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
@@ -521,28 +501,7 @@ router.post(
     }
 
     const fileBase64 = sanitizeBase64(req.body.fileBase64);
-    const nodeBuffer = Buffer.from(fileBase64, "base64");
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(nodeBuffer as unknown as ArrayBuffer);
-    const worksheet = workbook.worksheets[0];
-    if (!worksheet) {
-      return res.status(400).json({ message: "Не удалось прочитать Excel-файл" });
-    }
-
-    let rows = excelSheetToJson(worksheet);
     const buffer = Buffer.from(fileBase64, "base64");
-    const workbook = new ExcelJS.Workbook();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await workbook.xlsx.load(buffer as any);
-
-    const sheet = workbook.worksheets[0];
-    if (!sheet) {
-      return res.status(400).json({ message: "Не удалось прочитать Excel-файл" });
-    }
-
-    let rows = excelSheetToJson(sheet);
-
-
     let { rows, worksheet } = await excelBufferToJson<ImportRow>(buffer);
 
     if (!worksheet || rows.length === 0) {
@@ -556,32 +515,11 @@ router.post(
         (k) => k.includes("Ф.И.О.") || k.includes("ребенка") || k === "First Name" || k === "Класс"
       );
       if (!hasStandardHeaders) {
-        // Find the header row by scanning raw data (first 10 rows)
-        let headerRowIndex = -1;
-        worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
-          if (headerRowIndex >= 0 || rowNumber > 11) return;
-          row.eachCell((cell) => {
-            const val = cell.text ?? String(cell.value ?? "");
-            if (val.includes("Ф.И.О.") || val.includes("ребенка")) {
-              headerRowIndex = rowNumber;
-        const maxScanRows = Math.min(sheet.rowCount, 11);
-        for (let r = 1; r <= maxScanRows; r++) {
-          const row = sheet.getRow(r);
-          for (let c = 1; c <= (row.cellCount || 0); c++) {
-            const cellValue = String(row.getCell(c).value ?? "");
-            if (cellValue.includes("Ф.И.О.") || cellValue.includes("ребенка")) {
-              headerRowIndex = r;
-              break;
-            }
-          });
-        });
-        if (headerRowIndex >= 0) {
-          rows = excelSheetToJson(worksheet, headerRowIndex);
-          rows = excelSheetToJson(sheet, headerRowIndex);
         const headerRowIndex = findHeaderRow(worksheet, ["Ф.И.О.", "ребенка"]);
         if (headerRowIndex >= 0) {
           const result = await excelBufferToJson<ImportRow>(buffer, headerRowIndex);
           rows = result.rows;
+          worksheet = result.worksheet;
         }
       }
     }
@@ -606,27 +544,34 @@ router.post(
     const csvText = await fetchCsv(csvUrl);
     let rows = csvTextToRecords<ImportRow>(csvText);
 
-    // For children entity, try to detect header row in CSV with multi-row headers
     if (entity === "children" && rows.length > 0) {
       const firstRow = rows[0];
       const hasStandardHeaders = Object.keys(firstRow).some(
-        (k) => k.includes("Ф.И.О.") || k.includes("ребенка") || k === "First Name" || k === "Класс"
+        (key) => key.includes("Ф.И.О.") || key.includes("ребенка") || key === "First Name" || key === "Класс",
       );
+
       if (!hasStandardHeaders) {
-        // Find the row that contains the actual headers
-        const headerIdx = rows.findIndex((r) =>
-          Object.values(r).some((v) => typeof v === "string" && (v.includes("Ф.И.О.") || v.includes("ребенка")))
+        const headerIdx = rows.findIndex((row) =>
+          Object.values(row).some(
+            (value) => typeof value === "string" && (value.includes("Ф.И.О.") || value.includes("ребенка")),
+          ),
         );
+
         if (headerIdx >= 0) {
           const headerRow = rows[headerIdx];
-          const headers = Object.values(headerRow).map((v) => String(v).trim());
+          const headers = Object.values(headerRow).map((value) => String(value).trim());
           const dataRows = rows.slice(headerIdx + 1);
-          rows = dataRows.map((r) => {
-            const values = Object.values(r);
+
+          rows = dataRows.map((row) => {
+            const values = Object.values(row);
             const mapped: ImportRow = {};
-            headers.forEach((h, i) => {
-              if (h && values[i] !== undefined) mapped[h] = values[i];
+
+            headers.forEach((header, index) => {
+              if (header && values[index] !== undefined) {
+                mapped[header] = values[index];
+              }
             });
+
             return mapped;
           });
         }
@@ -635,7 +580,7 @@ router.post(
 
     const stats = await importer(rows);
     return res.json({ entity, source: "google-sheets", rows: rows.length, ...stats });
-  }
+  },
 );
 
 function getString(row: ImportRow, ...keys: string[]): string | undefined {
@@ -692,7 +637,6 @@ function getDate(row: ImportRow, ...keys: string[]): Date | undefined {
   return undefined;
 }
 
-// Flexible date parser: handles "DD.MM.YYYY", "M/D/YYYY", ISO, and Excel serial numbers
 function parseDateFlexible(row: ImportRow, ...keys: string[]): Date | undefined {
   for (const key of keys) {
     const value = row[key];
@@ -702,30 +646,41 @@ function parseDateFlexible(row: ImportRow, ...keys: string[]): Date | undefined 
     if (value instanceof Date && !Number.isNaN(value.getTime())) {
       return value;
     }
-    // Excel serial date number
     if (typeof value === "number" && value > 10000 && value < 100000) {
       const excelEpoch = new Date(1899, 11, 30);
       const date = new Date(excelEpoch.getTime() + value * 86400000);
-      if (!Number.isNaN(date.getTime())) return date;
+      if (!Number.isNaN(date.getTime())) {
+        return date;
+      }
     }
+
     const str = String(value).trim();
-    if (!str) continue;
-    // DD.MM.YYYY
+    if (!str) {
+      continue;
+    }
+
     const dotMatch = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
     if (dotMatch) {
       const date = new Date(Number(dotMatch[3]), Number(dotMatch[2]) - 1, Number(dotMatch[1]));
-      if (!Number.isNaN(date.getTime())) return date;
+      if (!Number.isNaN(date.getTime())) {
+        return date;
+      }
     }
-    // M/D/YYYY or MM/DD/YYYY
+
     const slashMatch = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
     if (slashMatch) {
       const date = new Date(Number(slashMatch[3]), Number(slashMatch[1]) - 1, Number(slashMatch[2]));
-      if (!Number.isNaN(date.getTime())) return date;
+      if (!Number.isNaN(date.getTime())) {
+        return date;
+      }
     }
-    // Fallback to standard Date parse
-    const date = new Date(str);
-    if (!Number.isNaN(date.getTime())) return date;
+
+    const fallbackDate = new Date(str);
+    if (!Number.isNaN(fallbackDate.getTime())) {
+      return fallbackDate;
+    }
   }
+
   return undefined;
 }
 
@@ -819,40 +774,6 @@ function fetchCsv(targetUrl: string, redirectCount = 0): Promise<string> {
 }
 
 /**
- * Converts an ExcelJS Worksheet to an array of JSON objects.
- * The first row (or the row at `headerRowNumber`) is used as keys.
- * Empty-string values are used as defaults (like xlsx's `{ defval: "" }`).
- */
-function excelSheetToJson(worksheet: ExcelJS.Worksheet, headerRowNumber = 1): ImportRow[] {
-  const headerRow = worksheet.getRow(headerRowNumber);
-  const headers: string[] = [];
-  headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-    headers[colNumber] = String(cell.value ?? "").trim();
-  });
-
-  const rows: ImportRow[] = [];
-  worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
-    if (rowNumber <= headerRowNumber) return;
-    const obj: ImportRow = {};
-    let hasValue = false;
-    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-      const key = headers[colNumber];
-      if (!key) return;
-      const rawValue = cell.value;
-      if (rawValue instanceof Date) {
-        obj[key] = rawValue;
-      } else {
-        obj[key] = rawValue !== null && rawValue !== undefined ? String(rawValue) : "";
-      }
-      if (obj[key] !== "") hasValue = true;
-    });
-    // Fill in missing headers with empty string
-    for (const h of headers) {
-      if (h && !(h in obj)) obj[h] = "";
-    }
-    if (hasValue) rows.push(obj);
-  });
-
  * Converts an ExcelJS worksheet to an array of key-value row objects,
  * replicating the behaviour of the old `XLSX.utils.sheet_to_json()`.
  *
