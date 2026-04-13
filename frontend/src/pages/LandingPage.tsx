@@ -15,8 +15,6 @@ import { api } from "../lib/api";
 
 const MIN_WAITLIST_MESSAGE_LENGTH = 10;
 const WAITLIST_FEEDBACK_TYPE = "WAITLIST";
-const TEST_SCHOOL_LOGIN = "admin@test.local";
-const TEST_SCHOOL_PASSWORD = "MiraiTest_2026!";
 
 function SectionHeading({
   badge,
@@ -232,8 +230,8 @@ export default function LandingPage() {
               <p className="text-sm font-semibold text-foreground">Тестовая школа для входа: test</p>
               <div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center">
                 <span className="rounded-full bg-background px-3 py-1.5">URL: {testSchoolUrl}</span>
-                <span className="rounded-full bg-background px-3 py-1.5">Логин: {TEST_SCHOOL_LOGIN}</span>
-                <span className="rounded-full bg-background px-3 py-1.5">Пароль: {TEST_SCHOOL_PASSWORD}</span>
+                <span className="rounded-full bg-background px-3 py-1.5">ERP и LMS в едином контуре</span>
+                <span className="rounded-full bg-background px-3 py-1.5">Вход доступен по кнопке Log in</span>
               </div>
             </div>
           </div>
