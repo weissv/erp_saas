@@ -233,6 +233,42 @@ ensure_databases() {
   fi
 }
 
+provision_seeded_tenant() {
+  local subdomain="$1"
+  local tenant_name="$2"
+  local database_name="$3"
+  local admin_email="$4"
+  local admin_password="$5"
+
+  local database_url="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${database_name}?schema=public"
+  local master_database_url="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${MASTER_POSTGRES_DB}?schema=public"
+
+  log "Ensuring database for tenant '${subdomain}' exists"
+  if [[ "$(run_compose exec -T postgres psql -U "$POSTGRES_USER" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${database_name}'")" != "1" ]]; then
+    run_compose exec -T postgres psql -U "$POSTGRES_USER" -d postgres -c "CREATE DATABASE \"${database_name}\""
+  fi
+
+  log "Applying tenant schema for '${subdomain}'"
+  run_compose run --rm \
+    -e DATABASE_URL="$database_url" \
+    backend npm run prisma:tenant:deploy
+
+  log "Seeding tenant '${subdomain}'"
+  run_compose run --rm \
+    -e DATABASE_URL="$database_url" \
+    backend npx prisma db seed
+
+  log "Registering tenant '${subdomain}'"
+  run_compose run --rm \
+    -e MASTER_DATABASE_URL="$master_database_url" \
+    -e DATABASE_URL="$database_url" \
+    -e INITIAL_TENANT_SUBDOMAIN="$subdomain" \
+    -e INITIAL_TENANT_NAME="$tenant_name" \
+    -e INITIAL_ADMIN_EMAIL="$admin_email" \
+    -e INITIAL_ADMIN_PASSWORD="$admin_password" \
+    backend npm run bootstrap:mirai
+}
+
 deploy_stack() {
   log "Validating Compose configuration"
   run_compose config >/dev/null
@@ -254,6 +290,19 @@ deploy_stack() {
   log "Bootstrapping initial tenant and admin"
   run_compose run --rm backend npm run bootstrap:mirai
 
+  local test_tenant_subdomain="${TEST_TENANT_SUBDOMAIN:-test}"
+  local test_tenant_name="${TEST_TENANT_NAME:-Test School}"
+  local test_tenant_db="${TEST_TENANT_DB:-erp_test}"
+  local test_admin_email="${TEST_TENANT_ADMIN_EMAIL:-admin}"
+  local test_admin_password="${TEST_TENANT_ADMIN_PASSWORD:-change_me_123}"
+
+  provision_seeded_tenant \
+    "$test_tenant_subdomain" \
+    "$test_tenant_name" \
+    "$test_tenant_db" \
+    "$test_admin_email" \
+    "$test_admin_password"
+
   log "Starting backend and frontend"
   run_compose up -d backend frontend
 }
@@ -264,6 +313,9 @@ print_next_steps() {
   echo "Frontend URL: https://${FRONTEND_DOMAIN}"
   echo "Public API URL: https://${FRONTEND_DOMAIN}/api"
   echo "Optional dedicated API URL: https://${API_DOMAIN}"
+  echo "Test school URL: https://${TEST_TENANT_SUBDOMAIN:-test}.${FRONTEND_DOMAIN}"
+  echo "Test school login: ${TEST_TENANT_ADMIN_EMAIL:-admin}"
+  echo "Test school password: ${TEST_TENANT_ADMIN_PASSWORD:-change_me_123}"
   echo
   echo "Cloudflare Tunnel next steps:"
   echo "  1. cloudflared tunnel login"
@@ -271,10 +323,11 @@ print_next_steps() {
   echo "  3. sudo cp $CLOUDFLARED_EXAMPLE_DEST /etc/cloudflared/config.yml"
   echo "  4. Edit /etc/cloudflared/config.yml and replace REPLACE_WITH_TUNNEL_ID in both places"
   echo "  5. cloudflared tunnel route dns erp-saas ${FRONTEND_DOMAIN}"
-  echo "  6. cloudflared tunnel route dns erp-saas ${API_DOMAIN}"
-  echo "  7. sudo cloudflared service install"
-  echo "  8. sudo systemctl enable --now cloudflared"
-  echo "  9. sudo systemctl status cloudflared"
+  echo "  6. cloudflared tunnel route dns erp-saas '*.${BASE_DOMAIN}'"
+  echo "  7. cloudflared tunnel route dns erp-saas ${API_DOMAIN}"
+  echo "  8. sudo cloudflared service install"
+  echo "  9. sudo systemctl enable --now cloudflared"
+  echo " 10. sudo systemctl status cloudflared"
   echo
   if [[ -n "$GENERATED_ADMIN_PASSWORD" ]]; then
     echo "Initial admin email: ${INITIAL_ADMIN_EMAIL}"
