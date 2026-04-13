@@ -139,7 +139,7 @@ docker compose logs -f redis
 
 ## 9. DNS and routing model
 
-- `mirai-edu.space` -> Cloudflare Tunnel -> Caddy -> frontend for `/`, backend for `/api` and `/ws`
+- `mirai-edu.space` -> Cloudflare Tunnel -> Caddy -> frontend for `/`, backend for `/api` and `/ws`; frontend production build uses relative `/api` requests to avoid scheme-based CORS issues
 - `api.mirai-edu.space` -> optional dedicated API hostname -> Cloudflare Tunnel -> Caddy -> `127.0.0.1:4000`
 
 The root-domain API route injects `X-Tenant-Subdomain: mirai`, so the backend can resolve the tenant correctly without needing a separate API DNS record. If you later create `api.mirai-edu.space`, the dedicated API site in Caddy can serve the same backend separately.

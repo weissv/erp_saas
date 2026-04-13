@@ -188,7 +188,7 @@ configure_env_files() {
   replace_env_line "$BACKEND_ENV_FILE" "INITIAL_ADMIN_EMAIL" "$admin_email"
   replace_env_line "$BACKEND_ENV_FILE" "INITIAL_ADMIN_PASSWORD" "$admin_password"
 
-  replace_env_line "$FRONTEND_ENV_FILE" "VITE_API_URL" "https://${FRONTEND_DOMAIN}"
+  replace_env_line "$FRONTEND_ENV_FILE" "VITE_API_URL" "/"
   replace_env_line "$FRONTEND_ENV_FILE" "VITE_TELEGRAM_BOT_NAME" "${VITE_TELEGRAM_BOT_NAME:-erp_bot}"
 
   export POSTGRES_USER="$db_user"
