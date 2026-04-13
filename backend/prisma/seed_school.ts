@@ -92,16 +92,16 @@ async function main() {
   }
 
   await prisma.user.upsert({
-    where: { email: "admin" },
+    where: { email: "admin@test.local" },
     update: { passwordHash: adminPassword, role: "DIRECTOR" },
     create: {
-      email: "admin",
+      email: "admin@test.local",
       passwordHash: adminPassword,
       role: "DIRECTOR",
       employeeId: adminEmployee.id,
     },
   });
-  console.log("✅ Admin user created.");
+  console.log("✅ Admin user created (login: admin@test.local).");
 
   // 2. Teachers -------------------------------------------------------------
   const teacherMap = new Map<string, number>();

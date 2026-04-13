@@ -36,8 +36,9 @@ function SectionHeading({
 }
 
 export default function LandingPage() {
-  const demoUrl = getDemoUrl();
+const demoUrl = getDemoUrl();
   const loginUrl = getLoginUrl();
+  const WAITLIST_FEEDBACK_TYPE = "WAITLIST";
   const [waitlistForm, setWaitlistForm] = useState({
     schoolName: "",
     contactInfo: "",
@@ -104,7 +105,7 @@ export default function LandingPage() {
       await api.post("/api/feedback", {
         parentName: schoolName,
         contactInfo,
-        type: "Очередь",
+        type: WAITLIST_FEEDBACK_TYPE,
         message,
       });
 
@@ -226,7 +227,7 @@ export default function LandingPage() {
               <p className="text-sm font-semibold text-foreground">Тестовая школа для входа: test</p>
               <div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center">
                 <span className="rounded-full bg-background px-3 py-1.5">URL: test.mirai-edu.space</span>
-                <span className="rounded-full bg-background px-3 py-1.5">Логин: admin</span>
+                <span className="rounded-full bg-background px-3 py-1.5">Логин: admin@test.local</span>
                 <span className="rounded-full bg-background px-3 py-1.5">Пароль: change_me_123</span>
               </div>
             </div>

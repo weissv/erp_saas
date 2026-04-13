@@ -23,6 +23,7 @@ describe("LandingPage", () => {
     );
     expect(screen.getByRole("button", { name: /Встать в очередь/i })).toBeInTheDocument();
     expect(screen.getByText(/Тестовая школа для входа: test/i)).toBeInTheDocument();
+    expect(screen.getByText(/Логин: admin@test\.local/i)).toBeInTheDocument();
   });
 
   it("sets document metadata for the marketing page", () => {
