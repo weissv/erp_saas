@@ -4,8 +4,25 @@ export interface DemoLocationLike {
   port?: string;
 }
 
-export function getDemoUrl(locationLike: DemoLocationLike = window.location): string {
-  const hostname = locationLike.hostname.replace(/^www\./, "");
+function getBaseHostname(hostname: string): string {
+  return hostname.replace(/^www\./, "");
+}
+
+export function getTenantUrl(
+  subdomain: string,
+  path: string = "",
+  locationLike: DemoLocationLike = window.location
+): string {
+  const hostname = getBaseHostname(locationLike.hostname);
   const port = locationLike.port ? `:${locationLike.port}` : "";
-  return `${locationLike.protocol}//demo.${hostname}${port}`;
+  const normalizedPath = path ? (path.startsWith("/") ? path : `/${path}`) : "";
+  return `${locationLike.protocol}//${subdomain}.${hostname}${port}${normalizedPath}`;
+}
+
+export function getDemoUrl(locationLike: DemoLocationLike = window.location): string {
+  return getTenantUrl("demo", "", locationLike);
+}
+
+export function getLoginUrl(locationLike: DemoLocationLike = window.location): string {
+  return getTenantUrl("test", "/auth/login", locationLike);
 }

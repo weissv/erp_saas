@@ -47,7 +47,7 @@ export const NAV_ITEMS = [
   { label: "Возможности", href: "#capabilities" },
   { label: "Кому подходит", href: "#audiences" },
   { label: "Запуск", href: "#implementation" },
-  { label: "Контакты", href: "#contact" },
+  { label: "Очередь", href: "#waitlist" },
 ] as const;
 
 export const HERO_HIGHLIGHTS = [

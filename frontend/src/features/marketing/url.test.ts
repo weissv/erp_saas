@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { getDemoUrl } from "./url";
+import { getDemoUrl, getLoginUrl, getTenantUrl } from "./url";
 
 describe("getDemoUrl", () => {
-  it("builds a demo host from the marketing domain", () => {
+  it("builds the demo host from the marketing domain", () => {
     expect(
       getDemoUrl({
         protocol: "https:",
@@ -19,5 +19,27 @@ describe("getDemoUrl", () => {
         port: "5173",
       })
     ).toBe("http://demo.mirai-edu.space:5173");
+  });
+});
+
+describe("getTenantUrl", () => {
+  it("builds a tenant URL with path support", () => {
+    expect(
+      getTenantUrl("test", "/auth/login", {
+        protocol: "https:",
+        hostname: "www.mirai-edu.space",
+      })
+    ).toBe("https://test.mirai-edu.space/auth/login");
+  });
+});
+
+describe("getLoginUrl", () => {
+  it("builds the test school login URL", () => {
+    expect(
+      getLoginUrl({
+        protocol: "https:",
+        hostname: "mirai-edu.space",
+      })
+    ).toBe("https://test.mirai-edu.space/auth/login");
   });
 });

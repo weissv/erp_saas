@@ -18,6 +18,21 @@ http://mirai-edu.space {
   reverse_proxy 127.0.0.1:3000
 }
 
+http://*.mirai-edu.space {
+  encode zstd gzip
+
+  @backend_routes {
+    path /api* /ws*
+  }
+
+  reverse_proxy @backend_routes 127.0.0.1:4000 {
+    header_up X-Forwarded-Host {host}
+    header_up X-Forwarded-Proto https
+  }
+
+  reverse_proxy 127.0.0.1:3000
+}
+
 http://api.mirai-edu.space {
   encode zstd gzip
   reverse_proxy 127.0.0.1:4000 {

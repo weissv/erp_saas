@@ -4,11 +4,34 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { config } from "../config";
 import { JWT } from "../constants";
+import { extractTenantSubdomain } from "../middleware/tenantResolver";
 import { prisma } from "../prisma";
 import { asyncHandler } from "../middleware/errorHandler";
 import { logger } from "../utils/logger";
 
 const router = Router();
+const DEMO_SUBDOMAIN = "demo";
+
+function createAuthToken(user: { id: number; role: string; employeeId: number | null }) {
+  return jwt.sign(
+    { id: user.id, role: user.role, employeeId: user.employeeId } as object,
+    config.jwtSecret,
+    { expiresIn: JWT.EXPIRES_IN }
+  );
+}
+
+function setAuthCookie(res: Response, token: string) {
+  res.cookie(JWT.COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: config.nodeEnv === "production",
+    sameSite: "none" as const,
+    maxAge: JWT.COOKIE_MAX_AGE,
+  });
+}
+
+function isDemoTenantRequest(req: Request): boolean {
+  return extractTenantSubdomain(req) === DEMO_SUBDOMAIN;
+}
 
 // Публичный роут для входа
 router.post("/login", asyncHandler(async (req: Request, res: Response) => {
@@ -40,23 +63,34 @@ router.post("/login", asyncHandler(async (req: Request, res: Response) => {
     return res.status(401).json({ message: "Invalid credentials" });
   }
 
-  const token = jwt.sign(
-    { id: user.id, role: user.role, employeeId: user.employeeId } as object,
-    config.jwtSecret,
-    { expiresIn: JWT.EXPIRES_IN }
-  );
-
-  // Set HttpOnly cookie
-  const cookieOptions = {
-    httpOnly: true,
-    secure: config.nodeEnv === "production",
-    sameSite: "none" as const,
-    maxAge: JWT.COOKIE_MAX_AGE,
-  };
-  
-  res.cookie(JWT.COOKIE_NAME, token, cookieOptions);
+  const token = createAuthToken(user);
+  setAuthCookie(res, token);
   
   // Remove sensitive data
+  const { passwordHash, ...sanitizedUser } = user;
+  return res.json({ user: sanitizedUser, token });
+}));
+
+router.post("/demo-access", asyncHandler(async (req: Request, res: Response) => {
+  if (!isDemoTenantRequest(req)) {
+    return res.status(403).json({ message: "Demo access is only available on the demo tenant" });
+  }
+
+  const db = req.prisma ?? prisma;
+  const user = await db.user.findFirst({
+    where: { deletedAt: null },
+    include: { employee: true },
+    orderBy: { id: "asc" },
+  });
+
+  if (!user) {
+    logger.warn("[auth] Demo access requested but no demo user exists");
+    return res.status(404).json({ message: "Demo user is not configured" });
+  }
+
+  const token = createAuthToken(user);
+  setAuthCookie(res, token);
+
   const { passwordHash, ...sanitizedUser } = user;
   return res.json({ user: sanitizedUser, token });
 }));

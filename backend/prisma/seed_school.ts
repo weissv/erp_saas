@@ -75,7 +75,7 @@ async function main() {
   console.log("🚀 Seeding generic school data …");
 
   // 1. Admin ----------------------------------------------------------------
-  const adminPassword = await bcrypt.hash("change_me_123", 10);
+  const adminPassword = await bcrypt.hash("MiraiTest_2026!", 10);
 
   let adminEmployee = await prisma.employee.findFirst({ where: { id: 999 } });
   if (!adminEmployee) {
@@ -92,16 +92,16 @@ async function main() {
   }
 
   await prisma.user.upsert({
-    where: { email: "admin" },
+    where: { email: "admin@test.local" },
     update: { passwordHash: adminPassword, role: "DIRECTOR" },
     create: {
-      email: "admin",
+      email: "admin@test.local",
       passwordHash: adminPassword,
       role: "DIRECTOR",
       employeeId: adminEmployee.id,
     },
   });
-  console.log("✅ Admin user created.");
+  console.log("✅ Admin user created (login: admin@test.local).");
 
   // 2. Teachers -------------------------------------------------------------
   const teacherMap = new Map<string, number>();

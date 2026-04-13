@@ -1,6 +1,7 @@
 // src/contexts/AuthContext.tsx
 import { createContext, useCallback, useEffect, useState, useMemo, ReactNode } from "react";
 import { api, ApiRequestError } from "../lib/api";
+import { useDemo } from "./DemoContext";
 import type { User, Role, AuthContextValue } from "../types/auth";
 import { FULL_ACCESS_ROLES, ADMIN_ROLES } from "../types/common";
 
@@ -53,6 +54,7 @@ export const AuthContext = createContext<AuthContextValue>({
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { isDemo } = useDemo();
   const [user, setUser] = useState<User | null>(() => readStoredUser());
   const [token, setToken] = useState<string | null>(() =>
     typeof window === "undefined" ? null : localStorage.getItem(TOKEN_STORAGE_KEY)
@@ -91,6 +93,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const clearSession = useCallback(() => {
     persistSession(null, null);
   }, [persistSession]);
+
+  const initializeDemoSession = useCallback(async (): Promise<boolean> => {
+    if (!isDemo) return false;
+
+    try {
+      const response = await api.post("/api/auth/demo-access");
+      const resolvedUser = response?.user ?? null;
+      const resolvedToken = response?.token ?? null;
+
+      if (!resolvedUser?.id) {
+        return false;
+      }
+
+      persistSession(resolvedToken, resolvedUser);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }, [isDemo, persistSession]);
 
   /**
    * Инициализация сессии при загрузке
@@ -146,6 +167,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      if (await initializeDemoSession()) {
+        return;
+      }
+
       clearSession();
     };
 
@@ -153,9 +178,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     // Устанавливаем обработчик для 401 ошибок
     api.setOnUnauthorized(() => {
+      if (isDemo) {
+        void initializeDemoSession().then((restored) => {
+          if (!restored) {
+            clearSession();
+          }
+        });
+        return;
+      }
       clearSession();
     });
-  }, [persistSession, clearSession]);
+  }, [persistSession, clearSession, initializeDemoSession, isDemo]);
 
   /**
    * Вход в систему

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { ArrowRight, Check, ChevronRight, Mail, PlayCircle } from "lucide-react";
 import {
   AUDIENCES,
@@ -10,7 +10,11 @@ import {
   OPERATIONS,
   TRUST_SIGNALS,
 } from "../features/marketing/content";
-import { getDemoUrl } from "../features/marketing/url";
+import { getDemoUrl, getLoginUrl, getTenantUrl } from "../features/marketing/url";
+import { api } from "../lib/api";
+
+const MIN_WAITLIST_MESSAGE_LENGTH = 10;
+const WAITLIST_FEEDBACK_TYPE = "WAITLIST";
 
 function SectionHeading({
   badge,
@@ -36,6 +40,21 @@ function SectionHeading({
 
 export default function LandingPage() {
   const demoUrl = getDemoUrl();
+  const loginUrl = getLoginUrl();
+  const testSchoolUrl = getTenantUrl("test");
+  const [waitlistForm, setWaitlistForm] = useState({
+    schoolName: "",
+    contactInfo: "",
+    message: "",
+  });
+  const [isSubmittingWaitlist, setIsSubmittingWaitlist] = useState(false);
+  const [waitlistState, setWaitlistState] = useState<{
+    kind: "idle" | "success" | "error";
+    message: string;
+  }>({
+    kind: "idle",
+    message: "",
+  });
 
   useEffect(() => {
     const previousTitle = document.title;
@@ -66,6 +85,51 @@ export default function LandingPage() {
       }
     };
   }, []);
+
+  const handleWaitlistSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const schoolName = waitlistForm.schoolName.trim();
+    const contactInfo = waitlistForm.contactInfo.trim();
+    const message = waitlistForm.message.trim();
+
+    if (!schoolName || !contactInfo || message.length < MIN_WAITLIST_MESSAGE_LENGTH) {
+      setWaitlistState({
+        kind: "error",
+        message: "Заполните школу, контакт и коротко опишите запрос.",
+      });
+      return;
+    }
+
+    setIsSubmittingWaitlist(true);
+    setWaitlistState({ kind: "idle", message: "" });
+
+    try {
+      await api.post("/api/feedback", {
+        parentName: schoolName,
+        contactInfo,
+        type: WAITLIST_FEEDBACK_TYPE,
+        message,
+      });
+
+      setWaitlistForm({
+        schoolName: "",
+        contactInfo: "",
+        message: "",
+      });
+      setWaitlistState({
+        kind: "success",
+        message: "Заявка отправлена. Мы добавили школу в очередь и свяжемся с вами.",
+      });
+    } catch (error: any) {
+      setWaitlistState({
+        kind: "error",
+        message: error?.message || "Не удалось отправить заявку. Попробуйте ещё раз.",
+      });
+    } finally {
+      setIsSubmittingWaitlist(false);
+    }
+  };
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
@@ -99,10 +163,16 @@ export default function LandingPage() {
               Демо
             </a>
             <a
-              href="mailto:info@mirai-edu.space"
+              href={loginUrl}
+              className="hidden rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent lg:inline-flex"
+            >
+              Log in
+            </a>
+            <a
+              href="#waitlist"
               className="inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              Связаться
+              Встать в очередь
             </a>
           </div>
         </div>
@@ -132,11 +202,11 @@ export default function LandingPage() {
                 <ArrowRight className="h-4 w-4" />
               </a>
               <a
-                href="mailto:info@mirai-edu.space"
+                href={loginUrl}
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
               >
                 <Mail className="h-4 w-4" />
-                Написать нам
+                Log in
               </a>
               <a
                 href="#implementation"
@@ -154,6 +224,15 @@ export default function LandingPage() {
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.description}</p>
                 </div>
               ))}
+            </div>
+
+            <div className="mt-6 rounded-[1.5rem] border border-border bg-card/80 p-5 shadow-sm">
+              <p className="text-sm font-semibold text-foreground">Тестовая школа для входа: test</p>
+              <div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center">
+                <span className="rounded-full bg-background px-3 py-1.5">URL: {testSchoolUrl}</span>
+                <span className="rounded-full bg-background px-3 py-1.5">Личная песочница только по логину и паролю</span>
+                <span className="rounded-full bg-background px-3 py-1.5">Демо открывается отдельно на demo.mirai-edu.space</span>
+              </div>
             </div>
           </div>
 
@@ -329,36 +408,134 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section id="contact" className="mx-auto max-w-7xl px-6 pb-16 sm:pb-20">
+        <section id="waitlist" className="mx-auto max-w-7xl px-6 pb-16 sm:pb-20">
           <div className="rounded-[2.25rem] border border-primary/20 bg-primary/10 p-8 sm:p-10 lg:p-12">
-            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.95fr)] lg:items-start">
               <div>
                 <span className="inline-flex items-center rounded-full border border-primary/20 bg-background px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-                  Готовы обсудить запуск
+                  Очередь на запуск
                 </span>
                 <h2 className="mt-4 max-w-3xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-                  Покажем, как Mirai Edu может стать цифровым ядром именно вашей школы.
+                  Встаньте в очередь на запуск школы в Mirai Edu.
                 </h2>
                 <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-                  Напишите нам, чтобы обсудить структуру школы, текущие процессы и сценарий внедрения.
-                  Мы покажем демо и предложим оптимальный стартовый контур запуска.
+                  Оставьте школу и контакт — мы зафиксируем заявку, покажем рабочее демо и подскажем,
+                  как быстро открыть ERP и LMS в едином контуре.
                 </p>
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                  <a
+                    href={demoUrl}
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                  >
+                    Открыть демо
+                    <ArrowRight className="h-4 w-4" />
+                  </a>
+                  <a
+                    href={loginUrl}
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-background px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
+                  >
+                    <Mail className="h-4 w-4" />
+                    Log in
+                  </a>
+                </div>
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
+              <form
+                onSubmit={handleWaitlistSubmit}
+                className="rounded-[1.75rem] border border-border bg-background p-6 shadow-sm"
+              >
+                <div className="grid gap-4">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-foreground" htmlFor="waitlist-school">
+                      Школа
+                    </label>
+                    <input
+                      id="waitlist-school"
+                      value={waitlistForm.schoolName}
+                      onChange={(event) =>
+                        setWaitlistForm((current) => ({ ...current, schoolName: event.target.value }))
+                      }
+                      className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                      placeholder="Например, Школа Test"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-foreground" htmlFor="waitlist-contact">
+                      Контакт
+                    </label>
+                    <input
+                      id="waitlist-contact"
+                      value={waitlistForm.contactInfo}
+                      onChange={(event) =>
+                        setWaitlistForm((current) => ({ ...current, contactInfo: event.target.value }))
+                      }
+                      className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                      placeholder="Email, Telegram или телефон"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-foreground" htmlFor="waitlist-message">
+                      Что нужно подключить
+                    </label>
+                    <textarea
+                      id="waitlist-message"
+                      value={waitlistForm.message}
+                      onChange={(event) =>
+                        setWaitlistForm((current) => ({ ...current, message: event.target.value }))
+                      }
+                      className="min-h-32 w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                      placeholder="Например: нужна школа test, доступ в ERP/LMS и рабочее демо."
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmittingWaitlist}
+                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {isSubmittingWaitlist ? "Отправляем..." : "Встать в очередь"}
+                </button>
+
+                {waitlistState.kind !== "idle" ? (
+                  <p
+                    className={`mt-4 text-sm ${
+                      waitlistState.kind === "success" ? "text-primary" : "text-destructive"
+                    }`}
+                  >
+                    {waitlistState.message}
+                  </p>
+                ) : null}
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-7xl px-6 pb-16">
+          <div className="rounded-[2rem] border border-border bg-card p-6 shadow-sm">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Единый сценарий</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
+                  Визитка, ERP и LMS работают в одном визуальном языке.
+                </h2>
+                <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
+                  Одинаковые токены, одна типографика, общая навигационная логика и единый бренд-контур
+                  помогают пользователю бесшовно переходить от витрины к ежедневной работе школы.
+                </p>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <a
                   href={demoUrl}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                  className="inline-flex items-center justify-center rounded-full border border-border bg-background px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
                 >
-                  Запросить демо
-                  <ArrowRight className="h-4 w-4" />
+                  Демо
                 </a>
                 <a
-                  href="mailto:info@mirai-edu.space"
-                  className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-background px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
+                  href={loginUrl}
+                  className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
                 >
-                  <Mail className="h-4 w-4" />
-                  info@mirai-edu.space
+                  Log in
                 </a>
               </div>
             </div>
