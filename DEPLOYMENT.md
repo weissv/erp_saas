@@ -31,8 +31,8 @@ sudo -E bash scripts/setup-ubuntu.sh
 If you want to override domains or paths, export them before running the script:
 
 ```bash
-export FRONTEND_DOMAIN=mirai.mezon.uz
-export API_DOMAIN=api.mirai.mezon.uz
+export FRONTEND_DOMAIN=mirai-edu.space
+export API_DOMAIN=api.mirai-edu.space
 export APP_DIR=/opt/erp_saas
 sudo -E bash scripts/setup-ubuntu.sh
 ```
@@ -59,15 +59,23 @@ The backend container runs through `tsx` in production mode so deployment is not
 
 ## 6. Configure Cloudflare Tunnel
 
-Run these commands after the setup script finishes:
+If you already have a Cloudflare Tunnel token from the dashboard, the fastest path is:
+
+```bash
+sudo cloudflared service install <YOUR_TUNNEL_TOKEN>
+sudo systemctl enable --now cloudflared
+sudo systemctl status cloudflared
+```
+
+If you are creating a brand new tunnel from scratch instead, run these commands after the setup script finishes:
 
 ```bash
 cloudflared tunnel login
 cloudflared tunnel create erp-saas
 sudo cp /etc/cloudflared/config.yml.example /etc/cloudflared/config.yml
 sudo nano /etc/cloudflared/config.yml
-cloudflared tunnel route dns erp-saas mirai.mezon.uz
-cloudflared tunnel route dns erp-saas api.mirai.mezon.uz
+cloudflared tunnel route dns erp-saas mirai-edu.space
+cloudflared tunnel route dns erp-saas api.mirai-edu.space
 sudo cloudflared service install
 sudo systemctl enable --now cloudflared
 sudo systemctl status cloudflared
@@ -89,8 +97,8 @@ docker compose logs --tail=100 frontend
 Check Caddy routing before Cloudflare DNS propagates:
 
 ```bash
-curl -H 'Host: mirai.mezon.uz' http://127.0.0.1/
-curl -H 'Host: api.mirai.mezon.uz' http://127.0.0.1/api/health
+curl -H 'Host: mirai-edu.space' http://127.0.0.1/
+curl -H 'Host: api.mirai-edu.space' http://127.0.0.1/api/health
 curl http://127.0.0.1:3000/health
 curl http://127.0.0.1:4000/api/health
 ```
@@ -131,7 +139,7 @@ docker compose logs -f redis
 
 ## 9. DNS and routing model
 
-- `mirai.mezon.uz` -> Cloudflare Tunnel -> Caddy -> `127.0.0.1:3000` -> frontend container
-- `api.mirai.mezon.uz` -> Cloudflare Tunnel -> Caddy -> `127.0.0.1:4000` -> backend container
+- `mirai-edu.space` -> Cloudflare Tunnel -> Caddy -> `127.0.0.1:3000` -> frontend container
+- `api.mirai-edu.space` -> Cloudflare Tunnel -> Caddy -> `127.0.0.1:4000` -> backend container
 
 The API route injects `X-Tenant-Subdomain: mirai`, so the backend can resolve the tenant correctly even though the API is hosted on a separate subdomain.

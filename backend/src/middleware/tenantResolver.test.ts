@@ -96,7 +96,7 @@ describe("extractSubdomain", () => {
 describe("extractTenantSubdomain", () => {
   it("prefers x-tenant-subdomain when present and valid", () => {
     const req = mockReq({
-      host: "api.mirai.mezon.uz",
+      host: "api.mirai-edu.space",
       tenantHeader: "mirai",
     });
 
@@ -245,7 +245,7 @@ describe("tenantResolver middleware", () => {
       status: "ACTIVE",
     });
     const req = mockReq({
-      host: "api.mirai.mezon.uz",
+      host: "api.mirai-edu.space",
       tenantHeader: "mirai",
     });
     const res = mockRes();

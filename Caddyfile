@@ -2,12 +2,12 @@
   auto_https off
 }
 
-http://mirai.mezon.uz {
+http://mirai-edu.space {
   encode zstd gzip
   reverse_proxy 127.0.0.1:3000
 }
 
-http://api.mirai.mezon.uz {
+http://api.mirai-edu.space {
   encode zstd gzip
   reverse_proxy 127.0.0.1:4000 {
     header_up X-Tenant-Subdomain mirai

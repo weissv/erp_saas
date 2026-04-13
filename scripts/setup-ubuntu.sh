@@ -18,9 +18,9 @@ fi
 APP_DIR="${APP_DIR:-$DEFAULT_APP_DIR}"
 REPO_URL="${REPO_URL:-https://github.com/weissv/erp_saas.git}"
 DEPLOY_USER="${DEPLOY_USER:-${SUDO_USER:-izu}}"
-FRONTEND_DOMAIN="${FRONTEND_DOMAIN:-mirai.mezon.uz}"
-API_DOMAIN="${API_DOMAIN:-api.mirai.mezon.uz}"
-BASE_DOMAIN="${BASE_DOMAIN:-mezon.uz}"
+FRONTEND_DOMAIN="${FRONTEND_DOMAIN:-mirai-edu.space}"
+API_DOMAIN="${API_DOMAIN:-api.mirai-edu.space}"
+BASE_DOMAIN="${BASE_DOMAIN:-mirai-edu.space}"
 
 BACKEND_ENV_FILE="$APP_DIR/backend/.env"
 FRONTEND_ENV_FILE="$APP_DIR/frontend/.env.production"
