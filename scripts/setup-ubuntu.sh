@@ -290,11 +290,23 @@ deploy_stack() {
   log "Bootstrapping initial tenant and admin"
   run_compose run --rm backend npm run bootstrap:mirai
 
+  local demo_tenant_subdomain="${DEMO_TENANT_SUBDOMAIN:-demo}"
+  local demo_tenant_name="${DEMO_TENANT_NAME:-Demo School}"
+  local demo_tenant_db="${DEMO_TENANT_DB:-erp_demo}"
+  local demo_admin_email="${DEMO_TENANT_ADMIN_EMAIL:-demo-admin@test.local}"
+  local demo_admin_password="${DEMO_TENANT_ADMIN_PASSWORD:-MiraiDemo_2026!}"
   local test_tenant_subdomain="${TEST_TENANT_SUBDOMAIN:-test}"
   local test_tenant_name="${TEST_TENANT_NAME:-Test School}"
   local test_tenant_db="${TEST_TENANT_DB:-erp_test}"
   local test_admin_email="${TEST_TENANT_ADMIN_EMAIL:-admin@test.local}"
   local test_admin_password="${TEST_TENANT_ADMIN_PASSWORD:-MiraiTest_2026!}"
+
+  provision_seeded_tenant \
+    "$demo_tenant_subdomain" \
+    "$demo_tenant_name" \
+    "$demo_tenant_db" \
+    "$demo_admin_email" \
+    "$demo_admin_password"
 
   provision_seeded_tenant \
     "$test_tenant_subdomain" \
@@ -313,6 +325,7 @@ print_next_steps() {
   echo "Frontend URL: https://${FRONTEND_DOMAIN}"
   echo "Public API URL: https://${FRONTEND_DOMAIN}/api"
   echo "Optional dedicated API URL: https://${API_DOMAIN}"
+  echo "Demo URL: https://${DEMO_TENANT_SUBDOMAIN:-demo}.${FRONTEND_DOMAIN}"
   echo "Test school URL: https://${TEST_TENANT_SUBDOMAIN:-test}.${FRONTEND_DOMAIN}"
   echo "Test school login: ${TEST_TENANT_ADMIN_EMAIL:-admin@test.local}"
   echo "Test school password: ${TEST_TENANT_ADMIN_PASSWORD:-MiraiTest_2026!}"

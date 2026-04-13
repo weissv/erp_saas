@@ -53,7 +53,7 @@ It performs these actions in order:
 10. Runs `npm run prisma:master:push` for the control-plane schema.
 11. Runs `npm run prisma:tenant:deploy` for the tenant schema, falling back to `prisma db push` when the repository has no Prisma migration folders.
 12. Runs `npm run bootstrap:mirai` to create or update the `mirai` tenant and the first admin user.
-13. Provisions a seeded `test` school tenant with demo ERP/LMS data and fixed login defaults (`admin@test.local` / `MiraiTest_2026!`) unless you override the `TEST_TENANT_*` env vars.
+13. Provisions a seeded read-only `demo` tenant for `demo.mirai-edu.space` and a separate private `test` school tenant for `test.mirai-edu.space`.
 14. Starts the backend and frontend containers.
 
 The backend container runs through `tsx` in production mode so deployment is not blocked by the repository's current strict TypeScript type errors.
@@ -109,6 +109,7 @@ Check database bootstrap:
 
 ```bash
 docker compose exec -T postgres psql -U erp -d erp_master -c 'select id, subdomain, name, status from tenants;'
+docker compose exec -T postgres psql -U erp -d erp_demo -c 'select email, role from "User";'
 docker compose exec -T postgres psql -U erp -d erp_db -c 'select email, role from "User";'
 docker compose exec -T postgres psql -U erp -d erp_test -c 'select email, role from "User";'
 ```
@@ -143,7 +144,7 @@ docker compose logs -f redis
 ## 9. DNS and routing model
 
 - `mirai-edu.space` -> Cloudflare Tunnel -> Caddy -> frontend for `/`, backend for `/api` and `/ws`; frontend production build uses relative `/api` requests to avoid scheme-based CORS issues
-- `*.mirai-edu.space` -> Cloudflare Tunnel -> Caddy -> frontend for `/`, backend for `/api` and `/ws`; the backend resolves the tenant from the request host so subdomains like `test.mirai-edu.space` work directly
+- `*.mirai-edu.space` -> Cloudflare Tunnel -> Caddy -> frontend for `/`, backend for `/api` and `/ws`; the backend resolves the tenant from the request host so subdomains like `demo.mirai-edu.space` and `test.mirai-edu.space` work directly
 - `api.mirai-edu.space` -> optional dedicated API hostname -> Cloudflare Tunnel -> Caddy -> `127.0.0.1:4000`
 
 The root-domain API route injects `X-Tenant-Subdomain: mirai`, so the backend can resolve the tenant correctly without needing a separate API DNS record. If you later create `api.mirai-edu.space`, the dedicated API site in Caddy can serve the same backend separately.

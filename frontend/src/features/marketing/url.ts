@@ -20,7 +20,7 @@ export function getTenantUrl(
 }
 
 export function getDemoUrl(locationLike: DemoLocationLike = window.location): string {
-  return getTenantUrl("test", "", locationLike);
+  return getTenantUrl("demo", "", locationLike);
 }
 
 export function getLoginUrl(locationLike: DemoLocationLike = window.location): string {

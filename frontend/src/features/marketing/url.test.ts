@@ -2,13 +2,13 @@ import { describe, expect, it } from "vitest";
 import { getDemoUrl, getLoginUrl, getTenantUrl } from "./url";
 
 describe("getDemoUrl", () => {
-  it("builds the test-school demo host from the marketing domain", () => {
+  it("builds the demo host from the marketing domain", () => {
     expect(
       getDemoUrl({
         protocol: "https:",
         hostname: "www.mirai-edu.space",
       })
-    ).toBe("https://test.mirai-edu.space");
+    ).toBe("https://demo.mirai-edu.space");
   });
 
   it("preserves the current port when generating the demo URL", () => {
@@ -18,7 +18,7 @@ describe("getDemoUrl", () => {
         hostname: "mirai-edu.space",
         port: "5173",
       })
-    ).toBe("http://test.mirai-edu.space:5173");
+    ).toBe("http://demo.mirai-edu.space:5173");
   });
 });
 
