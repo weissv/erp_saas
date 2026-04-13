@@ -1,0 +1,11 @@
+[Unit]
+Description=Poll GitHub for ERP SaaS updates
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+Persistent=true
+Unit=erp-saas-autodeploy.service
+
+[Install]
+WantedBy=timers.target
