@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { ArrowRight, Check, ChevronRight, Mail, PlayCircle } from "lucide-react";
+import { ArrowRight, Check, ChevronRight, LogIn, PlayCircle } from "lucide-react";
 import {
   AUDIENCES,
   FEATURES,
@@ -15,6 +15,12 @@ import { api } from "../lib/api";
 
 const MIN_WAITLIST_MESSAGE_LENGTH = 10;
 const WAITLIST_FEEDBACK_TYPE = "WAITLIST";
+const primaryActionClass =
+  "inline-flex items-center justify-center gap-2 rounded-full bg-macos-blue px-6 py-3 text-sm font-semibold text-white shadow-subtle transition hover:bg-macos-blue-hover";
+const secondaryActionClass =
+  "inline-flex items-center justify-center gap-2 rounded-full border border-card bg-surface-primary px-6 py-3 text-sm font-semibold text-text-primary shadow-subtle transition hover:bg-white";
+const tertiaryActionClass =
+  "inline-flex items-center justify-center gap-2 rounded-full px-2 py-3 text-sm font-semibold text-macos-blue transition hover:opacity-80";
 
 function SectionHeading({
   badge,
@@ -27,13 +33,13 @@ function SectionHeading({
 }) {
   return (
     <div className="mx-auto max-w-3xl text-center">
-      <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+      <span className="mezon-chip text-[11px] font-semibold uppercase tracking-[0.2em] text-macos-blue">
         {badge}
       </span>
-      <h2 className="mt-4 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+      <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-text-primary sm:text-4xl">
         {title}
       </h2>
-      <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg">{description}</p>
+      <p className="mt-4 text-base leading-7 text-text-tertiary sm:text-lg">{description}</p>
     </div>
   );
 }
@@ -96,7 +102,7 @@ export default function LandingPage() {
     if (!schoolName || !contactInfo || message.length < MIN_WAITLIST_MESSAGE_LENGTH) {
       setWaitlistState({
         kind: "error",
-        message: "Заполните школу, контакт и коротко опишите запрос.",
+        message: "Укажите школу, канал связи и коротко опишите, что резервируем в очереди.",
       });
       return;
     }
@@ -119,7 +125,7 @@ export default function LandingPage() {
       });
       setWaitlistState({
         kind: "success",
-        message: "Заявка отправлена. Мы добавили школу в очередь и свяжемся с вами.",
+        message: "Школа добавлена в очередь. Мы закрепили слот и отправим следующий шаг по запуску.",
       });
     } catch (error: any) {
       setWaitlistState({
@@ -132,15 +138,15 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
-      <div className="absolute inset-x-0 top-0 -z-10 h-[32rem] bg-gradient-to-b from-primary/10 via-background to-background" />
-      <div className="absolute left-1/2 top-24 -z-10 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
+    <div className="relative min-h-screen overflow-hidden bg-bg-canvas text-text-primary">
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(0,122,255,0.14),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.96),rgba(244,247,255,0.92)_40%,rgba(240,243,250,0.92))]" />
+      <div className="absolute left-1/2 top-24 -z-10 h-80 w-80 -translate-x-1/2 rounded-full bg-[rgba(52,199,89,0.14)] blur-3xl" />
 
-      <header className="sticky top-0 z-50 border-b border-border/70 bg-background/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-card bg-[rgba(246,247,251,0.86)] backdrop-blur-[20px]">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-4">
           <div>
-            <p className="text-lg font-semibold tracking-tight">Mirai Edu</p>
-            <p className="text-sm text-muted-foreground">ERP и LMS для современной школы</p>
+            <p className="text-lg font-semibold tracking-[-0.03em] text-text-primary">Mirai Edu</p>
+            <p className="text-sm text-text-tertiary">Очередь на запуск, ERP и LMS в одном контуре</p>
           </div>
 
           <nav className="hidden items-center gap-6 md:flex">
@@ -148,7 +154,7 @@ export default function LandingPage() {
               <a
                 key={item.href}
                 href={item.href}
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                className="text-sm font-medium text-text-tertiary transition-colors hover:text-text-primary"
               >
                 {item.label}
               </a>
@@ -158,19 +164,20 @@ export default function LandingPage() {
           <div className="flex items-center gap-3">
             <a
               href={demoUrl}
-              className="hidden rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent sm:inline-flex"
+              className={`${secondaryActionClass} hidden px-4 py-2 sm:inline-flex`}
             >
               Демо
             </a>
             <a
               href={loginUrl}
-              className="hidden rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent lg:inline-flex"
+              className={`${secondaryActionClass} px-4 py-2`}
             >
+              <LogIn className="h-4 w-4" />
               Log in
             </a>
             <a
               href="#waitlist"
-              className="inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              className="inline-flex items-center justify-center rounded-full bg-macos-blue px-4 py-2 text-sm font-medium text-white shadow-subtle transition hover:bg-macos-blue-hover"
             >
               Встать в очередь
             </a>
@@ -178,84 +185,90 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <main>
+      <main className="relative z-10">
         <section className="mx-auto grid max-w-7xl gap-12 px-6 py-16 sm:py-20 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] lg:items-center lg:py-24">
           <div>
-            <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-              Mirai Edu · SaaS для школ, академий и учебных центров
+            <span className="mezon-chip text-[11px] font-semibold uppercase tracking-[0.2em] text-macos-blue">
+              Mirai Edu · очередь на запуск для школ, академий и учебных центров
             </span>
-            <h1 className="mt-6 max-w-3xl text-4xl font-semibold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-              Управляйте школой как современной цифровой организацией.
+            <h1 className="mt-6 max-w-3xl text-4xl font-semibold tracking-[-0.05em] text-text-primary sm:text-5xl lg:text-6xl">
+              Встаньте в очередь на запуск школы и получите единый контур ERP + LMS.
             </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl">
-              Mirai Edu собирает финансы, академический процесс, сервисные контуры,
-              коммуникации и управленческую аналитику в единую платформу — чтобы команда
-              школы работала быстрее, прозрачнее и спокойнее.
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-text-tertiary sm:text-xl">
+              Mirai Edu ставит школу в очередь на подключение, открывает рабочее демо без страницы
+              входа и затем переводит администрацию, педагогов и семьи в единый операционный контур.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <a
-                href={demoUrl}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                href="#waitlist"
+                className={primaryActionClass}
               >
-                Открыть демо
+                Встать в очередь
                 <ArrowRight className="h-4 w-4" />
               </a>
               <a
-                href={loginUrl}
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
+                href={demoUrl}
+                className={secondaryActionClass}
               >
-                <Mail className="h-4 w-4" />
+                <PlayCircle className="h-4 w-4" />
+                Открыть демо
+              </a>
+              <a
+                href={loginUrl}
+                className={secondaryActionClass}
+              >
+                <LogIn className="h-4 w-4" />
                 Log in
               </a>
               <a
                 href="#implementation"
-                className="inline-flex items-center justify-center gap-2 rounded-full px-2 py-3 text-sm font-semibold text-primary transition-colors hover:text-primary/80"
+                className={tertiaryActionClass}
               >
                 <PlayCircle className="h-4 w-4" />
-                Как проходит запуск
+                Как идет запуск
               </a>
             </div>
 
             <div className="mt-10 grid gap-4 sm:grid-cols-3">
               {HERO_HIGHLIGHTS.map((item) => (
-                <div key={item.title} className="rounded-3xl border border-border bg-card/80 p-5 shadow-sm">
-                  <p className="text-sm font-semibold text-foreground">{item.title}</p>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.description}</p>
+                <div key={item.title} className="glass-panel p-5">
+                  <p className="text-sm font-semibold text-text-primary">{item.title}</p>
+                  <p className="mt-2 text-sm leading-6 text-text-tertiary">{item.description}</p>
                 </div>
               ))}
             </div>
 
-            <div className="mt-6 rounded-[1.5rem] border border-border bg-card/80 p-5 shadow-sm">
-              <p className="text-sm font-semibold text-foreground">Тестовая школа для входа: test</p>
-              <div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center">
-                <span className="rounded-full bg-background px-3 py-1.5">URL: {testSchoolUrl}</span>
-                <span className="rounded-full bg-background px-3 py-1.5">Личная песочница только по логину и паролю</span>
-                <span className="rounded-full bg-background px-3 py-1.5">Демо открывается отдельно на demo.mirai-edu.space</span>
+            <div className="glass-panel mt-6 p-5">
+              <p className="text-sm font-semibold text-text-primary">Рабочая школа для авторизованного входа: test</p>
+              <div className="mt-3 flex flex-col gap-2 text-sm text-text-tertiary sm:flex-row sm:flex-wrap sm:items-center">
+                <span className="mezon-chip">URL: {testSchoolUrl}</span>
+                <span className="mezon-chip">Log in нужен только для школы test</span>
+                <span className="mezon-chip mezon-chip--teal">Demo без login: {demoUrl}</span>
               </div>
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-border bg-card/90 p-6 shadow-sm sm:p-8">
-            <div className="rounded-[1.75rem] border border-primary/15 bg-primary/5 p-6">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">
+          <div className="glass-panel p-6 sm:p-8">
+            <div className="rounded-[1.75rem] border border-[rgba(0,122,255,0.14)] bg-[linear-gradient(135deg,rgba(0,122,255,0.08),rgba(52,199,89,0.05))] p-6">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-macos-blue">
                 Операционное ядро школы
               </p>
-              <h2 className="mt-3 text-2xl font-semibold tracking-tight text-foreground">
-                Один продукт для администрации, педагогов, родителей и студентов.
+              <h2 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-text-primary">
+                Один сценарий для очереди, запуска, ERP и ежедневной LMS-работы.
               </h2>
-              <p className="mt-4 text-sm leading-6 text-muted-foreground">
-                Вместо набора отдельных таблиц, мессенджеров и локальных сервисов команда
-                получает единый сценарий работы от первого контакта до ежедневной учебной рутины.
+              <p className="mt-4 text-sm leading-6 text-text-tertiary">
+                Вместо разрозненных таблиц, мессенджеров и локальных сервисов команда получает
+                один цифровой маршрут: очередь на запуск, рабочее демо и затем стабильную систему.
               </p>
             </div>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               {METRICS.map((metric) => (
-                <div key={metric.value} className="rounded-3xl border border-border bg-background p-5">
-                  <p className="text-2xl font-semibold tracking-tight text-foreground">{metric.value}</p>
-                  <p className="mt-2 text-sm font-medium text-foreground">{metric.label}</p>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{metric.description}</p>
+                <div key={metric.value} className="rounded-3xl border border-card bg-white/80 p-5 backdrop-blur-[18px]">
+                  <p className="text-2xl font-semibold tracking-[-0.03em] text-text-primary">{metric.value}</p>
+                  <p className="mt-2 text-sm font-medium text-text-primary">{metric.label}</p>
+                  <p className="mt-2 text-sm leading-6 text-text-tertiary">{metric.description}</p>
                 </div>
               ))}
             </div>
@@ -271,16 +284,16 @@ export default function LandingPage() {
 
           <div className="mt-12 grid gap-6 lg:grid-cols-2">
             {FEATURES.map(({ icon: Icon, title, description, bullets }) => (
-              <article key={title} className="rounded-[2rem] border border-border bg-card p-7 shadow-sm">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <article key={title} className="glass-panel p-7">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgba(0,122,255,0.12)] text-macos-blue">
                   <Icon className="h-6 w-6" />
                 </div>
-                <h3 className="mt-5 text-2xl font-semibold tracking-tight text-foreground">{title}</h3>
-                <p className="mt-3 text-base leading-7 text-muted-foreground">{description}</p>
+                <h3 className="mt-5 text-2xl font-semibold tracking-[-0.03em] text-text-primary">{title}</h3>
+                <p className="mt-3 text-base leading-7 text-text-tertiary">{description}</p>
                 <ul className="mt-6 space-y-3">
                   {bullets.map((bullet) => (
-                    <li key={bullet} className="flex items-start gap-3 text-sm leading-6 text-muted-foreground">
-                      <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <li key={bullet} className="flex items-start gap-3 text-sm leading-6 text-text-tertiary">
+                      <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[rgba(0,122,255,0.12)] text-macos-blue">
                         <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
                       </span>
                       <span>{bullet}</span>
@@ -292,7 +305,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="border-y border-border/70 bg-card/40 py-16 sm:py-20">
+        <section className="border-y border-card/80 bg-white/40 py-16 sm:py-20 backdrop-blur-[18px]">
           <div className="mx-auto max-w-7xl px-6">
             <SectionHeading
               badge="Сквозные сценарии"
@@ -302,16 +315,16 @@ export default function LandingPage() {
 
             <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
               {OPERATIONS.map(({ icon: Icon, title, description, bullets }) => (
-                <article key={title} className="rounded-[1.75rem] border border-border bg-background p-6 shadow-sm">
-                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <article key={title} className="glass-panel p-6">
+                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[rgba(0,122,255,0.12)] text-macos-blue">
                     <Icon className="h-5 w-5" />
                   </div>
-                  <h3 className="mt-4 text-xl font-semibold tracking-tight text-foreground">{title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-muted-foreground">{description}</p>
-                  <ul className="mt-5 space-y-2.5 text-sm leading-6 text-muted-foreground">
+                  <h3 className="mt-4 text-xl font-semibold tracking-[-0.03em] text-text-primary">{title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-text-tertiary">{description}</p>
+                  <ul className="mt-5 space-y-2.5 text-sm leading-6 text-text-tertiary">
                     {bullets.map((bullet) => (
                       <li key={bullet} className="flex items-start gap-2.5">
-                        <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-primary" />
+                        <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-macos-blue" />
                         <span>{bullet}</span>
                       </li>
                     ))}
@@ -331,16 +344,16 @@ export default function LandingPage() {
 
           <div className="mt-12 grid gap-6 lg:grid-cols-3">
             {AUDIENCES.map(({ icon: Icon, title, description, bullets }) => (
-              <article key={title} className="rounded-[2rem] border border-border bg-card p-7 shadow-sm">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <article key={title} className="glass-panel p-7">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgba(0,122,255,0.12)] text-macos-blue">
                   <Icon className="h-6 w-6" />
                 </div>
-                <h3 className="mt-5 text-2xl font-semibold tracking-tight text-foreground">{title}</h3>
-                <p className="mt-3 text-base leading-7 text-muted-foreground">{description}</p>
-                <ul className="mt-6 space-y-3 text-sm leading-6 text-muted-foreground">
+                <h3 className="mt-5 text-2xl font-semibold tracking-[-0.03em] text-text-primary">{title}</h3>
+                <p className="mt-3 text-base leading-7 text-text-tertiary">{description}</p>
+                <ul className="mt-6 space-y-3 text-sm leading-6 text-text-tertiary">
                   {bullets.map((bullet) => (
                     <li key={bullet} className="flex items-start gap-3">
-                      <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[rgba(0,122,255,0.12)] text-macos-blue">
                         <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
                       </span>
                       <span>{bullet}</span>
@@ -362,19 +375,19 @@ export default function LandingPage() {
           <div className="mt-12 grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)]">
             <div className="grid gap-6">
               {IMPLEMENTATION_STEPS.map((step, index) => (
-                <article key={step.title} className="rounded-[2rem] border border-border bg-card p-7 shadow-sm">
+                <article key={step.title} className="glass-panel p-7">
                   <div className="flex items-center gap-4">
-                    <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+                    <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-macos-blue text-sm font-semibold text-white">
                       0{index + 1}
                     </span>
                     <div>
-                      <h3 className="text-2xl font-semibold tracking-tight text-foreground">{step.title}</h3>
-                      <p className="mt-1 text-sm leading-6 text-muted-foreground">{step.description}</p>
+                      <h3 className="text-2xl font-semibold tracking-[-0.03em] text-text-primary">{step.title}</h3>
+                      <p className="mt-1 text-sm leading-6 text-text-tertiary">{step.description}</p>
                     </div>
                   </div>
-                  <ul className="mt-6 grid gap-3 text-sm leading-6 text-muted-foreground sm:grid-cols-3">
+                  <ul className="mt-6 grid gap-3 text-sm leading-6 text-text-tertiary sm:grid-cols-3">
                     {step.bullets.map((bullet) => (
-                      <li key={bullet} className="rounded-2xl border border-border bg-background px-4 py-3">
+                      <li key={bullet} className="rounded-2xl border border-card bg-white/80 px-4 py-3 backdrop-blur-[18px]">
                         {bullet}
                       </li>
                     ))}
@@ -383,24 +396,24 @@ export default function LandingPage() {
               ))}
             </div>
 
-            <aside className="rounded-[2rem] border border-border bg-card p-7 shadow-sm">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Что получает школа</p>
-              <h3 className="mt-3 text-2xl font-semibold tracking-tight text-foreground">
+            <aside className="glass-panel p-7">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-macos-blue">Что получает школа</p>
+              <h3 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-text-primary">
                 Платформа даёт управляемость сегодня и запас для роста завтра.
               </h3>
-              <p className="mt-4 text-sm leading-6 text-muted-foreground">
+              <p className="mt-4 text-sm leading-6 text-text-tertiary">
                 Mirai Edu помогает быстрее запускать процессы, удерживать качество сервиса и выстраивать
                 прозрачную цифровую среду для администрации, педагогов, родителей и студентов.
               </p>
 
               <div className="mt-6 grid gap-4">
                 {TRUST_SIGNALS.map(({ icon: Icon, title, description }) => (
-                  <div key={title} className="rounded-3xl border border-border bg-background p-5">
-                    <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <div key={title} className="rounded-3xl border border-card bg-white/80 p-5 backdrop-blur-[18px]">
+                    <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[rgba(0,122,255,0.12)] text-macos-blue">
                       <Icon className="h-5 w-5" />
                     </div>
-                    <p className="mt-4 text-base font-semibold text-foreground">{title}</p>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
+                    <p className="mt-4 text-base font-semibold text-text-primary">{title}</p>
+                    <p className="mt-2 text-sm leading-6 text-text-tertiary">{description}</p>
                   </div>
                 ))}
               </div>
@@ -409,32 +422,32 @@ export default function LandingPage() {
         </section>
 
         <section id="waitlist" className="mx-auto max-w-7xl px-6 pb-16 sm:pb-20">
-          <div className="rounded-[2.25rem] border border-primary/20 bg-primary/10 p-8 sm:p-10 lg:p-12">
+          <div className="glass-panel overflow-hidden bg-[linear-gradient(135deg,rgba(0,122,255,0.08),rgba(52,199,89,0.08))] p-8 sm:p-10 lg:p-12">
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.95fr)] lg:items-start">
               <div>
-                <span className="inline-flex items-center rounded-full border border-primary/20 bg-background px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+                <span className="mezon-chip bg-white/90 text-[11px] font-semibold uppercase tracking-[0.2em] text-macos-blue">
                   Очередь на запуск
                 </span>
-                <h2 className="mt-4 max-w-3xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+                <h2 className="mt-4 max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-text-primary sm:text-4xl">
                   Встаньте в очередь на запуск школы в Mirai Edu.
                 </h2>
-                <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-                  Оставьте школу и контакт — мы зафиксируем заявку, покажем рабочее демо и подскажем,
-                  как быстро открыть ERP и LMS в едином контуре.
+                <p className="mt-4 max-w-2xl text-base leading-7 text-text-tertiary sm:text-lg">
+                  Оставьте школу и канал связи. Мы ставим вас в очередь на запуск, резервируем demo-сценарий
+                  и отправляем следующий шаг, чтобы быстро открыть ERP и LMS в одном контуре.
                 </p>
                 <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                   <a
                     href={demoUrl}
-                    className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                    className={primaryActionClass}
                   >
                     Открыть демо
                     <ArrowRight className="h-4 w-4" />
                   </a>
                   <a
                     href={loginUrl}
-                    className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-background px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
+                    className={secondaryActionClass}
                   >
-                    <Mail className="h-4 w-4" />
+                    <LogIn className="h-4 w-4" />
                     Log in
                   </a>
                 </div>
@@ -442,11 +455,11 @@ export default function LandingPage() {
 
               <form
                 onSubmit={handleWaitlistSubmit}
-                className="rounded-[1.75rem] border border-border bg-background p-6 shadow-sm"
+                className="rounded-[1.75rem] border border-card bg-white/90 p-6 shadow-subtle backdrop-blur-[18px]"
               >
                 <div className="grid gap-4">
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-foreground" htmlFor="waitlist-school">
+                    <label className="mb-2 block text-sm font-medium text-text-primary" htmlFor="waitlist-school">
                       Школа
                     </label>
                     <input
@@ -455,13 +468,13 @@ export default function LandingPage() {
                       onChange={(event) =>
                         setWaitlistForm((current) => ({ ...current, schoolName: event.target.value }))
                       }
-                      className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
-                      placeholder="Например, Школа Test"
+                      className="w-full rounded-2xl border border-card bg-surface-primary px-4 py-3 text-sm text-text-primary outline-none transition focus:border-macos-blue focus:ring-2 focus:ring-[rgba(0,122,255,0.12)]"
+                      placeholder="Например, Mirai Test School"
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-foreground" htmlFor="waitlist-contact">
-                      Контакт
+                    <label className="mb-2 block text-sm font-medium text-text-primary" htmlFor="waitlist-contact">
+                      Канал связи
                     </label>
                     <input
                       id="waitlist-contact"
@@ -469,13 +482,13 @@ export default function LandingPage() {
                       onChange={(event) =>
                         setWaitlistForm((current) => ({ ...current, contactInfo: event.target.value }))
                       }
-                      className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                      className="w-full rounded-2xl border border-card bg-surface-primary px-4 py-3 text-sm text-text-primary outline-none transition focus:border-macos-blue focus:ring-2 focus:ring-[rgba(0,122,255,0.12)]"
                       placeholder="Email, Telegram или телефон"
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-foreground" htmlFor="waitlist-message">
-                      Что нужно подключить
+                    <label className="mb-2 block text-sm font-medium text-text-primary" htmlFor="waitlist-message">
+                      Что резервируем в очереди
                     </label>
                     <textarea
                       id="waitlist-message"
@@ -483,8 +496,8 @@ export default function LandingPage() {
                       onChange={(event) =>
                         setWaitlistForm((current) => ({ ...current, message: event.target.value }))
                       }
-                      className="min-h-32 w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
-                      placeholder="Например: нужна школа test, доступ в ERP/LMS и рабочее демо."
+                      className="min-h-32 w-full rounded-2xl border border-card bg-surface-primary px-4 py-3 text-sm text-text-primary outline-none transition focus:border-macos-blue focus:ring-2 focus:ring-[rgba(0,122,255,0.12)]"
+                      placeholder="Например: нужен запуск школы, demo-проверка и единый контур ERP/LMS для команды."
                     />
                   </div>
                 </div>
@@ -492,7 +505,7 @@ export default function LandingPage() {
                 <button
                   type="submit"
                   disabled={isSubmittingWaitlist}
-                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-macos-blue px-6 py-3 text-sm font-semibold text-white shadow-subtle transition hover:bg-macos-blue-hover disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {isSubmittingWaitlist ? "Отправляем..." : "Встать в очередь"}
                 </button>
@@ -500,7 +513,7 @@ export default function LandingPage() {
                 {waitlistState.kind !== "idle" ? (
                   <p
                     className={`mt-4 text-sm ${
-                      waitlistState.kind === "success" ? "text-primary" : "text-destructive"
+                      waitlistState.kind === "success" ? "text-[var(--macos-blue)]" : "text-destructive"
                     }`}
                   >
                     {waitlistState.message}
@@ -512,14 +525,14 @@ export default function LandingPage() {
         </section>
 
         <section className="mx-auto max-w-7xl px-6 pb-16">
-          <div className="rounded-[2rem] border border-border bg-card p-6 shadow-sm">
+          <div className="glass-panel p-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Единый сценарий</p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
-                  Визитка, ERP и LMS работают в одном визуальном языке.
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-macos-blue">Единый сценарий</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-text-primary">
+                  Визитка, demo, ERP и LMS говорят одним визуальным языком.
                 </h2>
-                <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
+                <p className="mt-3 max-w-3xl text-sm leading-6 text-text-tertiary">
                   Одинаковые токены, одна типографика, общая навигационная логика и единый бренд-контур
                   помогают пользователю бесшовно переходить от витрины к ежедневной работе школы.
                 </p>
@@ -527,13 +540,13 @@ export default function LandingPage() {
               <div className="flex flex-col gap-3 sm:flex-row">
                 <a
                   href={demoUrl}
-                  className="inline-flex items-center justify-center rounded-full border border-border bg-background px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
+                  className={secondaryActionClass}
                 >
                   Демо
                 </a>
                 <a
                   href={loginUrl}
-                  className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                  className={primaryActionClass}
                 >
                   Log in
                 </a>
@@ -543,12 +556,12 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="border-t border-border/70 bg-background/80">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+      <footer className="border-t border-card/80 bg-[rgba(246,247,251,0.86)]">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-8 text-sm text-text-tertiary sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} Mirai Edu. Цифровая платформа для управления школой.</p>
           <div className="flex flex-wrap items-center gap-4">
             {NAV_ITEMS.map((item) => (
-              <a key={item.href} href={item.href} className="transition-colors hover:text-foreground">
+              <a key={item.href} href={item.href} className="transition-colors hover:text-text-primary">
                 {item.label}
               </a>
             ))}

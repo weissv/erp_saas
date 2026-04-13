@@ -4,11 +4,13 @@ import clsx from "clsx";
 import { X } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "../hooks/useAuth";
+import { useDemo } from "../contexts/DemoContext";
 import { useTenant } from "../contexts/TenantContext";
 import type { UserRole } from "../types/auth";
 
 export default function LmsSideNav() {
  const { user, logout} = useAuth();
+ const { isDemo } = useDemo();
  const { tenant} = useTenant();
  const loc = useLocation();
  const navigate = useNavigate();
@@ -48,9 +50,10 @@ export default function LmsSideNav() {
 }
 };
 
- const handleLogout = () => {
- logout();
- navigate("/auth/login");
+ const handleLogout = async () => {
+ await logout();
+ closeMobileMenu();
+ navigate(isDemo ? "/school" : "/auth/login", { replace: true });
 };
 
  // Define LMS Navigation Links based on Role

@@ -7,6 +7,7 @@ import DoomGame from "../components/DoomGame";
 import { Toaster } from "sonner";
 import { useKonamiCode } from "../hooks/useKonamiCode";
 import { useAuth } from "../hooks/useAuth";
+import { useDemo } from "../contexts/DemoContext";
 import { useTenant } from "../contexts/TenantContext";
 import { ROLE_LABELS } from "../types/auth";
 import { Spinner } from "../components/ui/LoadingState";
@@ -15,6 +16,7 @@ import { installOpenAiKeyErrorInterceptor } from "../features/ai/setup-openai-er
 
 export default function MainLayout() {
   const { user, isLoading } = useAuth();
+  const { isDemo } = useDemo();
   const { tenant } = useTenant();
   const [showDoom, setShowDoom] = useState(false);
 
@@ -53,16 +55,18 @@ export default function MainLayout() {
             <Lock className="w-7 h-7 text-macos-blue" strokeWidth={1.5} />
           </div>
           <p className="text-[18px] font-semibold text-text-primary tracking-[-0.02em]">
-            Сессия потеряна
+            {isDemo ? "Демо обновляется" : "Сессия потеряна"}
           </p>
           <p className="text-[14px] text-text-tertiary leading-relaxed">
-            Вы не авторизованы или ваша сессия устарела.
+            {isDemo
+              ? "Логин для demo-контура не нужен. Если сессия сбросилась, откройте рабочее демо ещё раз."
+              : "Вы не авторизованы или ваша сессия устарела."}
           </p>
           <Link
-            to="/auth/login"
+            to={isDemo ? "/dashboard" : "/auth/login"}
             className="inline-flex items-center justify-center rounded-md bg-macos-blue px-5 py-2.5 text-[13px] font-medium text-white shadow-subtle macos-transition hover:bg-macos-blue-hover"
           >
-            Перейти к входу
+            {isDemo ? "Продолжить демо" : "Перейти к входу"}
           </Link>
         </div>
       </div>

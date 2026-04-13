@@ -60,30 +60,59 @@ The backend container runs through `tsx` in production mode so deployment is not
 
 ## 6. Configure Cloudflare Tunnel
 
-If you already have a Cloudflare Tunnel token from the dashboard, the fastest path is:
+The deployment script can now automate both cloudflared service installation and Cloudflare DNS creation. The simplest case is to provide the tunnel token plus a Cloudflare API token for the zone:
 
 ```bash
-sudo cloudflared service install <YOUR_TUNNEL_TOKEN>
-sudo systemctl enable --now cloudflared
-sudo systemctl status cloudflared
+export CLOUDFLARE_TUNNEL_TOKEN='<YOUR_TUNNEL_TOKEN>'
+export CLOUDFLARE_API_TOKEN='<YOUR_CLOUDFLARE_API_TOKEN>'
+export CLOUDFLARE_ZONE_NAME='mirai-edu.space'
 ```
 
-If you are creating a brand new tunnel from scratch instead, run these commands after the setup script finishes:
+`scripts/setup-ubuntu.sh` can derive the tunnel UUID directly from `CLOUDFLARE_TUNNEL_TOKEN`, so `CLOUDFLARE_TUNNEL_ID` is optional.
+
+If you prefer to pin the tunnel UUID explicitly, you can still set:
+
+```bash
+export CLOUDFLARE_TUNNEL_ID='<YOUR_TUNNEL_UUID>'
+```
+
+If you prefer to resolve the tunnel by account metadata instead of hardcoding the tunnel UUID, use this pair instead of `CLOUDFLARE_TUNNEL_ID`:
+
+```bash
+export CLOUDFLARE_ACCOUNT_ID='<YOUR_CLOUDFLARE_ACCOUNT_ID>'
+export CLOUDFLARE_TUNNEL_NAME='erp-saas'
+```
+
+Optional: if your API token cannot list zones, provide the zone ID directly:
+
+```bash
+export CLOUDFLARE_ZONE_ID='<YOUR_ZONE_ID>'
+```
+
+When these variables are present, `scripts/setup-ubuntu.sh` will:
+
+1. Render `/etc/cloudflared/config.yml` from `cloudflared/config.yml.example`
+2. Install and start the `cloudflared` systemd service using the tunnel token
+3. Upsert Cloudflare DNS records for `mirai-edu.space`, `*.mirai-edu.space`, and `api.mirai-edu.space`
+4. If the API token also has tunnel-management access, sync the remote tunnel ingress to `api.mirai-edu.space`, `mirai-edu.space`, and a final catch-all origin rule so tenant subdomains work behind the wildcard DNS record
+
+The script treats these permissions independently: a token with DNS scopes will upsert the public CNAME records, and a token with tunnel-management scopes will update the remote-managed tunnel ingress. A single token may provide both, but it no longer has to.
+
+That wildcard DNS record means future tenants such as `demo.mirai-edu.space`, `test.mirai-edu.space`, and any new `<tenant>.mirai-edu.space` subdomain resolve without adding anything manually in Cloudflare. For locally managed tunnels, the ingress should use a final catch-all origin rule, not a wildcard hostname entry, so those tenant hosts fall through to Caddy.
+
+Important: if the tunnel itself was created as a remotely managed Zero Trust tunnel, Cloudflare can still override the local ingress config and keep only the public hostnames stored on the Cloudflare side. In that case a zone-scoped DNS token is not enough to add tenant routes; you also need a Cloudflare API token with tunnel-management permissions or UI access to update the tunnel hostnames.
+
+If you are creating a brand new tunnel from scratch instead, the manual fallback is still:
 
 ```bash
 cloudflared tunnel login
 cloudflared tunnel create erp-saas
-sudo cp /etc/cloudflared/config.yml.example /etc/cloudflared/config.yml
-sudo nano /etc/cloudflared/config.yml
 cloudflared tunnel route dns erp-saas mirai-edu.space
 cloudflared tunnel route dns erp-saas '*.mirai-edu.space'
 cloudflared tunnel route dns erp-saas api.mirai-edu.space
-sudo cloudflared service install
-sudo systemctl enable --now cloudflared
-sudo systemctl status cloudflared
 ```
 
-Use `cloudflared/config.yml.example` from the repository as the source of truth for the ingress rules. It now includes a wildcard `*.mirai-edu.space` ingress so tenant subdomains such as `test.mirai-edu.space` resolve through the same tunnel.
+Use `cloudflared/config.yml.example` from the repository as the source of truth for ingress rules. It keeps explicit entries for the marketing apex and API host, then ends with a catch-all `service: http://127.0.0.1:80` so tenant subdomains route through the same tunnel to Caddy. If Cloudflare reports a different active ingress after the connector starts, the tunnel is being remotely managed and you must update the Cloudflare-side hostname list as well.
 
 ## 7. Validate the deployment locally on the server
 
@@ -144,7 +173,7 @@ docker compose logs -f redis
 ## 9. DNS and routing model
 
 - `mirai-edu.space` -> Cloudflare Tunnel -> Caddy -> frontend for `/`, backend for `/api` and `/ws`; frontend production build uses relative `/api` requests to avoid scheme-based CORS issues
-- `*.mirai-edu.space` -> Cloudflare Tunnel -> Caddy -> frontend for `/`, backend for `/api` and `/ws`; the backend resolves the tenant from the request host so subdomains like `demo.mirai-edu.space` and `test.mirai-edu.space` work directly
+- `*.mirai-edu.space` -> wildcard Cloudflare DNS -> Cloudflare Tunnel catch-all origin -> Caddy -> frontend for `/`, backend for `/api` and `/ws`; the backend resolves the tenant from the request host so subdomains like `demo.mirai-edu.space` and `test.mirai-edu.space` work directly
 - `api.mirai-edu.space` -> optional dedicated API hostname -> Cloudflare Tunnel -> Caddy -> `127.0.0.1:4000`
 
 The root-domain API route injects `X-Tenant-Subdomain: mirai`, so the backend can resolve the tenant correctly without needing a separate API DNS record. If you later create `api.mirai-edu.space`, the dedicated API site in Caddy can serve the same backend separately.

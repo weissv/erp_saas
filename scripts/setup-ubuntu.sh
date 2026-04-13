@@ -28,7 +28,10 @@ CADDYFILE_SOURCE="$APP_DIR/Caddyfile"
 CADDYFILE_DEST="/etc/caddy/Caddyfile"
 CLOUDFLARED_SOURCE="$APP_DIR/cloudflared/config.yml.example"
 CLOUDFLARED_DIR="/etc/cloudflared"
+CLOUDFLARED_CONFIG_DEST="$CLOUDFLARED_DIR/config.yml"
 CLOUDFLARED_EXAMPLE_DEST="$CLOUDFLARED_DIR/config.yml.example"
+CLOUDFLARED_TOKEN_FILE="$CLOUDFLARED_DIR/tunnel-token"
+CLOUDFLARE_API_BASE="${CLOUDFLARE_API_BASE:-https://api.cloudflare.com/client/v4}"
 
 GENERATED_ADMIN_PASSWORD=""
 
@@ -38,6 +41,148 @@ log() {
 
 run_compose() {
   (cd "$APP_DIR" && docker compose "$@")
+}
+
+decode_cloudflare_tunnel_token_field() {
+  local field="$1"
+
+  if [[ -z "${CLOUDFLARE_TUNNEL_TOKEN:-}" ]]; then
+    return 1
+  fi
+
+  python3 - "$field" "$CLOUDFLARE_TUNNEL_TOKEN" <<'PY'
+import base64
+import json
+import sys
+
+field = sys.argv[1]
+token = sys.argv[2].strip()
+padding = '=' * (-len(token) % 4)
+payload = json.loads(base64.urlsafe_b64decode(token + padding))
+value = payload.get(field)
+if not value:
+    raise SystemExit(1)
+print(value)
+PY
+}
+
+cloudflare_api_request() {
+  local method="$1"
+  local endpoint="$2"
+  local payload="${3:-}"
+
+  if [[ -z "${CLOUDFLARE_API_TOKEN:-}" ]]; then
+    echo "CLOUDFLARE_API_TOKEN is required for Cloudflare API automation" >&2
+    return 1
+  fi
+
+  local curl_args=(
+    -fsS
+    -X "$method"
+    -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
+    -H "Content-Type: application/json"
+  )
+
+  if [[ -n "$payload" ]]; then
+    curl_args+=(--data "$payload")
+  fi
+
+  curl "${curl_args[@]}" "${CLOUDFLARE_API_BASE}${endpoint}"
+}
+
+resolve_cloudflare_zone_id() {
+  if [[ -n "${CLOUDFLARE_ZONE_ID:-}" ]]; then
+    printf '%s\n' "$CLOUDFLARE_ZONE_ID"
+    return
+  fi
+
+  local zone_name="${CLOUDFLARE_ZONE_NAME:-$BASE_DOMAIN}"
+  cloudflare_api_request \
+    GET \
+    "/zones?name=$(printf '%s' "$zone_name" | jq -sRr @uri)&status=active" \
+    | jq -er '.result[0].id'
+}
+
+resolve_cloudflare_tunnel_id() {
+  if [[ -n "${CLOUDFLARE_TUNNEL_ID:-}" ]]; then
+    printf '%s\n' "$CLOUDFLARE_TUNNEL_ID"
+    return
+  fi
+
+  if decode_cloudflare_tunnel_token_field t >/dev/null 2>&1; then
+    decode_cloudflare_tunnel_token_field t
+    return
+  fi
+
+  if [[ -n "${CLOUDFLARE_ACCOUNT_ID:-}" && -n "${CLOUDFLARE_TUNNEL_NAME:-}" ]]; then
+    cloudflare_api_request \
+      GET \
+      "/accounts/${CLOUDFLARE_ACCOUNT_ID}/cfd_tunnel?name=$(printf '%s' "$CLOUDFLARE_TUNNEL_NAME" | jq -sRr @uri)" \
+      | jq -er '.result[0].id'
+    return
+  fi
+
+  echo "Set CLOUDFLARE_TUNNEL_TOKEN or CLOUDFLARE_TUNNEL_ID or CLOUDFLARE_ACCOUNT_ID+CLOUDFLARE_TUNNEL_NAME for automated tunnel setup" >&2
+  return 1
+}
+
+resolve_cloudflare_account_id() {
+  if [[ -n "${CLOUDFLARE_ACCOUNT_ID:-}" ]]; then
+    printf '%s\n' "$CLOUDFLARE_ACCOUNT_ID"
+    return
+  fi
+
+  if decode_cloudflare_tunnel_token_field a >/dev/null 2>&1; then
+    decode_cloudflare_tunnel_token_field a
+    return
+  fi
+
+  echo "Set CLOUDFLARE_ACCOUNT_ID or provide a CLOUDFLARE_TUNNEL_TOKEN that can be decoded for remote tunnel config sync" >&2
+  return 1
+}
+
+upsert_cloudflare_cname_record() {
+  local zone_id="$1"
+  local hostname="$2"
+  local target="$3"
+
+  local existing_response
+  existing_response="$({ cloudflare_api_request GET "/zones/${zone_id}/dns_records?name=$(printf '%s' "$hostname" | jq -sRr @uri)"; } )"
+
+  local record_id
+  record_id="$(printf '%s' "$existing_response" | jq -r '.result[0].id // empty')"
+
+  local payload
+  payload="$(jq -nc --arg type "CNAME" --arg name "$hostname" --arg content "$target" '{type:$type,name:$name,content:$content,proxied:true,ttl:1}')"
+
+  if [[ -n "$record_id" ]]; then
+    cloudflare_api_request PUT "/zones/${zone_id}/dns_records/${record_id}" "$payload" | jq -e '.success == true' >/dev/null
+    log "Updated Cloudflare DNS record ${hostname} -> ${target}"
+    return
+  fi
+
+  cloudflare_api_request POST "/zones/${zone_id}/dns_records" "$payload" | jq -e '.success == true' >/dev/null
+  log "Created Cloudflare DNS record ${hostname} -> ${target}"
+}
+
+sync_cloudflare_remote_tunnel_config() {
+  local account_id="$1"
+  local tunnel_id="$2"
+
+  local payload
+  payload="$(jq -nc \
+    --arg api_domain "$API_DOMAIN" \
+    --arg frontend_domain "$FRONTEND_DOMAIN" \
+    '{config:{ingress:[{service:"http://localhost:80",hostname:$api_domain,originRequest:{}},{service:"http://localhost:80",hostname:$frontend_domain,originRequest:{}},{service:"http://localhost:80",originRequest:{}}],"warp-routing":{enabled:false}}}')"
+
+  local response
+  if response="$(cloudflare_api_request PUT "/accounts/${account_id}/cfd_tunnel/${tunnel_id}/configurations" "$payload" 2>/dev/null)"; then
+    printf '%s' "$response" | jq -e '.success == true' >/dev/null
+    log "Synced remote Cloudflare tunnel ingress for ${tunnel_id}"
+    return
+  fi
+
+  log "Skipping remote Cloudflare tunnel ingress sync because CLOUDFLARE_API_TOKEN lacks tunnel-management access"
 }
 
 replace_env_line() {
@@ -57,7 +202,7 @@ replace_env_line() {
 install_base_packages() {
   log "Installing base packages"
   apt-get update
-  apt-get install -y ca-certificates curl gnupg lsb-release git openssl
+  apt-get install -y ca-certificates curl gnupg lsb-release git openssl jq
 }
 
 install_docker() {
@@ -208,6 +353,88 @@ sync_caddyfile() {
   install -m 0644 "$CLOUDFLARED_SOURCE" "$CLOUDFLARED_EXAMPLE_DEST"
 }
 
+sync_cloudflared_config() {
+  local tunnel_id="$1"
+  local rendered_config
+
+  rendered_config="$(mktemp)"
+  sed "s/REPLACE_WITH_TUNNEL_ID/${tunnel_id}/g" "$CLOUDFLARED_SOURCE" > "$rendered_config"
+  install -m 0644 "$rendered_config" "$CLOUDFLARED_CONFIG_DEST"
+  rm -f "$rendered_config"
+}
+
+configure_cloudflared_service() {
+  local cloudflared_bin="$1"
+
+  if [[ -z "${CLOUDFLARE_TUNNEL_TOKEN:-}" ]]; then
+    log "Skipping cloudflared service install because CLOUDFLARE_TUNNEL_TOKEN is not set"
+    return
+  fi
+
+  log "Configuring cloudflared systemd service"
+  printf '%s\n' "$CLOUDFLARE_TUNNEL_TOKEN" > "$CLOUDFLARED_TOKEN_FILE"
+  chmod 0600 "$CLOUDFLARED_TOKEN_FILE"
+
+  cat > /etc/systemd/system/cloudflared.service <<EOF
+[Unit]
+Description=Cloudflare Tunnel
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=${cloudflared_bin} --config ${CLOUDFLARED_CONFIG_DEST} tunnel --no-autoupdate run --token-file ${CLOUDFLARED_TOKEN_FILE}
+Restart=always
+RestartSec=5s
+User=root
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  systemctl daemon-reload
+  systemctl enable --now cloudflared
+}
+
+configure_cloudflare_tunnel() {
+  local tunnel_id=""
+
+  if tunnel_id="$(resolve_cloudflare_tunnel_id 2>/dev/null)"; then
+    log "Rendering cloudflared config for tunnel ${tunnel_id}"
+    sync_cloudflared_config "$tunnel_id"
+
+    local cloudflared_bin
+    cloudflared_bin="$(command -v cloudflared)"
+    configure_cloudflared_service "$cloudflared_bin"
+
+    if [[ -n "${CLOUDFLARE_API_TOKEN:-}" ]]; then
+      local account_id
+      local tunnel_target="${tunnel_id}.cfargotunnel.com"
+
+      local zone_id
+      if zone_id="$(resolve_cloudflare_zone_id 2>/dev/null)"; then
+        upsert_cloudflare_cname_record "$zone_id" "$FRONTEND_DOMAIN" "$tunnel_target"
+        upsert_cloudflare_cname_record "$zone_id" "*.${BASE_DOMAIN}" "$tunnel_target"
+        upsert_cloudflare_cname_record "$zone_id" "$API_DOMAIN" "$tunnel_target"
+      else
+        log "Skipping Cloudflare DNS automation because CLOUDFLARE_API_TOKEN lacks zone DNS access"
+      fi
+
+      if account_id="$(resolve_cloudflare_account_id 2>/dev/null)"; then
+        sync_cloudflare_remote_tunnel_config "$account_id" "$tunnel_id"
+      else
+        log "Skipping remote Cloudflare tunnel ingress sync because account id could not be resolved"
+      fi
+    else
+      log "Skipping Cloudflare DNS automation because CLOUDFLARE_API_TOKEN is not set"
+    fi
+
+    return
+  fi
+
+  log "Cloudflare tunnel automation is disabled; set CLOUDFLARE_TUNNEL_ID or CLOUDFLARE_ACCOUNT_ID+CLOUDFLARE_TUNNEL_NAME"
+}
+
 wait_for_postgres() {
   log "Waiting for PostgreSQL to become ready"
   local attempt=0
@@ -330,17 +557,27 @@ print_next_steps() {
   echo "Test school login: ${TEST_TENANT_ADMIN_EMAIL:-admin@test.local}"
   echo "Test school password: ${TEST_TENANT_ADMIN_PASSWORD:-MiraiTest_2026!}"
   echo
-  echo "Cloudflare Tunnel next steps:"
-  echo "  1. cloudflared tunnel login"
-  echo "  2. cloudflared tunnel create erp-saas"
-  echo "  3. sudo cp $CLOUDFLARED_EXAMPLE_DEST /etc/cloudflared/config.yml"
-  echo "  4. Edit /etc/cloudflared/config.yml and replace REPLACE_WITH_TUNNEL_ID in both places"
-  echo "  5. cloudflared tunnel route dns erp-saas ${FRONTEND_DOMAIN}"
-  echo "  6. cloudflared tunnel route dns erp-saas '*.${BASE_DOMAIN}'"
-  echo "  7. cloudflared tunnel route dns erp-saas ${API_DOMAIN}"
-  echo "  8. sudo cloudflared service install"
-  echo "  9. sudo systemctl enable --now cloudflared"
-  echo " 10. sudo systemctl status cloudflared"
+  if [[ -n "${CLOUDFLARE_TUNNEL_ID:-}" || ( -n "${CLOUDFLARE_ACCOUNT_ID:-}" && -n "${CLOUDFLARE_TUNNEL_NAME:-}" ) ]]; then
+    echo "Cloudflare automation: enabled"
+    echo "  - cloudflared config: ${CLOUDFLARED_CONFIG_DEST}"
+    if [[ -n "${CLOUDFLARE_TUNNEL_TOKEN:-}" ]]; then
+      echo "  - cloudflared systemd service: configured"
+    else
+      echo "  - set CLOUDFLARE_TUNNEL_TOKEN to auto-install the cloudflared service"
+    fi
+    if [[ -n "${CLOUDFLARE_API_TOKEN:-}" ]]; then
+      echo "  - Cloudflare DNS records upserted for ${FRONTEND_DOMAIN}, *.${BASE_DOMAIN}, ${API_DOMAIN}"
+    else
+      echo "  - set CLOUDFLARE_API_TOKEN plus CLOUDFLARE_ZONE_ID or CLOUDFLARE_ZONE_NAME to auto-create DNS records"
+    fi
+  else
+    echo "Cloudflare Tunnel next steps:"
+    echo "  1. Export CLOUDFLARE_TUNNEL_ID or CLOUDFLARE_ACCOUNT_ID+CLOUDFLARE_TUNNEL_NAME"
+    echo "  2. Export CLOUDFLARE_TUNNEL_TOKEN to auto-install the cloudflared service"
+    echo "  3. Export CLOUDFLARE_API_TOKEN plus CLOUDFLARE_ZONE_ID or CLOUDFLARE_ZONE_NAME to auto-create DNS records"
+    echo "  4. Re-run this script"
+    echo "     The script will render ${CLOUDFLARED_CONFIG_DEST} and upsert ${FRONTEND_DOMAIN}, *.${BASE_DOMAIN}, ${API_DOMAIN} automatically"
+  fi
   echo
   if [[ -n "$GENERATED_ADMIN_PASSWORD" ]]; then
     echo "Initial admin email: ${INITIAL_ADMIN_EMAIL}"
@@ -357,6 +594,7 @@ main() {
   ensure_repo
   configure_env_files
   sync_caddyfile
+  configure_cloudflare_tunnel
   deploy_stack
   print_next_steps
 }

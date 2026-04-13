@@ -213,10 +213,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await api.post("/api/auth/logout");
     } catch (error) {
       console.warn("[Auth] Logout request failed:", error);
-    } finally {
-      clearSession();
     }
-  }, [clearSession]);
+
+    if (isDemo) {
+      const restored = await initializeDemoSession();
+      if (!restored) {
+        clearSession();
+      }
+      return;
+    }
+
+    clearSession();
+  }, [clearSession, initializeDemoSession, isDemo]);
 
   /**
    * Проверка роли пользователя

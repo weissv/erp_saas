@@ -8,7 +8,7 @@ describe("LandingPage", () => {
 
     expect(
       screen.getByRole("heading", {
-        name: /Управляйте школой как современной цифровой организацией/i,
+        name: /Встаньте в очередь на запуск школы и получите единый контур ERP \+ LMS/i,
       })
     ).toBeInTheDocument();
     expect(
@@ -26,8 +26,9 @@ describe("LandingPage", () => {
       expect.stringMatching(/^http:\/\/test\..+\/auth\/login$/)
     );
     expect(screen.getByRole("button", { name: /Встать в очередь/i })).toBeInTheDocument();
-    expect(screen.getByText(/Тестовая школа для входа: test/i)).toBeInTheDocument();
-    expect(screen.getByText(/Личная песочница только по логину и паролю/i)).toBeInTheDocument();
+    expect(screen.getByText(/Рабочая школа для авторизованного входа: test/i)).toBeInTheDocument();
+    expect(screen.getByText(/Log in нужен только для школы test/i)).toBeInTheDocument();
+    expect(screen.getByText(/Demo без login:/i)).toBeInTheDocument();
   });
 
   it("sets document metadata for the marketing page", () => {

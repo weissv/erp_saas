@@ -5,11 +5,13 @@ import { Menu, LayoutDashboard } from "lucide-react";
 import LmsSideNav from "../components/LmsSideNav";
 import { Toaster } from "sonner";
 import { useAuth } from "../hooks/useAuth";
+import { useDemo } from "../contexts/DemoContext";
 import { useTenant } from "../contexts/TenantContext";
 import { Spinner } from "../components/ui/LoadingState";
 
 export default function LmsLayout() {
  const { user, isLoading} = useAuth();
+ const { isDemo } = useDemo();
  const { tenant} = useTenant();
 
   if (isLoading) {
@@ -27,15 +29,19 @@ export default function LmsLayout() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-bg-canvas px-6 text-center">
         <div className="max-w-md space-y-4">
-          <p className="text-xl font-semibold text-text-primary">Сессия потеряна</p>
+          <p className="text-xl font-semibold text-text-primary">
+            {isDemo ? "Демо LMS обновляется" : "Сессия потеряна"}
+          </p>
           <p className="text-[13px] text-text-tertiary">
-            Вы не авторизованы. Войдите для доступа к LMS.
+            {isDemo
+              ? "Логин для demo-LMS не нужен. Если доступ сбросился, откройте демонстрационную школу ещё раз."
+              : "Вы не авторизованы. Войдите для доступа к LMS."}
           </p>
           <Link
-            to="/auth/login"
+            to={isDemo ? "/school" : "/auth/login"}
             className="inline-flex items-center justify-center rounded-md bg-macos-blue px-5 py-2.5 text-[13px] font-medium text-white shadow-sm macos-transition hover:opacity-90"
           >
-            Войти
+            {isDemo ? "Продолжить демо" : "Войти"}
           </Link>
         </div>
       </div>

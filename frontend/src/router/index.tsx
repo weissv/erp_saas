@@ -1,5 +1,5 @@
 // src/router/index.tsx
-import { Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { Routes, Route, Navigate, Outlet, Link } from "react-router-dom";
 import AuthLayout from "../layouts/AuthLayout";
 import MainLayout from "../layouts/MainLayout";
 import LmsLayout from "../layouts/LmsLayout";
@@ -54,6 +54,7 @@ import ArticleView from "../pages/KnowledgeBase/ArticleView";
 
 // AI Settings (BYOK)
 import AiSettingsPage from "../pages/AiSettingsPage";
+import { useDemo } from "../contexts/DemoContext";
 
 function LoadingScreen() {
   return (
@@ -66,13 +67,38 @@ function LoadingScreen() {
   );
 }
 
+function DemoAccessScreen({ target }: { target: string }) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-bg-canvas px-6 text-center">
+      <div className="max-w-md rounded-[28px] border border-card bg-surface-primary p-8 shadow-subtle">
+        <p className="text-[18px] font-semibold tracking-[-0.02em] text-text-primary">
+          Демо продолжается без формы входа
+        </p>
+        <p className="mt-3 text-[14px] leading-6 text-text-tertiary">
+          Если сессия сбросилась, откройте рабочее демо ещё раз. Для demo-контура логин не нужен.
+        </p>
+        <Link
+          to={target}
+          className="mt-5 inline-flex items-center justify-center rounded-md bg-macos-blue px-5 py-2.5 text-[13px] font-medium text-white shadow-subtle macos-transition hover:bg-macos-blue-hover"
+        >
+          Продолжить демо
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 function PrivateRoute() {
+  const { isDemo } = useDemo();
   const { user, isLoading } = useAuth();
   if (isLoading) {
     return <LoadingScreen />;
   }
 
   if (!user) {
+    if (isDemo) {
+      return <DemoAccessScreen target="/dashboard" />;
+    }
     return <Navigate to="/auth/login" replace />;
   }
   return <Outlet />;
@@ -135,15 +161,21 @@ function TeacherRoute() {
 }
 
 export default function Router() {
+  const { isDemo } = useDemo();
+
   return (
     <Routes>
       {/* Публичный роут для прохождения контрольных (без авторизации) */}
       <Route path="/exam/:token" element={<ExamTakePage />} />
 
-      <Route path="/auth" element={<AuthLayout />}>
-        <Route index element={<Navigate to="login" replace />} />
-        <Route path="login" element={<LoginPage />} />
-      </Route>
+      {isDemo ? (
+        <Route path="/auth/*" element={<Navigate to="/dashboard" replace />} />
+      ) : (
+        <Route path="/auth" element={<AuthLayout />}>
+          <Route index element={<Navigate to="login" replace />} />
+          <Route path="login" element={<LoginPage />} />
+        </Route>
+      )}
 
       <Route element={<PrivateRoute />}>
         {/* ERP Routes - доступны всем ролям включая учителей */}

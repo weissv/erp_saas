@@ -1,8 +1,9 @@
-import { Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { Routes, Route, Navigate, Outlet, Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import LmsLayout from "../layouts/LmsLayout";
 import LoginPage from "../pages/LoginPage";
 import AuthLayout from "../layouts/AuthLayout";
+import { useDemo } from "../contexts/DemoContext";
 
 // LMS Pages - School (Primary)
 import LmsSchoolDashboard from "../pages/lms/LmsSchoolDashboard";
@@ -24,25 +25,56 @@ function LoadingScreen() {
   );
 }
 
+function DemoAccessScreen({ target }: { target: string }) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-bg-canvas px-6 text-center">
+      <div className="max-w-md rounded-[28px] border border-card bg-surface-primary p-8 shadow-subtle">
+        <p className="text-[18px] font-semibold tracking-[-0.02em] text-text-primary">
+          Демо LMS работает без формы входа
+        </p>
+        <p className="mt-3 text-[14px] leading-6 text-text-tertiary">
+          Если demo-сессия сбросилась, откройте LMS ещё раз. Логин для этого контура не нужен.
+        </p>
+        <Link
+          to={target}
+          className="mt-5 inline-flex items-center justify-center rounded-md bg-macos-blue px-5 py-2.5 text-[13px] font-medium text-white shadow-subtle macos-transition hover:bg-macos-blue-hover"
+        >
+          Продолжить демо
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 function PrivateRoute() {
+  const { isDemo } = useDemo();
   const { user, isLoading } = useAuth();
   if (isLoading) {
     return <LoadingScreen />;
   }
 
   if (!user) {
+    if (isDemo) {
+      return <DemoAccessScreen target="/school" />;
+    }
     return <Navigate to="/auth/login" replace />;
   }
   return <Outlet />;
 }
 
 export default function LmsRouter() {
+  const { isDemo } = useDemo();
+
   return (
     <Routes>
-      <Route path="/auth" element={<AuthLayout />}>
-        <Route index element={<Navigate to="login" replace />} />
-        <Route path="login" element={<LoginPage />} />
-      </Route>
+      {isDemo ? (
+        <Route path="/auth/*" element={<Navigate to="/school" replace />} />
+      ) : (
+        <Route path="/auth" element={<AuthLayout />}>
+          <Route index element={<Navigate to="login" replace />} />
+          <Route path="login" element={<LoginPage />} />
+        </Route>
+      )}
 
       <Route element={<PrivateRoute />}>
         <Route path="/" element={<LmsLayout />}>
@@ -66,7 +98,7 @@ export default function LmsRouter() {
         </Route>
       </Route>
 
-      <Route path="*" element={<Navigate to="/lms/school" replace />} />
+      <Route path="*" element={<Navigate to="/school" replace />} />
     </Routes>
   );
 }

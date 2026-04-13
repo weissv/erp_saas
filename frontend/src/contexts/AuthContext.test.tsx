@@ -2,9 +2,9 @@
 // Unit тесты для AuthContext
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, act } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import { AuthProvider, AuthContext } from './AuthContext';
+import { DemoProvider } from './DemoContext';
 import { useContext } from 'react';
 
 // Мок для api модуля
@@ -44,7 +44,7 @@ const TestConsumer = () => {
       <div data-testid="token">{auth.token || 'null'}</div>
       <button onClick={() => auth.login('test@example.com', 'password')}>Login</button>
       <button onClick={() => auth.logout()}>Logout</button>
-      <div data-testid="hasRole-director">{String(auth.hasRole('director'))}</div>
+      <div data-testid="hasRole-DIRECTOR">{String(auth.hasRole('DIRECTOR'))}</div>
       <div data-testid="hasPermission-create">{String(auth.hasPermission('users', 'create'))}</div>
     </div>
   );
@@ -56,7 +56,7 @@ describe('AuthContext', () => {
     login: 'test@example.com',
     firstName: 'Test',
     lastName: 'User',
-    role: 'director',
+    role: 'DIRECTOR',
   };
 
   const mockToken = 'mock-jwt-token';
@@ -136,8 +136,6 @@ describe('AuthContext', () => {
 
   describe('Login', () => {
     it('выполняет вход и сохраняет сессию', async () => {
-      const user = userEvent.setup();
-      
       render(
         <AuthProvider>
           <TestConsumer />
@@ -148,7 +146,7 @@ describe('AuthContext', () => {
         expect(screen.getByTestId('loading')).toHaveTextContent('false');
       });
 
-      await user.click(screen.getByRole('button', { name: /login/i }));
+      fireEvent.click(screen.getByRole('button', { name: /login/i }));
 
       await waitFor(() => {
         expect(screen.getByTestId('authenticated')).toHaveTextContent('true');
@@ -161,8 +159,6 @@ describe('AuthContext', () => {
     });
 
     it('сохраняет токен в localStorage', async () => {
-      const user = userEvent.setup();
-      
       render(
         <AuthProvider>
           <TestConsumer />
@@ -173,7 +169,7 @@ describe('AuthContext', () => {
         expect(screen.getByTestId('loading')).toHaveTextContent('false');
       });
 
-      await user.click(screen.getByRole('button', { name: /login/i }));
+      fireEvent.click(screen.getByRole('button', { name: /login/i }));
 
       await waitFor(() => {
         expect(localStorage.getItem('auth_token')).toBe(mockToken);
@@ -181,8 +177,6 @@ describe('AuthContext', () => {
     });
 
     it('устанавливает токен в API клиенте', async () => {
-      const user = userEvent.setup();
-      
       render(
         <AuthProvider>
           <TestConsumer />
@@ -193,7 +187,7 @@ describe('AuthContext', () => {
         expect(screen.getByTestId('loading')).toHaveTextContent('false');
       });
 
-      await user.click(screen.getByRole('button', { name: /login/i }));
+      fireEvent.click(screen.getByRole('button', { name: /login/i }));
 
       await waitFor(() => {
         expect(mockSetToken).toHaveBeenCalledWith(mockToken);
@@ -209,8 +203,6 @@ describe('AuthContext', () => {
       
       mockGet.mockResolvedValue({ user: mockUser });
       mockPost.mockResolvedValue({});
-
-      const user = userEvent.setup();
       
       render(
         <AuthProvider>
@@ -222,7 +214,7 @@ describe('AuthContext', () => {
         expect(screen.getByTestId('authenticated')).toHaveTextContent('true');
       });
 
-      await user.click(screen.getByRole('button', { name: /logout/i }));
+      fireEvent.click(screen.getByRole('button', { name: /logout/i }));
 
       await waitFor(() => {
         expect(screen.getByTestId('authenticated')).toHaveTextContent('false');
@@ -239,8 +231,6 @@ describe('AuthContext', () => {
       
       mockGet.mockResolvedValue({ user: mockUser });
       mockPost.mockResolvedValue({});
-
-      const user = userEvent.setup();
       
       render(
         <AuthProvider>
@@ -252,7 +242,7 @@ describe('AuthContext', () => {
         expect(screen.getByTestId('authenticated')).toHaveTextContent('true');
       });
 
-      await user.click(screen.getByRole('button', { name: /logout/i }));
+      fireEvent.click(screen.getByRole('button', { name: /logout/i }));
 
       await waitFor(() => {
         expect(mockPost).toHaveBeenCalledWith('/api/auth/logout');
@@ -266,8 +256,6 @@ describe('AuthContext', () => {
       
       mockGet.mockResolvedValue({ user: mockUser });
       mockPost.mockRejectedValue(new Error('Network error'));
-
-      const user = userEvent.setup();
       
       render(
         <AuthProvider>
@@ -279,10 +267,52 @@ describe('AuthContext', () => {
         expect(screen.getByTestId('authenticated')).toHaveTextContent('true');
       });
 
-      await user.click(screen.getByRole('button', { name: /logout/i }));
+      fireEvent.click(screen.getByRole('button', { name: /logout/i }));
 
       await waitFor(() => {
         expect(screen.getByTestId('authenticated')).toHaveTextContent('false');
+      });
+    });
+
+    it('перезапускает demo-сессию после выхода в demo-контуре', async () => {
+      const demoToken = 'demo-session-token';
+
+      localStorage.setItem('auth_token', mockToken);
+      localStorage.setItem('auth_user', JSON.stringify(mockUser));
+      localStorage.setItem('auth_expiry', String(Date.now() + 1000 * 60 * 60));
+
+      mockGet.mockResolvedValue({ user: mockUser });
+      mockPost.mockImplementation((url: string) => {
+        if (url === '/api/auth/logout') {
+          return Promise.resolve({});
+        }
+
+        if (url === '/api/auth/demo-access') {
+          return Promise.resolve({ user: mockUser, token: demoToken });
+        }
+
+        return Promise.resolve({ user: mockUser, token: mockToken });
+      });
+
+      render(
+        <DemoProvider isDemo>
+          <AuthProvider>
+            <TestConsumer />
+          </AuthProvider>
+        </DemoProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId('authenticated')).toHaveTextContent('true');
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: /logout/i }));
+
+      await waitFor(() => {
+        expect(mockPost).toHaveBeenCalledWith('/api/auth/logout');
+        expect(mockPost).toHaveBeenCalledWith('/api/auth/demo-access');
+        expect(screen.getByTestId('authenticated')).toHaveTextContent('true');
+        expect(screen.getByTestId('token')).toHaveTextContent(demoToken);
       });
     });
   });
@@ -302,7 +332,7 @@ describe('AuthContext', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId('hasRole-director')).toHaveTextContent('true');
+        expect(screen.getByTestId('hasRole-DIRECTOR')).toHaveTextContent('true');
       });
     });
 
@@ -317,7 +347,7 @@ describe('AuthContext', () => {
         expect(screen.getByTestId('loading')).toHaveTextContent('false');
       });
 
-      expect(screen.getByTestId('hasRole-director')).toHaveTextContent('false');
+      expect(screen.getByTestId('hasRole-DIRECTOR')).toHaveTextContent('false');
     });
   });
 
