@@ -294,7 +294,7 @@ deploy_stack() {
   local test_tenant_name="${TEST_TENANT_NAME:-Test School}"
   local test_tenant_db="${TEST_TENANT_DB:-erp_test}"
   local test_admin_email="${TEST_TENANT_ADMIN_EMAIL:-admin@test.local}"
-  local test_admin_password="${TEST_TENANT_ADMIN_PASSWORD:-change_me_123}"
+  local test_admin_password="${TEST_TENANT_ADMIN_PASSWORD:-MiraiTest_2026!}"
 
   provision_seeded_tenant \
     "$test_tenant_subdomain" \
@@ -315,7 +315,7 @@ print_next_steps() {
   echo "Optional dedicated API URL: https://${API_DOMAIN}"
   echo "Test school URL: https://${TEST_TENANT_SUBDOMAIN:-test}.${FRONTEND_DOMAIN}"
   echo "Test school login: ${TEST_TENANT_ADMIN_EMAIL:-admin@test.local}"
-  echo "Test school password: ${TEST_TENANT_ADMIN_PASSWORD:-change_me_123}"
+  echo "Test school password: ${TEST_TENANT_ADMIN_PASSWORD:-MiraiTest_2026!}"
   echo
   echo "Cloudflare Tunnel next steps:"
   echo "  1. cloudflared tunnel login"

@@ -75,7 +75,7 @@ async function main() {
   console.log("🚀 Seeding generic school data …");
 
   // 1. Admin ----------------------------------------------------------------
-  const adminPassword = await bcrypt.hash("change_me_123", 10);
+  const adminPassword = await bcrypt.hash("MiraiTest_2026!", 10);
 
   let adminEmployee = await prisma.employee.findFirst({ where: { id: 999 } });
   if (!adminEmployee) {

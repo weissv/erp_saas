@@ -10,8 +10,13 @@ import {
   OPERATIONS,
   TRUST_SIGNALS,
 } from "../features/marketing/content";
-import { getDemoUrl, getLoginUrl } from "../features/marketing/url";
+import { getDemoUrl, getLoginUrl, getTenantUrl } from "../features/marketing/url";
 import { api } from "../lib/api";
+
+const MIN_WAITLIST_MESSAGE_LENGTH = 10;
+const WAITLIST_FEEDBACK_TYPE = "WAITLIST";
+const TEST_SCHOOL_LOGIN = "admin@test.local";
+const TEST_SCHOOL_PASSWORD = "MiraiTest_2026!";
 
 function SectionHeading({
   badge,
@@ -36,9 +41,9 @@ function SectionHeading({
 }
 
 export default function LandingPage() {
-const demoUrl = getDemoUrl();
+  const demoUrl = getDemoUrl();
   const loginUrl = getLoginUrl();
-  const WAITLIST_FEEDBACK_TYPE = "WAITLIST";
+  const testSchoolUrl = getTenantUrl("test");
   const [waitlistForm, setWaitlistForm] = useState({
     schoolName: "",
     contactInfo: "",
@@ -90,7 +95,7 @@ const demoUrl = getDemoUrl();
     const contactInfo = waitlistForm.contactInfo.trim();
     const message = waitlistForm.message.trim();
 
-    if (!schoolName || !contactInfo || message.length < 10) {
+    if (!schoolName || !contactInfo || message.length < MIN_WAITLIST_MESSAGE_LENGTH) {
       setWaitlistState({
         kind: "error",
         message: "Заполните школу, контакт и коротко опишите запрос.",
@@ -226,9 +231,9 @@ const demoUrl = getDemoUrl();
             <div className="mt-6 rounded-[1.5rem] border border-border bg-card/80 p-5 shadow-sm">
               <p className="text-sm font-semibold text-foreground">Тестовая школа для входа: test</p>
               <div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center">
-                <span className="rounded-full bg-background px-3 py-1.5">URL: test.mirai-edu.space</span>
-                <span className="rounded-full bg-background px-3 py-1.5">Логин: admin@test.local</span>
-                <span className="rounded-full bg-background px-3 py-1.5">Пароль: change_me_123</span>
+                <span className="rounded-full bg-background px-3 py-1.5">URL: {testSchoolUrl}</span>
+                <span className="rounded-full bg-background px-3 py-1.5">Логин: {TEST_SCHOOL_LOGIN}</span>
+                <span className="rounded-full bg-background px-3 py-1.5">Пароль: {TEST_SCHOOL_PASSWORD}</span>
               </div>
             </div>
           </div>
