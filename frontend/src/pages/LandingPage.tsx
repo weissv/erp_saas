@@ -111,7 +111,7 @@ export default function LandingPage() {
       <main>
         <section className="mx-auto grid max-w-7xl gap-12 px-6 py-16 sm:py-20 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] lg:items-center lg:py-24">
           <div>
-            <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+            <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
               Mirai Edu · SaaS для школ, академий и учебных центров
             </span>
             <h1 className="mt-6 max-w-3xl text-4xl font-semibold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
@@ -187,7 +187,7 @@ export default function LandingPage() {
           <SectionHeading
             badge="Продуктовые направления"
             title="Закрываем ключевые контуры работы образовательного бизнеса"
-            description="Страница построена как полноценная витрина продукта: каждая секция показывает, как Mirai Edu помогает школе управлять ежедневными процессами и масштабировать операционную модель."
+            description="Mirai Edu помогает управлять филиалами, финансами, учебным процессом и сервисными задачами в одном цифровом контуре без разрозненных инструментов."
           />
 
           <div className="mt-12 grid gap-6 lg:grid-cols-2">
@@ -218,7 +218,7 @@ export default function LandingPage() {
             <SectionHeading
               badge="Сквозные сценарии"
               title="Не только учеба — вся операционная экосистема школы работает синхронно"
-              description="В обновленной визитке акцент смещен с простого списка функций на реальные сценарии: коммуникации, документы, события и сервисные процессы больше не выпадают из общей картины управления."
+              description="Коммуникации, документы, события и сервисные процессы связаны между собой, поэтому школа управляет операционными задачами без потерь контекста."
             />
 
             <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
@@ -247,7 +247,7 @@ export default function LandingPage() {
           <SectionHeading
             badge="Кому подходит"
             title="Роль-ориентированный опыт для всех участников процесса"
-            description="Новая структура визитки сразу показывает ценность продукта по ролям — от собственника до семьи ученика. Это делает позиционирование понятнее и сильнее для входящего маркетинга."
+            description="Каждая роль видит свой сценарий работы: руководство — показатели и контроль, команда — процессы и расписание, семьи — прозрачный доступ к важной информации."
           />
 
           <div className="mt-12 grid gap-6 lg:grid-cols-3">
@@ -277,7 +277,7 @@ export default function LandingPage() {
           <SectionHeading
             badge="Запуск и рост"
             title="Как проходит запуск Mirai Edu"
-            description="Вместо абстрактного CTA страница теперь ведет пользователя по понятному пути внедрения: сначала аудит, затем запуск базовых модулей и после этого масштабирование с автоматизацией."
+            description="Запуск строится поэтапно: сначала анализируем процессы, затем включаем базовые модули и после этого расширяем платформу под рост школы."
           />
 
           <div className="mt-12 grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)]">
@@ -305,13 +305,13 @@ export default function LandingPage() {
             </div>
 
             <aside className="rounded-[2rem] border border-border bg-card p-7 shadow-sm">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Почему эта витрина сильнее</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Что получает школа</p>
               <h3 className="mt-3 text-2xl font-semibold tracking-tight text-foreground">
-                Визитка стала ближе к продуктовому лендингу, а не к краткой заглушке.
+                Платформа даёт управляемость сегодня и запас для роста завтра.
               </h3>
               <p className="mt-4 text-sm leading-6 text-muted-foreground">
-                Обновлённая структура усиливает позиционирование Mirai Edu, показывает ценность по ролям,
-                добавляет сценарии внедрения и делает конверсионные действия заметнее на каждом этапе.
+                Mirai Edu помогает быстрее запускать процессы, удерживать качество сервиса и выстраивать
+                прозрачную цифровую среду для администрации, педагогов, родителей и студентов.
               </p>
 
               <div className="mt-6 grid gap-4">
