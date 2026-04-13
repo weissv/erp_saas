@@ -1,0 +1,13 @@
+[Unit]
+Description=ERP SaaS application stack
+After=network-online.target docker.service caddy.service
+Wants=network-online.target docker.service caddy.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/erp-saas-stack-start.sh
+
+[Install]
+WantedBy=multi-user.target
