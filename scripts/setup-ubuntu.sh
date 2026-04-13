@@ -177,7 +177,7 @@ configure_env_files() {
   replace_env_line "$BACKEND_ENV_FILE" "MASTER_DATABASE_URL" "postgresql://${db_user}:${db_password}@postgres:5432/${master_db_name}?schema=public"
   replace_env_line "$BACKEND_ENV_FILE" "REDIS_URL" "redis://redis:6379"
   replace_env_line "$BACKEND_ENV_FILE" "BASE_DOMAIN" "$BASE_DOMAIN"
-  replace_env_line "$BACKEND_ENV_FILE" "CORS_ORIGINS" "https://${FRONTEND_DOMAIN}"
+  replace_env_line "$BACKEND_ENV_FILE" "CORS_ORIGINS" "https://${FRONTEND_DOMAIN},http://${FRONTEND_DOMAIN}"
   replace_env_line "$BACKEND_ENV_FILE" "FRONTEND_URL" "https://${FRONTEND_DOMAIN}"
   replace_env_line "$BACKEND_ENV_FILE" "PUBLIC_EXAM_BASE_URL" "https://${FRONTEND_DOMAIN}/exam"
   replace_env_line "$BACKEND_ENV_FILE" "BILLING_PAGE_URL" "https://${FRONTEND_DOMAIN}/billing"
