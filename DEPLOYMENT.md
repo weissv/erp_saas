@@ -98,7 +98,7 @@ Check Caddy routing before Cloudflare DNS propagates:
 
 ```bash
 curl -H 'Host: mirai-edu.space' http://127.0.0.1/
-curl -H 'Host: api.mirai-edu.space' http://127.0.0.1/api/health
+curl -H 'Host: mirai-edu.space' http://127.0.0.1/api/health
 curl http://127.0.0.1:3000/health
 curl http://127.0.0.1:4000/api/health
 ```
@@ -139,7 +139,7 @@ docker compose logs -f redis
 
 ## 9. DNS and routing model
 
-- `mirai-edu.space` -> Cloudflare Tunnel -> Caddy -> `127.0.0.1:3000` -> frontend container
-- `api.mirai-edu.space` -> Cloudflare Tunnel -> Caddy -> `127.0.0.1:4000` -> backend container
+- `mirai-edu.space` -> Cloudflare Tunnel -> Caddy -> frontend for `/`, backend for `/api` and `/ws`
+- `api.mirai-edu.space` -> optional dedicated API hostname -> Cloudflare Tunnel -> Caddy -> `127.0.0.1:4000`
 
-The API route injects `X-Tenant-Subdomain: mirai`, so the backend can resolve the tenant correctly even though the API is hosted on a separate subdomain.
+The root-domain API route injects `X-Tenant-Subdomain: mirai`, so the backend can resolve the tenant correctly without needing a separate API DNS record. If you later create `api.mirai-edu.space`, the dedicated API site in Caddy can serve the same backend separately.
