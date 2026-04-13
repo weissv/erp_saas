@@ -51,7 +51,7 @@ It performs these actions in order:
 8. Starts PostgreSQL and Redis.
 9. Creates `erp_master` if it does not exist.
 10. Runs `npm run prisma:master:push` for the control-plane schema.
-11. Runs `npm run prisma:migrate:deploy` for the tenant schema.
+11. Runs `npm run prisma:tenant:deploy` for the tenant schema, falling back to `prisma db push` when the repository has no Prisma migration folders.
 12. Runs `npm run bootstrap:mirai` to create or update the `mirai` tenant and the first admin user.
 13. Starts the backend and frontend containers.
 

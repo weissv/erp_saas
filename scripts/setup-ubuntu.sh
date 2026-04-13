@@ -248,8 +248,8 @@ deploy_stack() {
   log "Applying master schema"
   run_compose run --rm backend npm run prisma:master:push
 
-  log "Applying tenant migrations"
-  run_compose run --rm backend npm run prisma:migrate:deploy
+  log "Applying tenant schema"
+  run_compose run --rm backend npm run prisma:tenant:deploy
 
   log "Bootstrapping initial tenant and admin"
   run_compose run --rm backend npm run bootstrap:mirai

@@ -12,6 +12,7 @@
     "build": "tsc",
     "prisma:generate": "prisma generate && prisma generate --schema=prisma/master/schema.prisma",
     "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:tenant:deploy": "sh -c 'if find prisma/migrations -mindepth 1 -maxdepth 1 -type d | grep -q .; then prisma migrate deploy; else prisma db push; fi'",
     "prisma:master:push": "prisma db push --schema=prisma/master/schema.prisma",
     "bootstrap:mirai": "npm run prisma:generate && node --import tsx src/scripts/bootstrap-mirai-tenant.ts",
     "bootstrap:mirai:ts": "tsx src/scripts/bootstrap-mirai-tenant.ts",
