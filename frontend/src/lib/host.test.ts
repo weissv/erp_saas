@@ -1,20 +1,19 @@
 // src/lib/host.test.ts
-import { describe, it, expect, vi, beforeEach } from "vitest";
-
-// We need to mock import.meta.env before importing the module
-// The module reads VITE_MARKETING_HOSTNAME at call-time, so we can control it
-vi.stubGlobal("import", { meta: { env: {} } });
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 describe("resolveHost", () => {
   let resolveHost: typeof import("./host").resolveHost;
 
   beforeEach(async () => {
     vi.resetModules();
-    // Clear env override
-    vi.stubEnv("VITE_MARKETING_HOSTNAME", "");
-    // Re-import to get a fresh module
+    // Re-import to get a fresh module each time
     const mod = await import("./host");
     resolveHost = mod.resolveHost;
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
   });
 
   it("identifies marketing apex hostname", () => {
@@ -35,9 +34,10 @@ describe("resolveHost", () => {
     expect(info.subdomain).toBe("demo");
   });
 
-  it("identifies tenant subdomain", () => {
+  it("identifies tenant subdomain (lowercased)", () => {
     const info = resolveHost("schoolA.mirai-edu.space");
     expect(info.kind).toBe("tenant");
+    // Subdomain is extracted from the lowercased hostname
     expect(info.subdomain).toBe("schoola");
   });
 
