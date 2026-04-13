@@ -12,6 +12,8 @@ import {
 } from "../features/marketing/content";
 import { getDemoUrl, getLoginUrl, getTenantUrl } from "../features/marketing/url";
 import { api } from "../lib/api";
+import { LoginWorkspaceModal } from "../components/modals/LoginWorkspaceModal";
+
 
 const MIN_WAITLIST_MESSAGE_LENGTH = 10;
 const WAITLIST_FEEDBACK_TYPE = "WAITLIST";
@@ -48,6 +50,7 @@ export default function LandingPage() {
   const demoUrl = getDemoUrl();
   const loginUrl = getLoginUrl();
   const testSchoolUrl = getTenantUrl("test");
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [waitlistForm, setWaitlistForm] = useState({
     schoolName: "",
     contactInfo: "",
@@ -169,7 +172,7 @@ export default function LandingPage() {
               Демо
             </a>
             <a
-              href={loginUrl}
+              onClick={(e) => { e.preventDefault(); setIsLoginModalOpen(true); }}
               className={`${secondaryActionClass} px-4 py-2`}
             >
               <LogIn className="h-4 w-4" />
@@ -215,7 +218,7 @@ export default function LandingPage() {
                 Открыть демо
               </a>
               <a
-                href={loginUrl}
+                onClick={(e) => { e.preventDefault(); setIsLoginModalOpen(true); }}
                 className={secondaryActionClass}
               >
                 <LogIn className="h-4 w-4" />
@@ -237,15 +240,6 @@ export default function LandingPage() {
                   <p className="mt-2 text-sm leading-6 text-text-tertiary">{item.description}</p>
                 </div>
               ))}
-            </div>
-
-            <div className="glass-panel mt-6 p-5">
-              <p className="text-sm font-semibold text-text-primary">Рабочая школа для авторизованного входа: test</p>
-              <div className="mt-3 flex flex-col gap-2 text-sm text-text-tertiary sm:flex-row sm:flex-wrap sm:items-center">
-                <span className="mezon-chip">URL: {testSchoolUrl}</span>
-                <span className="mezon-chip">Log in нужен только для школы test</span>
-                <span className="mezon-chip mezon-chip--teal">Demo без login: {demoUrl}</span>
-              </div>
             </div>
           </div>
 
@@ -444,7 +438,7 @@ export default function LandingPage() {
                     <ArrowRight className="h-4 w-4" />
                   </a>
                   <a
-                    href={loginUrl}
+                    onClick={(e) => { e.preventDefault(); setIsLoginModalOpen(true); }}
                     className={secondaryActionClass}
                   >
                     <LogIn className="h-4 w-4" />
@@ -545,7 +539,7 @@ export default function LandingPage() {
                   Демо
                 </a>
                 <a
-                  href={loginUrl}
+                  onClick={(e) => { e.preventDefault(); setIsLoginModalOpen(true); }}
                   className={primaryActionClass}
                 >
                   Log in
@@ -568,6 +562,8 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      <LoginWorkspaceModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
     </div>
   );
 }

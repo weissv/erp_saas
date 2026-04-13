@@ -64,6 +64,7 @@ export default function MainLayout() {
           </p>
           <Link
             to={isDemo ? "/dashboard" : "/auth/login"}
+            reloadDocument={isDemo}
             className="inline-flex items-center justify-center rounded-md bg-macos-blue px-5 py-2.5 text-[13px] font-medium text-white shadow-subtle macos-transition hover:bg-macos-blue-hover"
           >
             {isDemo ? "Продолжить демо" : "Перейти к входу"}

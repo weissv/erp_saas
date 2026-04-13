@@ -39,6 +39,7 @@ export default function LmsLayout() {
           </p>
           <Link
             to={isDemo ? "/school" : "/auth/login"}
+            reloadDocument={isDemo}
             className="inline-flex items-center justify-center rounded-md bg-macos-blue px-5 py-2.5 text-[13px] font-medium text-white shadow-sm macos-transition hover:opacity-90"
           >
             {isDemo ? "Продолжить демо" : "Войти"}
