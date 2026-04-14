@@ -10,7 +10,7 @@ import {
   OPERATIONS,
   TRUST_SIGNALS,
 } from "../features/marketing/content";
-import { getDemoUrl, getLoginUrl, getTenantUrl } from "../features/marketing/url";
+import { getDemoUrl } from "../features/marketing/url";
 import { api } from "../lib/api";
 import { LoginWorkspaceModal } from "../components/modals/LoginWorkspaceModal";
 
@@ -48,8 +48,6 @@ function SectionHeading({
 
 export default function LandingPage() {
   const demoUrl = getDemoUrl();
-  const loginUrl = getLoginUrl();
-  const testSchoolUrl = getTenantUrl("test");
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [waitlistForm, setWaitlistForm] = useState({
     schoolName: "",
@@ -140,6 +138,10 @@ export default function LandingPage() {
     }
   };
 
+  const openLoginModal = () => {
+    setIsLoginModalOpen(true);
+  };
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-bg-canvas text-text-primary">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(0,122,255,0.14),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.96),rgba(244,247,255,0.92)_40%,rgba(240,243,250,0.92))]" />
@@ -171,13 +173,15 @@ export default function LandingPage() {
             >
               Демо
             </a>
-            <a
-              onClick={(e) => { e.preventDefault(); setIsLoginModalOpen(true); }}
+            <button
+              type="button"
+              onClick={openLoginModal}
+              aria-haspopup="dialog"
               className={`${secondaryActionClass} px-4 py-2`}
             >
               <LogIn className="h-4 w-4" />
               Log in
-            </a>
+            </button>
             <a
               href="#waitlist"
               className="inline-flex items-center justify-center rounded-full bg-macos-blue px-4 py-2 text-sm font-medium text-white shadow-subtle transition hover:bg-macos-blue-hover"
@@ -217,13 +221,15 @@ export default function LandingPage() {
                 <PlayCircle className="h-4 w-4" />
                 Открыть демо
               </a>
-              <a
-                onClick={(e) => { e.preventDefault(); setIsLoginModalOpen(true); }}
+              <button
+                type="button"
+                onClick={openLoginModal}
+                aria-haspopup="dialog"
                 className={secondaryActionClass}
               >
                 <LogIn className="h-4 w-4" />
                 Log in
-              </a>
+              </button>
               <a
                 href="#implementation"
                 className={tertiaryActionClass}
@@ -437,13 +443,15 @@ export default function LandingPage() {
                     Открыть демо
                     <ArrowRight className="h-4 w-4" />
                   </a>
-                  <a
-                    onClick={(e) => { e.preventDefault(); setIsLoginModalOpen(true); }}
+                  <button
+                    type="button"
+                    onClick={openLoginModal}
+                    aria-haspopup="dialog"
                     className={secondaryActionClass}
                   >
                     <LogIn className="h-4 w-4" />
                     Log in
-                  </a>
+                  </button>
                 </div>
               </div>
 
@@ -538,12 +546,14 @@ export default function LandingPage() {
                 >
                   Демо
                 </a>
-                <a
-                  onClick={(e) => { e.preventDefault(); setIsLoginModalOpen(true); }}
+                <button
+                  type="button"
+                  onClick={openLoginModal}
+                  aria-haspopup="dialog"
                   className={primaryActionClass}
                 >
                   Log in
-                </a>
+                </button>
               </div>
             </div>
           </div>

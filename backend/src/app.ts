@@ -8,6 +8,7 @@ import { tenantResolver } from "./middleware/tenantResolver";
 import { errorHandler } from "./middleware/errorHandler";
 import { config } from "./config";
 import { logger } from "./utils/logger";
+import { isAllowedOrigin } from "./utils/origin";
 import stripeWebhookRoutes from "./modules/saas/routes/stripe-webhook.routes";
 
 // Импорты роутов
@@ -53,15 +54,12 @@ import openaiIntegrationRoutes from "./routes/openai-integration.routes";
 
 const app = express();
 
-const allowedOrigins = new Set(config.corsOrigins);
-const allowPattern = [/\.onrender\.com$/, /\.trycloudflare\.com$/, /\.loca\.lt$/];
-
 const corsOptions: cors.CorsOptions = {
   origin(origin, callback) {
-    if (!origin) {
-      return callback(null, true);
-    }
-    if (allowedOrigins.has(origin) || allowPattern.some((regex) => regex.test(origin))) {
+    if (isAllowedOrigin(origin ?? undefined, {
+      allowedOrigins: config.corsOrigins,
+      baseDomain: config.baseDomain,
+    })) {
       return callback(null, true);
     }
     logger.warn(`CORS blocked origin: ${origin}`);

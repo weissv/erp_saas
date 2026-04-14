@@ -1,5 +1,5 @@
 // src/router/index.tsx
-import { Routes, Route, Navigate, Outlet, Link } from "react-router-dom";
+import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import AuthLayout from "../layouts/AuthLayout";
 import MainLayout from "../layouts/MainLayout";
 import LmsLayout from "../layouts/LmsLayout";
@@ -56,23 +56,15 @@ import ArticleView from "../pages/KnowledgeBase/ArticleView";
 import AiSettingsPage from "../pages/AiSettingsPage";
 import { useDemo } from "../contexts/DemoContext";
 
-function LoadingScreen() {
+function LoadingScreen({ message = "Загрузка..." }: { message?: string }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
       <div className="flex flex-col items-center gap-3">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
-        <span className="text-sm text-muted-foreground">Загрузка...</span>
+        <span className="text-sm text-muted-foreground">{message}</span>
       </div>
     </div>
   );
-}
-
-function DemoAccessScreen({ target }: { target: string }) {
-  // Return early if no user - we just redirect to the main marketing site
-  if (typeof window !== "undefined") {
-    window.location.href = "https://mirai-edu.space";
-  }
-  return null;
 }
 
 function PrivateRoute() {
@@ -84,7 +76,7 @@ function PrivateRoute() {
 
   if (!user) {
     if (isDemo) {
-      return <DemoAccessScreen target="/dashboard" />;
+      return <LoadingScreen message="Открываем демо..." />;
     }
     return <Navigate to="/auth/login" replace />;
   }

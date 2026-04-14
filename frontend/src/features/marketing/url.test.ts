@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getDemoUrl, getLoginUrl, getTenantUrl } from "./url";
+import { getDemoUrl, getLoginUrl, getTenantUrl, getWorkspaceLoginUrl } from "./url";
 
 describe("getDemoUrl", () => {
   it("builds the demo host from the marketing domain", () => {
@@ -41,5 +41,34 @@ describe("getLoginUrl", () => {
         hostname: "mirai-edu.space",
       })
     ).toBe("https://test.mirai-edu.space/auth/login");
+  });
+});
+
+describe("getWorkspaceLoginUrl", () => {
+  it("builds a workspace login URL from a bare subdomain", () => {
+    expect(
+      getWorkspaceLoginUrl("school-a", {
+        protocol: "https:",
+        hostname: "mirai-edu.space",
+      })
+    ).toBe("https://school-a.mirai-edu.space/auth/login");
+  });
+
+  it("accepts a full tenant hostname", () => {
+    expect(
+      getWorkspaceLoginUrl("school-a.mirai-edu.space", {
+        protocol: "https:",
+        hostname: "www.mirai-edu.space",
+      })
+    ).toBe("https://school-a.mirai-edu.space/auth/login");
+  });
+
+  it("accepts a pasted full URL", () => {
+    expect(
+      getWorkspaceLoginUrl("https://school-a.mirai-edu.space/dashboard", {
+        protocol: "https:",
+        hostname: "mirai-edu.space",
+      })
+    ).toBe("https://school-a.mirai-edu.space/auth/login");
   });
 });

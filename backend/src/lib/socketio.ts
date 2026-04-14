@@ -5,6 +5,7 @@
 import { Server as HttpServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import { config } from "../config";
+import { isAllowedOrigin } from "../utils/origin";
 import { logger } from "../utils/logger";
 
 /** Regex for validating tenant identifiers in Socket.IO handshakes. */
@@ -22,7 +23,18 @@ export function initSocketIO(httpServer: HttpServer): SocketIOServer {
 
   _io = new SocketIOServer(httpServer, {
     cors: {
-      origin: config.corsOrigins,
+      origin(origin, callback) {
+        if (isAllowedOrigin(origin ?? undefined, {
+          allowedOrigins: config.corsOrigins,
+          baseDomain: config.baseDomain,
+        })) {
+          callback(null, true);
+          return;
+        }
+
+        logger.warn(`Socket.IO blocked origin: ${origin}`);
+        callback(new Error(`Origin ${origin} is not allowed by CORS`));
+      },
       methods: ["GET", "POST"],
       credentials: true,
     },
