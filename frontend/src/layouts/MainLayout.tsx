@@ -13,6 +13,7 @@ import { ROLE_LABELS } from "../types/auth";
 import { Spinner } from "../components/ui/LoadingState";
 import { MissingOpenAiKeyDialog } from "../features/ai/components/MissingOpenAiKeyDialog";
 import { installOpenAiKeyErrorInterceptor } from "../features/ai/setup-openai-error-interceptor";
+import { getErpSectionLabel } from "./workspaceCopy";
 
 export default function MainLayout() {
   const { user, isLoading } = useAuth();
@@ -30,14 +31,7 @@ export default function MainLayout() {
     ? [user.employee.firstName, user.employee.lastName].filter(Boolean).join(" ")
     : user?.email;
   const userRoleLabel = user ? ROLE_LABELS[user.role] ?? user.role : "";
-  const sectionLabel = [
-    ["/children", "Контингент и семьи"],
-    ["/employees", "Команда и роли"],
-    ["/finance", "Финансы и отчетность"],
-    ["/schedule", "Академический контур"],
-    ["/documents", "Документы и согласования"],
-    ["/dashboard", "Операционный центр"],
-  ].find(([path]) => location.pathname.startsWith(path))?.[1] ?? "Единое рабочее пространство";
+  const sectionLabel = getErpSectionLabel(location.pathname);
 
   useKonamiCode(() => {
     if (user) setShowDoom(true);

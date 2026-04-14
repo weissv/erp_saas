@@ -8,25 +8,18 @@ import { useDemo } from "../contexts/DemoContext";
 import { useTenant } from "../contexts/TenantContext";
 import { Spinner } from "../components/ui/LoadingState";
 import { ROLE_LABELS } from "../types/auth";
+import { getLmsSectionLabel } from "./workspaceCopy";
 
 export default function LmsLayout() {
- const { user, isLoading} = useAuth();
+  const { user, isLoading } = useAuth();
   const { isDemo } = useDemo();
-  const { tenant} = useTenant();
+  const { tenant } = useTenant();
   const location = useLocation();
   const userName = user?.employee
     ? [user.employee.firstName, user.employee.lastName].filter(Boolean).join(" ")
     : user?.email;
   const userRoleLabel = user ? ROLE_LABELS[user.role] ?? user.role : "";
-  const sectionLabel = [
-    ["/lms/school/classes", "Классы и потоки"],
-    ["/lms/school/gradebook", "Журнал и оценки"],
-    ["/lms/school/schedule", "Расписание занятий"],
-    ["/lms/school/homework", "Домашние задания"],
-    ["/lms/school/attendance", "Посещаемость"],
-    ["/lms/diary", "Дневник ученика"],
-    ["/lms/school", "Школьная аналитика"],
-  ].find(([path]) => location.pathname.startsWith(path))?.[1] ?? "Школьная LMS";
+  const sectionLabel = getLmsSectionLabel(location.pathname);
 
   if (isLoading) {
     return (

@@ -27,7 +27,7 @@ const variants: Record<ButtonVariant, string> = {
     "focus-visible:ring-2 focus-visible:ring-macos-blue/30",
   ].join(" "),
   outline: [
-    "border border-white/80 bg-white/80 text-text-primary backdrop-blur-xl",
+    "border border-white/80 bg-white/95 text-text-primary backdrop-blur-xl",
     "shadow-subtle",
     "hover:-translate-y-0.5 hover:bg-white",
     "focus-visible:ring-2 focus-visible:ring-macos-blue/30",

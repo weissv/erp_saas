@@ -607,7 +607,7 @@ body {
   gap: 8px;
   width: fit-content;
   padding: 8px 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: rgba(255, 255, 255, 0.78);
   border: 1px solid rgba(255, 255, 255, 0.74);
   color: var(--color-blue);
@@ -627,7 +627,7 @@ body {
   font-family: var(--font-display);
   font-size: clamp(2rem, 4vw, 3.5rem);
   font-weight: 600;
-  line-height: 1.02;
+  line-height: 1.1;
   letter-spacing: -0.05em;
   color: var(--text-primary);
 }
@@ -894,7 +894,7 @@ body {
 .mezon-textarea {
   min-height: 108px;
   resize: vertical;
-  border-radius: 24px;
+  border-radius: var(--radius-sheet);
 }
 
 
@@ -1769,7 +1769,7 @@ body {
   justify-content: center;
   width: 40px;
   height: 40px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: rgba(255, 255, 255, 0.76);
   border: 1px solid rgba(255, 255, 255, 0.72);
   color: var(--text-primary);

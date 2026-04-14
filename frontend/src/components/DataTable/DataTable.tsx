@@ -72,7 +72,7 @@ export function DataTable<T extends Record<string, any>>({
       <div className="overflow-x-auto">
         <table className={tableCls} role="table">
           <thead>
-            <tr className="border-b border-white/70 bg-[rgba(248,250,255,0.88)]">
+            <tr className="border-b border-white/70 bg-fill-quaternary">
               {columns.map((c) => (
                 <th key={c.key} className={headerCellCls}>
                   {c.header}
@@ -95,7 +95,7 @@ export function DataTable<T extends Record<string, any>>({
                 <tr
                   key={i}
                   className={`border-b border-white/70 last:border-0 hover:bg-white/70 macos-transition ${
-                    i % 2 === 1 ? 'bg-[rgba(248,250,255,0.52)]' : ''
+                    i % 2 === 1 ? 'bg-fill-quaternary' : ''
                   }`}
                 >
                   {columns.map((c) => (
