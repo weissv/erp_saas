@@ -484,7 +484,7 @@ body {
 .mezon-nav-label {
   text-transform: uppercase;
   font-size: 11px;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.12em;
   font-weight: 700;
   color: var(--color-blue);
   padding: 10px 12px 8px;
@@ -613,7 +613,7 @@ body {
   color: var(--color-blue);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   box-shadow: var(--shadow-subtle);
 }
@@ -838,13 +838,13 @@ body {
 .mezon-field {
   min-height: 44px;
   width: 100%;
-  border-radius: 999px;
+  border-radius: var(--radius-xl);
   border: 1px solid rgba(255, 255, 255, 0.74);
   background: rgba(255, 255, 255, 0.82);
   padding: 10px 14px;
   font-size: 14px;
   color: var(--text-primary);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 12px 24px rgba(15, 23, 42, 0.04);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 6px 16px rgba(15, 23, 42, 0.04);
   transition: border-color var(--duration-fast) var(--ease-out),
               box-shadow var(--duration-fast) var(--ease-out),
               background var(--duration-fast) var(--ease-out);

@@ -91,12 +91,16 @@ export function DataTable<T extends Record<string, any>>({
                 </td>
               </tr>
             ) : (
-              data.map((row, i) => (
+              data.map((row, i) => {
+                const rowClassName = [
+                  "border-b border-white/70 last:border-0 hover:bg-white/70 macos-transition",
+                  i % 2 === 1 ? "bg-fill-quaternary" : "",
+                ].join(" ");
+
+                return (
                 <tr
                   key={i}
-                  className={`border-b border-white/70 last:border-0 hover:bg-white/70 macos-transition ${
-                    i % 2 === 1 ? 'bg-fill-quaternary' : ''
-                  }`}
+                  className={rowClassName}
                 >
                   {columns.map((c) => (
                     <td key={c.key} className={bodyCellCls}>
@@ -108,7 +112,7 @@ export function DataTable<T extends Record<string, any>>({
                     </td>
                   ))}
                 </tr>
-              ))
+              )})
             )}
           </tbody>
         </table>

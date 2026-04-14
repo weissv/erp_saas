@@ -8,7 +8,7 @@ import { useDemo } from "../contexts/DemoContext";
 import { useTenant } from "../contexts/TenantContext";
 import { Spinner } from "../components/ui/LoadingState";
 import { ROLE_LABELS } from "../types/auth";
-import { getLmsSectionLabel } from "./workspaceCopy";
+import { getLmsSectionLabel, LMS_WORKSPACE_COPY } from "./workspaceCopy";
 
 export default function LmsLayout() {
   const { user, isLoading } = useAuth();
@@ -56,90 +56,84 @@ export default function LmsLayout() {
     );
   }
 
- return (
- <div className="mezon-app">
- <header className="mezon-top-bar" role="banner">
-      {/* Mobile menu button */}
-      <button 
-        className="mezon-mobile-menu-btn"
-        onClick={() => {
-          window.dispatchEvent(new CustomEvent('toggle-mobile-menu'));
-        }}
-        aria-label="Toggle menu"
-      >
-        <Menu className="h-5 w-5" />
-      </button>
-      
-      <div className="mezon-top-bar__cluster mezon-top-bar__cluster--compact">
+  return (
+    <div className="mezon-app">
+      <header className="mezon-top-bar" role="banner">
+        <button
+          className="mezon-mobile-menu-btn"
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent("toggle-mobile-menu"));
+          }}
+          aria-label="Toggle menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+
+        <div className="mezon-top-bar__cluster mezon-top-bar__cluster--compact">
         {tenant.supportPhone && (
           <span className="mezon-chip">{tenant.supportPhone}</span>
         )}
         {tenant.supportEmail && (
           <span className="mezon-chip">{tenant.supportEmail}</span>
         )}
-      </div>
-      <div className="mezon-top-bar__cluster">
-        {/* Кнопка "Вернуться в ERP" доступна всем ролям включая учителей */}
-        <Link
-          to="/dashboard"
-          className="mezon-chip mezon-chip--teal flex items-center gap-2 cursor-pointer"
-        >
-          <LayoutDashboard className="h-3.5 w-3.5" />
-          Вернуться в ERP
-        </Link>
-      </div>
-    </header>
-    <div className="mezon-shell">
-      <LmsSideNav />
-      <main className="mezon-main" role="main" aria-label="Содержимое LMS">
-        <Toaster position="top-right" richColors />
-        <div className="mezon-main-inner macos-animate-fade-in">
-          <div className="mezon-workspace">
-            <section className="mezon-workspace-hero" aria-label="LMS workspace hero">
-              <div className="mezon-workspace-hero__top">
-                <div className="mezon-workspace-hero__headline">
-                  <span className="mezon-workspace-hero__eyebrow">LMS · учебный контур</span>
-                  <h1>{sectionLabel}</h1>
-                  <p>
-                    Школьная LMS получила тот же визуальный язык, что и лендинг:
-                    светлые стеклянные панели, акцентные CTA и спокойную иерархию
-                    для ежедневной работы преподавателей, учеников и администрации.
-                  </p>
+        </div>
+        <div className="mezon-top-bar__cluster">
+          <Link
+            to="/dashboard"
+            className="mezon-chip mezon-chip--teal flex items-center gap-2 cursor-pointer"
+          >
+            <LayoutDashboard className="h-3.5 w-3.5" />
+            Вернуться в ERP
+          </Link>
+        </div>
+      </header>
+      <div className="mezon-shell">
+        <LmsSideNav />
+        <main className="mezon-main" role="main" aria-label="Содержимое LMS">
+          <Toaster position="top-right" richColors />
+          <div className="mezon-main-inner macos-animate-fade-in">
+            <div className="mezon-workspace">
+              <section className="mezon-workspace-hero" aria-label="LMS workspace hero">
+                <div className="mezon-workspace-hero__top">
+                  <div className="mezon-workspace-hero__headline">
+                    <span className="mezon-workspace-hero__eyebrow">{LMS_WORKSPACE_COPY.eyebrow}</span>
+                    <h1>{sectionLabel}</h1>
+                    <p>{LMS_WORKSPACE_COPY.description}</p>
+                  </div>
+
+                  <div className="mezon-workspace-hero__actions">
+                    <span className="mezon-chip">{isDemo ? "Demo school" : tenant.name}</span>
+                    {userRoleLabel && <span className="mezon-chip">{userRoleLabel}</span>}
+                    <Link to="/dashboard" className="mezon-btn mezon-btn--outline">
+                      <LayoutDashboard className="h-4 w-4" />
+                      Вернуться в ERP
+                    </Link>
+                  </div>
                 </div>
 
-                <div className="mezon-workspace-hero__actions">
-                  <span className="mezon-chip">{isDemo ? "Demo school" : tenant.name}</span>
-                  {userRoleLabel && <span className="mezon-chip">{userRoleLabel}</span>}
-                  <Link to="/dashboard" className="mezon-btn mezon-btn--outline">
-                    <LayoutDashboard className="h-4 w-4" />
-                    Вернуться в ERP
-                  </Link>
+                <div className="mezon-workspace-hero__meta">
+                  <div className="mezon-workspace-hero__meta-card">
+                    <strong>{LMS_WORKSPACE_COPY.participantTitle}</strong>
+                    <span>{userName ?? "Пользователь"} работает в одном учебном интерфейсе без лишнего визуального шума.</span>
+                  </div>
+                  <div className="mezon-workspace-hero__meta-card">
+                    <strong>{LMS_WORKSPACE_COPY.supportTitle}</strong>
+                    <span>{tenant.supportEmail || tenant.supportPhone || LMS_WORKSPACE_COPY.supportFallback}</span>
+                  </div>
+                  <div className="mezon-workspace-hero__meta-card">
+                    <strong>{LMS_WORKSPACE_COPY.continuityTitle}</strong>
+                    <span>{LMS_WORKSPACE_COPY.continuityDescription}</span>
+                  </div>
                 </div>
+              </section>
+
+              <div className="mezon-workspace-content">
+                <Outlet />
               </div>
-
-              <div className="mezon-workspace-hero__meta">
-                <div className="mezon-workspace-hero__meta-card">
-                  <strong>Текущий участник</strong>
-                  <span>{userName ?? "Пользователь"} работает в одном учебном интерфейсе без лишнего визуального шума.</span>
-                </div>
-                <div className="mezon-workspace-hero__meta-card">
-                  <strong>Коммуникация и поддержка</strong>
-                  <span>{tenant.supportEmail || tenant.supportPhone || "Контакты поддержки доступны внутри тенанта."}</span>
-                </div>
-                <div className="mezon-workspace-hero__meta-card">
-                  <strong>Сквозной сценарий</strong>
-                  <span>От расписания до дневника — учебный контур визуально синхронизирован с ERP и лендингом.</span>
-                </div>
-              </div>
-            </section>
-
-            <div className="mezon-workspace-content">
-              <Outlet />
             </div>
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
-  </div>
   );
 }

@@ -13,7 +13,7 @@ import { ROLE_LABELS } from "../types/auth";
 import { Spinner } from "../components/ui/LoadingState";
 import { MissingOpenAiKeyDialog } from "../features/ai/components/MissingOpenAiKeyDialog";
 import { installOpenAiKeyErrorInterceptor } from "../features/ai/setup-openai-error-interceptor";
-import { getErpSectionLabel } from "./workspaceCopy";
+import { ERP_WORKSPACE_COPY, getErpSectionLabel } from "./workspaceCopy";
 
 export default function MainLayout() {
   const { user, isLoading } = useAuth();
@@ -142,12 +142,10 @@ export default function MainLayout() {
               <section className="mezon-workspace-hero" aria-label="ERP workspace hero">
                 <div className="mezon-workspace-hero__top">
                   <div className="mezon-workspace-hero__headline">
-                    <span className="mezon-workspace-hero__eyebrow">ERP · рабочее пространство</span>
+                    <span className="mezon-workspace-hero__eyebrow">{ERP_WORKSPACE_COPY.eyebrow}</span>
                     <h1>{sectionLabel}</h1>
                     <p>
-                      Интерфейс ERP теперь следует визуальному языку лендинга:
-                      мягкие стеклянные поверхности, акцентные метки и единый
-                      сценарий для команды {tenant.name}.
+                      {ERP_WORKSPACE_COPY.description} {tenant.name}.
                     </p>
                   </div>
 
@@ -166,16 +164,16 @@ export default function MainLayout() {
 
                 <div className="mezon-workspace-hero__meta">
                   <div className="mezon-workspace-hero__meta-card">
-                    <strong>Текущий оператор</strong>
+                    <strong>{ERP_WORKSPACE_COPY.operatorTitle}</strong>
                     <span>{userName ?? "Пользователь"} · доступ и задачи под рукой.</span>
                   </div>
                   <div className="mezon-workspace-hero__meta-card">
-                    <strong>Поддержка</strong>
-                    <span>{tenant.supportEmail || tenant.supportPhone || "Контакты поддержки доступны в профиле тенанта."}</span>
+                    <strong>{ERP_WORKSPACE_COPY.supportTitle}</strong>
+                    <span>{tenant.supportEmail || tenant.supportPhone || ERP_WORKSPACE_COPY.supportFallback}</span>
                   </div>
                   <div className="mezon-workspace-hero__meta-card">
-                    <strong>Навигация без разрыва</strong>
-                    <span>Один визуальный язык для модулей ERP, чтобы переход между разделами ощущался как единый маршрут.</span>
+                    <strong>{ERP_WORKSPACE_COPY.continuityTitle}</strong>
+                    <span>{ERP_WORKSPACE_COPY.continuityDescription}</span>
                   </div>
                 </div>
               </section>

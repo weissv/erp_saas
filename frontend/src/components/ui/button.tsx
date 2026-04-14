@@ -22,14 +22,14 @@ const variants: Record<ButtonVariant, string> = {
   default: [
     "border border-transparent bg-macos-blue text-white",
     "shadow-[0_14px_32px_rgba(0,122,255,0.24)]",
-    "hover:-translate-y-0.5 hover:bg-macos-blue-hover",
+    "hover:bg-macos-blue-hover",
     "active:bg-macos-blue-active",
     "focus-visible:ring-2 focus-visible:ring-macos-blue/30",
   ].join(" "),
   outline: [
     "border border-white/80 bg-white/95 text-text-primary backdrop-blur-xl",
     "shadow-subtle",
-    "hover:-translate-y-0.5 hover:bg-white",
+    "hover:bg-white",
     "focus-visible:ring-2 focus-visible:ring-macos-blue/30",
   ].join(" "),
   ghost: [
@@ -39,13 +39,13 @@ const variants: Record<ButtonVariant, string> = {
   ].join(" "),
   secondary: [
     "border border-transparent bg-white/60 text-text-primary backdrop-blur-xl",
-    "hover:-translate-y-0.5 hover:bg-white/80",
+    "hover:bg-white/80",
     "focus-visible:ring-2 focus-visible:ring-macos-blue/30",
   ].join(" "),
   destructive: [
     "border border-transparent bg-macos-red text-white",
     "shadow-[0_14px_32px_rgba(255,59,48,0.22)]",
-    "hover:-translate-y-0.5 hover:bg-macos-red-hover",
+    "hover:bg-macos-red-hover",
     "active:bg-macos-red-active",
     "focus-visible:ring-2 focus-visible:ring-macos-red/30",
   ].join(" "),
