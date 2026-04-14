@@ -1,6 +1,6 @@
 // src/layouts/MainLayout.tsx
 import { useState, useEffect } from "react";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { Menu, GraduationCap, Lock } from "lucide-react";
 import SideNav from "../components/SideNav";
 import DoomGame from "../components/DoomGame";
@@ -13,11 +13,13 @@ import { ROLE_LABELS } from "../types/auth";
 import { Spinner } from "../components/ui/LoadingState";
 import { MissingOpenAiKeyDialog } from "../features/ai/components/MissingOpenAiKeyDialog";
 import { installOpenAiKeyErrorInterceptor } from "../features/ai/setup-openai-error-interceptor";
+import { ERP_WORKSPACE_COPY, getErpSectionLabel } from "./workspaceCopy";
 
 export default function MainLayout() {
   const { user, isLoading } = useAuth();
   const { isDemo } = useDemo();
   const { tenant } = useTenant();
+  const location = useLocation();
   const [showDoom, setShowDoom] = useState(false);
 
   // Install global MISSING_OPENAI_KEY error interceptor once
@@ -29,6 +31,7 @@ export default function MainLayout() {
     ? [user.employee.firstName, user.employee.lastName].filter(Boolean).join(" ")
     : user?.email;
   const userRoleLabel = user ? ROLE_LABELS[user.role] ?? user.role : "";
+  const sectionLabel = getErpSectionLabel(location.pathname);
 
   useKonamiCode(() => {
     if (user) setShowDoom(true);
@@ -135,7 +138,50 @@ export default function MainLayout() {
           <Toaster position="top-right" richColors />
           <MissingOpenAiKeyDialog />
           <div className="mezon-main-inner macos-animate-fade-in">
-            <Outlet />
+            <div className="mezon-workspace">
+              <section className="mezon-workspace-hero" aria-label="ERP workspace hero">
+                <div className="mezon-workspace-hero__top">
+                  <div className="mezon-workspace-hero__headline">
+                    <span className="mezon-workspace-hero__eyebrow">{ERP_WORKSPACE_COPY.eyebrow}</span>
+                    <h1>{sectionLabel}</h1>
+                    <p>
+                      {ERP_WORKSPACE_COPY.description} {tenant.name}.
+                    </p>
+                  </div>
+
+                  <div className="mezon-workspace-hero__actions">
+                    <span className="mezon-chip">{isDemo ? "Demo contour" : "Live workspace"}</span>
+                    {userRoleLabel && <span className="mezon-chip">{userRoleLabel}</span>}
+                    <Link
+                      to="/lms"
+                      className="mezon-btn mezon-btn--outline"
+                    >
+                      <GraduationCap className="h-4 w-4" />
+                      Открыть LMS
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="mezon-workspace-hero__meta">
+                  <div className="mezon-workspace-hero__meta-card">
+                    <strong>{ERP_WORKSPACE_COPY.operatorTitle}</strong>
+                    <span>{userName ?? "Пользователь"} · доступ и задачи под рукой.</span>
+                  </div>
+                  <div className="mezon-workspace-hero__meta-card">
+                    <strong>{ERP_WORKSPACE_COPY.supportTitle}</strong>
+                    <span>{tenant.supportEmail || tenant.supportPhone || ERP_WORKSPACE_COPY.supportFallback}</span>
+                  </div>
+                  <div className="mezon-workspace-hero__meta-card">
+                    <strong>{ERP_WORKSPACE_COPY.continuityTitle}</strong>
+                    <span>{ERP_WORKSPACE_COPY.continuityDescription}</span>
+                  </div>
+                </div>
+              </section>
+
+              <div className="mezon-workspace-content">
+                <Outlet />
+              </div>
+            </div>
           </div>
         </main>
       </div>

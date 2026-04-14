@@ -11,51 +11,50 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const base = [
-  "inline-flex items-center justify-center gap-2 font-medium",
-  "transition-all duration-150 ease-out rounded-lg outline-none",
+  "inline-flex items-center justify-center gap-2 font-semibold",
+  "transition-all duration-150 ease-out rounded-full outline-none",
   "disabled:opacity-40 disabled:cursor-not-allowed",
-  "active:scale-[0.97] touch-manipulation",
+  "active:scale-[0.98] touch-manipulation",
   "tracking-[-0.01em] leading-none",
 ].join(" ");
 
 const variants: Record<ButtonVariant, string> = {
   default: [
-    "bg-macos-blue text-white",
-    "shadow-subtle",
+    "border border-transparent bg-macos-blue text-white",
+    "shadow-[0_14px_32px_rgba(0,122,255,0.24)]",
     "hover:bg-macos-blue-hover",
     "active:bg-macos-blue-active",
-    "focus-visible:ring-2 focus-visible:ring-macos-blue/50",
+    "focus-visible:ring-2 focus-visible:ring-macos-blue/30",
   ].join(" "),
   outline: [
-    "bg-surface-primary text-text-primary",
-    "border border-separator",
+    "border border-white/80 bg-white/95 text-text-primary backdrop-blur-xl",
     "shadow-subtle",
-    "hover:bg-fill-quaternary hover:border-border-card",
-    "focus-visible:ring-2 focus-visible:ring-macos-blue/50",
+    "hover:bg-white",
+    "focus-visible:ring-2 focus-visible:ring-macos-blue/30",
   ].join(" "),
   ghost: [
     "text-macos-blue",
-    "hover:bg-fill-quaternary hover:text-macos-blue-hover",
-    "focus-visible:ring-2 focus-visible:ring-macos-blue/50",
+    "hover:bg-white/70 hover:text-macos-blue-hover",
+    "focus-visible:ring-2 focus-visible:ring-macos-blue/30",
   ].join(" "),
   secondary: [
-    "bg-fill-tertiary text-text-primary",
-    "hover:bg-fill-secondary",
-    "focus-visible:ring-2 focus-visible:ring-macos-blue/50",
+    "border border-transparent bg-white/60 text-text-primary backdrop-blur-xl",
+    "hover:bg-white/80",
+    "focus-visible:ring-2 focus-visible:ring-macos-blue/30",
   ].join(" "),
   destructive: [
-    "bg-macos-red text-white",
-    "shadow-subtle",
+    "border border-transparent bg-macos-red text-white",
+    "shadow-[0_14px_32px_rgba(255,59,48,0.22)]",
     "hover:bg-macos-red-hover",
     "active:bg-macos-red-active",
-    "focus-visible:ring-2 focus-visible:ring-macos-red/50",
+    "focus-visible:ring-2 focus-visible:ring-macos-red/30",
   ].join(" "),
 };
 
 const sizes: Record<ButtonSize, string> = {
-  sm: "text-[12px] px-2.5 py-1 min-h-[28px]",
-  md: "text-[13px] px-3.5 py-1.5 min-h-[32px]",
-  lg: "text-[14px] px-5 py-2 min-h-[36px]",
+  sm: "text-[12px] px-3.5 py-2 min-h-[36px]",
+  md: "text-[13px] px-4 py-2.5 min-h-[42px]",
+  lg: "text-[14px] px-6 py-3 min-h-[48px]",
   icon: "h-9 w-9 p-0 min-h-[44px] min-w-[44px]",
 };
 
