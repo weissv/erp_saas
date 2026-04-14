@@ -56,11 +56,11 @@ export function DataTable<T extends Record<string, any>>({
   };
 
   return (
-    <div className="rounded-[var(--radius-xl)] border border-[var(--border-card)] bg-[var(--surface-primary)] overflow-hidden shadow-[var(--shadow-card)]">
+    <div className="overflow-hidden rounded-[1.75rem] border border-white/80 bg-white/80 shadow-[0_18px_42px_rgba(15,23,42,0.07)] backdrop-blur-xl">
       {/* Toolbar */}
-      <div className="flex justify-end px-4 py-2.5 border-b border-[var(--separator)]">
+      <div className="flex justify-end border-b border-white/70 px-4 py-3">
         <button
-          className="text-[12px] font-medium px-3 py-1.5 rounded-[var(--radius-md)] bg-fill-quaternary hover:bg-fill-tertiary text-secondary macos-transition"
+          className="rounded-full border border-white/80 bg-white/85 px-3.5 py-2 text-[12px] font-semibold text-secondary shadow-subtle backdrop-blur-xl macos-transition hover:-translate-y-0.5 hover:bg-white"
           onClick={downloadCsv}
           aria-label="Экспорт данных в CSV"
         >
@@ -72,7 +72,7 @@ export function DataTable<T extends Record<string, any>>({
       <div className="overflow-x-auto">
         <table className={tableCls} role="table">
           <thead>
-            <tr className="border-b border-[var(--separator)] bg-[var(--bg-inset)]">
+            <tr className="border-b border-white/70 bg-[rgba(248,250,255,0.88)]">
               {columns.map((c) => (
                 <th key={c.key} className={headerCellCls}>
                   {c.header}
@@ -94,8 +94,8 @@ export function DataTable<T extends Record<string, any>>({
               data.map((row, i) => (
                 <tr
                   key={i}
-                  className={`border-b border-[var(--separator)] last:border-0 hover:bg-fill-quaternary macos-transition ${
-                    i % 2 === 1 ? 'bg-[var(--bg-inset)]' : ''
+                  className={`border-b border-white/70 last:border-0 hover:bg-white/70 macos-transition ${
+                    i % 2 === 1 ? 'bg-[rgba(248,250,255,0.52)]' : ''
                   }`}
                 >
                   {columns.map((c) => (
@@ -115,7 +115,7 @@ export function DataTable<T extends Record<string, any>>({
       </div>
 
       {/* Pagination */}
-      <div className="flex flex-col sm:flex-row justify-between items-center px-4 py-3 text-[13px] gap-2 border-t border-[var(--separator)]">
+      <div className="flex flex-col items-center justify-between gap-2 border-t border-white/70 px-4 py-4 text-[13px] sm:flex-row">
         <div className="text-tertiary">
           Всего: <span className="font-semibold text-primary">{total}</span>
         </div>
@@ -123,7 +123,7 @@ export function DataTable<T extends Record<string, any>>({
           <button
             disabled={page <= 1}
             onClick={() => onPageChange(page - 1)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] bg-fill-quaternary text-primary disabled:opacity-30 disabled:cursor-not-allowed hover:bg-fill-tertiary macos-transition font-medium"
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/85 px-3.5 py-2 font-semibold text-primary shadow-subtle backdrop-blur-xl macos-transition hover:-translate-y-0.5 hover:bg-white disabled:cursor-not-allowed disabled:opacity-30"
             aria-label="Предыдущая страница"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
@@ -135,7 +135,7 @@ export function DataTable<T extends Record<string, any>>({
           <button
             disabled={page >= pages}
             onClick={() => onPageChange(page + 1)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] bg-fill-quaternary text-primary disabled:opacity-30 disabled:cursor-not-allowed hover:bg-fill-tertiary macos-transition font-medium"
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/85 px-3.5 py-2 font-semibold text-primary shadow-subtle backdrop-blur-xl macos-transition hover:-translate-y-0.5 hover:bg-white disabled:cursor-not-allowed disabled:opacity-30"
             aria-label="Следующая страница"
           >
             Вперёд

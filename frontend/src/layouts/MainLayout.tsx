@@ -1,6 +1,6 @@
 // src/layouts/MainLayout.tsx
 import { useState, useEffect } from "react";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { Menu, GraduationCap, Lock } from "lucide-react";
 import SideNav from "../components/SideNav";
 import DoomGame from "../components/DoomGame";
@@ -18,6 +18,7 @@ export default function MainLayout() {
   const { user, isLoading } = useAuth();
   const { isDemo } = useDemo();
   const { tenant } = useTenant();
+  const location = useLocation();
   const [showDoom, setShowDoom] = useState(false);
 
   // Install global MISSING_OPENAI_KEY error interceptor once
@@ -29,6 +30,14 @@ export default function MainLayout() {
     ? [user.employee.firstName, user.employee.lastName].filter(Boolean).join(" ")
     : user?.email;
   const userRoleLabel = user ? ROLE_LABELS[user.role] ?? user.role : "";
+  const sectionLabel = [
+    ["/children", "Контингент и семьи"],
+    ["/employees", "Команда и роли"],
+    ["/finance", "Финансы и отчетность"],
+    ["/schedule", "Академический контур"],
+    ["/documents", "Документы и согласования"],
+    ["/dashboard", "Операционный центр"],
+  ].find(([path]) => location.pathname.startsWith(path))?.[1] ?? "Единое рабочее пространство";
 
   useKonamiCode(() => {
     if (user) setShowDoom(true);
@@ -135,7 +144,52 @@ export default function MainLayout() {
           <Toaster position="top-right" richColors />
           <MissingOpenAiKeyDialog />
           <div className="mezon-main-inner macos-animate-fade-in">
-            <Outlet />
+            <div className="mezon-workspace">
+              <section className="mezon-workspace-hero" aria-label="ERP workspace hero">
+                <div className="mezon-workspace-hero__top">
+                  <div className="mezon-workspace-hero__headline">
+                    <span className="mezon-workspace-hero__eyebrow">ERP · рабочее пространство</span>
+                    <h1>{sectionLabel}</h1>
+                    <p>
+                      Интерфейс ERP теперь следует визуальному языку лендинга:
+                      мягкие стеклянные поверхности, акцентные метки и единый
+                      сценарий для команды {tenant.name}.
+                    </p>
+                  </div>
+
+                  <div className="mezon-workspace-hero__actions">
+                    <span className="mezon-chip">{isDemo ? "Demo contour" : "Live workspace"}</span>
+                    {userRoleLabel && <span className="mezon-chip">{userRoleLabel}</span>}
+                    <Link
+                      to="/lms"
+                      className="mezon-btn mezon-btn--outline"
+                    >
+                      <GraduationCap className="h-4 w-4" />
+                      Открыть LMS
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="mezon-workspace-hero__meta">
+                  <div className="mezon-workspace-hero__meta-card">
+                    <strong>Текущий оператор</strong>
+                    <span>{userName ?? "Пользователь"} · доступ и задачи под рукой.</span>
+                  </div>
+                  <div className="mezon-workspace-hero__meta-card">
+                    <strong>Поддержка</strong>
+                    <span>{tenant.supportEmail || tenant.supportPhone || "Контакты поддержки доступны в профиле тенанта."}</span>
+                  </div>
+                  <div className="mezon-workspace-hero__meta-card">
+                    <strong>Навигация без разрыва</strong>
+                    <span>Один визуальный язык для модулей ERP, чтобы переход между разделами ощущался как единый маршрут.</span>
+                  </div>
+                </div>
+              </section>
+
+              <div className="mezon-workspace-content">
+                <Outlet />
+              </div>
+            </div>
           </div>
         </main>
       </div>

@@ -7,9 +7,9 @@ export const Card = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
     <div
       ref={ref}
       className={cn(
-        "rounded-xl border border-border-card bg-surface-primary shadow-subtle",
-        "relative overflow-hidden macos-transition",
-        "hover:shadow-card", // macOS hover subtle interactions
+        "relative overflow-hidden rounded-[1.75rem] border border-white/80 bg-white/80 shadow-[0_18px_42px_rgba(15,23,42,0.07)] backdrop-blur-xl",
+        "before:pointer-events-none before:absolute before:inset-0 before:bg-[linear-gradient(180deg,rgba(255,255,255,0.34),transparent_28%)] before:content-['']",
+        "macos-transition hover:-translate-y-0.5 hover:shadow-[0_24px_56px_rgba(15,23,42,0.10)]",
         className
       )}
       {...props}
