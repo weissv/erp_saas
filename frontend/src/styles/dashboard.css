@@ -4,33 +4,33 @@
 
 :root {
   /* Bento category tokens */
-  --bento-kpi-bg: linear-gradient(145deg, #EEF2FF 0%, #E0E7FF 100%);
-  --bento-kpi-border: rgba(99, 102, 241, 0.12);
-  --bento-kpi-dot: #6366F1;
+  --bento-kpi-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.88) 0%, rgba(239, 244, 255, 0.92) 100%);
+  --bento-kpi-border: rgba(0, 122, 255, 0.12);
+  --bento-kpi-dot: var(--color-blue);
   
-  --bento-finance-bg: linear-gradient(145deg, #ECFDF5 0%, #D1FAE5 100%);
-  --bento-finance-border: rgba(16, 185, 129, 0.12);
-  --bento-finance-dot: #10B981;
+  --bento-finance-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(236, 253, 245, 0.94) 100%);
+  --bento-finance-border: rgba(52, 199, 89, 0.14);
+  --bento-finance-dot: var(--color-green);
   
-  --bento-operations-bg: linear-gradient(145deg, #FFFBEB 0%, #FEF3C7 100%);
-  --bento-operations-border: rgba(245, 158, 11, 0.14);
-  --bento-operations-dot: #F59E0B;
+  --bento-operations-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 251, 235, 0.96) 100%);
+  --bento-operations-border: rgba(255, 149, 0, 0.14);
+  --bento-operations-dot: var(--color-orange);
   
-  --bento-hr-bg: linear-gradient(145deg, #FFF1F2 0%, #FFE4E6 100%);
-  --bento-hr-border: rgba(225, 29, 72, 0.10);
-  --bento-hr-dot: #E11D48;
+  --bento-hr-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 241, 242, 0.95) 100%);
+  --bento-hr-border: rgba(255, 45, 85, 0.12);
+  --bento-hr-dot: var(--color-pink);
   
-  --bento-alerts-bg: linear-gradient(145deg, #FEF2F2 0%, #FEE2E2 100%);
-  --bento-alerts-border: rgba(220, 38, 38, 0.12);
-  --bento-alerts-dot: #DC2626;
+  --bento-alerts-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(254, 242, 242, 0.96) 100%);
+  --bento-alerts-border: rgba(255, 59, 48, 0.12);
+  --bento-alerts-dot: var(--color-red);
   
-  --bento-activity-bg: linear-gradient(145deg, #F5F3FF 0%, #EDE9FE 100%);
-  --bento-activity-border: rgba(124, 58, 237, 0.10);
-  --bento-activity-dot: #7C3AED;
+  --bento-activity-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(245, 243, 255, 0.94) 100%);
+  --bento-activity-border: rgba(175, 82, 222, 0.12);
+  --bento-activity-dot: var(--color-purple);
   
-  --bento-actions-bg: linear-gradient(145deg, #EFF6FF 0%, #DBEAFE 100%);
-  --bento-actions-border: rgba(37, 99, 235, 0.12);
-  --bento-actions-dot: #2563EB;
+  --bento-actions-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(239, 246, 255, 0.95) 100%);
+  --bento-actions-border: rgba(0, 122, 255, 0.12);
+  --bento-actions-dot: var(--color-blue);
 
   /* Semantic status colors */
   --status-positive: #059669;
@@ -116,57 +116,59 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  border-radius: 20px;
+  border-radius: 28px;
   overflow: hidden;
-  transition: transform 150ms ease, box-shadow 150ms ease;
+  -webkit-backdrop-filter: blur(24px) saturate(145%);
+          backdrop-filter: blur(24px) saturate(145%);
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
 }
 
 .bento-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.10), 0 2px 8px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.10), 0 2px 8px rgba(15, 23, 42, 0.05);
 }
 
 /* Category colour tokens */
 .bento-card[data-cat="kpi"] {
   background: var(--bento-kpi-bg);
-  border: 1px solid var(--bento-kpi-border);
-  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.08), 0 4px 16px rgba(99, 102, 241, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 .bento-card[data-cat="finance"] {
   background: var(--bento-finance-bg);
-  border: 1px solid var(--bento-finance-border);
-  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.08), 0 4px 16px rgba(16, 185, 129, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 .bento-card[data-cat="operations"] {
   background: var(--bento-operations-bg);
-  border: 1px solid var(--bento-operations-border);
-  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.08), 0 4px 16px rgba(245, 158, 11, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 .bento-card[data-cat="hr"] {
   background: var(--bento-hr-bg);
-  border: 1px solid var(--bento-hr-border);
-  box-shadow: 0 1px 3px rgba(225, 29, 72, 0.06), 0 4px 16px rgba(225, 29, 72, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 .bento-card[data-cat="alerts"] {
   background: var(--bento-alerts-bg);
-  border: 1px solid var(--bento-alerts-border);
-  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.08), 0 4px 16px rgba(220, 38, 38, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 .bento-card[data-cat="activity"] {
   background: var(--bento-activity-bg);
-  border: 1px solid var(--bento-activity-border);
-  box-shadow: 0 1px 3px rgba(124, 58, 237, 0.06), 0 4px 16px rgba(124, 58, 237, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 .bento-card[data-cat="actions"] {
   background: var(--bento-actions-bg);
-  border: 1px solid var(--bento-actions-border);
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08), 0 4px 16px rgba(37, 99, 235, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 /* Fallback */
 .bento-card:not([data-cat]) {
-  background: var(--surface-primary);
-  border: 1px solid var(--border-card);
-  box-shadow: var(--shadow-card);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 
 /* ── Header ── */
