@@ -402,7 +402,7 @@ async function main() {
         data: {
           employeeId:  empId,
           date:        dateOnly,
-          status:      Math.random() > 0.08 ? "PRESENT" : "SICK",
+          status:      Math.random() > 0.08 ? "PRESENT" : "SICK_LEAVE",
           hoursWorked: Math.random() > 0.08 ? 8 : 0,
         },
       });
@@ -473,7 +473,7 @@ async function main() {
     // Club fees (income)
     ...Array.from({ length: 6 }, (_, mo) => ({
       amount: 850000, type: "INCOME", category: "CLUBS",
-      source: "PARENT", description: `Кружки — ${monthName(mo)} 2025`,
+      source: "EXTRA_BUDGET", description: `Кружки — ${monthName(mo)} 2025`,
       date: daysAgo(mo * 30 + 7),
     })),
     // Salaries (expense)
@@ -498,7 +498,7 @@ async function main() {
     { amount: -15500, type: "EXPENSE", category: "OTHER",
       source: "BUDGET", description: "Канцтовары — офис администрации", date: daysAgo(8) },
     { amount: 120000, type: "INCOME", category: "OTHER",
-      source: "GRANT", description: "Грант на развитие STEAM-образования", date: daysAgo(60) },
+      source: "EXTRA_BUDGET", description: "Грант на развитие STEAM-образования", date: daysAgo(60) },
   ];
 
   for (const r of financeRecords) {
@@ -741,16 +741,16 @@ async function main() {
   // 12. INGREDIENTS, DISHES, MENU
   // =========================================================================
   const ingredients = [
-    { name: "Молоко",      unit: "л",  cal: 64,  prot: 3.2, fat: 3.5, carbs: 4.7 },
-    { name: "Мука",        unit: "кг", cal: 364, prot: 10,  fat: 1.1, carbs: 76  },
-    { name: "Яйцо",        unit: "шт", cal: 155, prot: 12.7,fat: 11.5,carbs: 1.1 },
-    { name: "Рис",         unit: "кг", cal: 360, prot: 6.7, fat: 0.7, carbs: 79  },
-    { name: "Гречка",      unit: "кг", cal: 343, prot: 12.6,fat: 3.3, carbs: 62  },
-    { name: "Картофель",   unit: "кг", cal: 77,  prot: 2.0, fat: 0.1, carbs: 17  },
-    { name: "Масло слив.", unit: "кг", cal: 748, prot: 0.5, fat: 82.5,carbs: 0.8 },
-    { name: "Сахар",       unit: "кг", cal: 387, prot: 0,   fat: 0,   carbs: 100 },
-    { name: "Соль",        unit: "кг", cal: 0,   prot: 0,   fat: 0,   carbs: 0   },
-    { name: "Макароны",    unit: "кг", cal: 350, prot: 11,  fat: 1.3, carbs: 71  },
+    { name: "Молоко",      unit: "л",  calories: 64,  protein: 3.2, fat: 3.5, carbs: 4.7 },
+    { name: "Мука",        unit: "кг", calories: 364, protein: 10,  fat: 1.1, carbs: 76  },
+    { name: "Яйцо",        unit: "шт", calories: 155, protein: 12.7,fat: 11.5,carbs: 1.1 },
+    { name: "Рис",         unit: "кг", calories: 360, protein: 6.7, fat: 0.7, carbs: 79  },
+    { name: "Гречка",      unit: "кг", calories: 343, protein: 12.6,fat: 3.3, carbs: 62  },
+    { name: "Картофель",   unit: "кг", calories: 77,  protein: 2.0, fat: 0.1, carbs: 17  },
+    { name: "Масло слив.", unit: "кг", calories: 748, protein: 0.5, fat: 82.5,carbs: 0.8 },
+    { name: "Сахар",       unit: "кг", calories: 387, protein: 0,   fat: 0,   carbs: 100 },
+    { name: "Соль",        unit: "кг", calories: 0,   protein: 0,   fat: 0,   carbs: 0   },
+    { name: "Макароны",    unit: "кг", calories: 350, protein: 11,  fat: 1.3, carbs: 71  },
   ];
 
   const ingMap = new Map<string, number>();
@@ -799,7 +799,7 @@ async function main() {
     const menuDate = new Date(monday);
     menuDate.setDate(monday.getDate() + dow);
 
-    for (const ageGroup of ["SCHOOL"]) {
+    for (const ageGroup of ["ELEMENTARY"]) {
       const existing = await prisma.menu.findFirst({
         where: { date: menuDate, ageGroup },
       });
@@ -857,10 +857,10 @@ async function main() {
   // 14. SECURITY LOGS
   // =========================================================================
   const securityEvents = [
-    { type: "VISITOR",  desc: "Проверка системы видеонаблюдения — плановая",                    ago: 30 },
+    { type: "VISITOR_LOG",  desc: "Проверка системы видеонаблюдения — плановая",                    ago: 30 },
     { type: "INCIDENT", desc: "Сигнализация сработала ложно — КЗ в розетке кабинета 105",      ago: 20 },
-    { type: "VISITOR",  desc: "Визит комиссии Департамента образования (3 человека, 10:00-14:00)", ago: 15 },
-    { type: "VISITOR",  desc: "Посещение родителей открытого урока — 12 человек",               ago: 7  },
+    { type: "VISITOR_LOG",  desc: "Визит комиссии Департамента образования (3 человека, 10:00-14:00)", ago: 15 },
+    { type: "VISITOR_LOG",  desc: "Посещение родителей открытого урока — 12 человек",               ago: 7  },
     { type: "INCIDENT", desc: "Учащийся получил травму на перемене (ушиб колена). Оказана первая помощь.", ago: 3 },
   ];
 
@@ -925,16 +925,16 @@ async function main() {
   // 17. STAFFING TABLE
   // =========================================================================
   const staffingData = [
-    { position: "Директор",            rate: 1.0 },
-    { position: "Заместитель директора",rate: 1.0 },
-    { position: "Учитель начальных классов", rate: 6.0 },
-    { position: "Учитель математики",   rate: 2.0 },
-    { position: "Учитель английского",  rate: 2.0 },
-    { position: "Учитель информатики",  rate: 1.0 },
-    { position: "Учитель физкультуры",  rate: 1.0 },
-    { position: "Учитель музыки",       rate: 0.5 },
-    { position: "Бухгалтер",           rate: 1.0 },
-    { position: "Завхоз",              rate: 1.0 },
+    { position: "Директор",            requiredRate: 1.0 },
+    { position: "Заместитель директора", requiredRate: 1.0 },
+    { position: "Учитель начальных классов", requiredRate: 6.0 },
+    { position: "Учитель математики",   requiredRate: 2.0 },
+    { position: "Учитель английского",  requiredRate: 2.0 },
+    { position: "Учитель информатики",  requiredRate: 1.0 },
+    { position: "Учитель физкультуры",  requiredRate: 1.0 },
+    { position: "Учитель музыки",       requiredRate: 0.5 },
+    { position: "Бухгалтер",           requiredRate: 1.0 },
+    { position: "Завхоз",              requiredRate: 1.0 },
   ];
 
   for (const st of staffingData) {

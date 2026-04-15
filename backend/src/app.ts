@@ -9,6 +9,8 @@ import { errorHandler } from "./middleware/errorHandler";
 import { config } from "./config";
 import { logger } from "./utils/logger";
 import { isAllowedOrigin } from "./utils/origin";
+import { runWithRequestContext } from "./lib/requestContext";
+import { rootPrisma } from "./prisma";
 import stripeWebhookRoutes from "./modules/saas/routes/stripe-webhook.routes";
 
 // Импорты роутов
@@ -98,6 +100,15 @@ app.get("/api/health", (_req, res) => {
 // The middleware parses the subdomain, looks up the Control Plane, and
 // injects req.tenantId + req.prisma for downstream handlers.
 app.use(tenantResolver);
+app.use((req, _res, next) => {
+  runWithRequestContext(
+    {
+      prisma: req.prisma ?? rootPrisma,
+      tenantId: req.tenantId,
+    },
+    next,
+  );
+});
 
 // Публичные роуты
 app.use("/api/auth", authRoutes);

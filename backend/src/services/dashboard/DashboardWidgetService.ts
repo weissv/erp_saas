@@ -3,6 +3,7 @@
 
 import { Role } from '@prisma/client';
 import { prisma } from '../../prisma';
+import { getRequestTenantId } from '../../lib/requestContext';
 import {
   DashboardBootstrapPayload,
   DashboardOverviewPayload,
@@ -20,12 +21,13 @@ interface CacheEntry {
 const cache = new Map<string, CacheEntry>();
 
 function cached<T>(key: string, ttlMs: number, fn: () => Promise<T>): Promise<T> {
-  const entry = cache.get(key);
+  const scopedKey = `${getRequestTenantId() ?? 'global'}:${key}`;
+  const entry = cache.get(scopedKey);
   if (entry && entry.expiresAt > Date.now()) {
     return Promise.resolve(entry.data as T);
   }
   return fn().then(data => {
-    cache.set(key, { data, expiresAt: Date.now() + ttlMs });
+    cache.set(scopedKey, { data, expiresAt: Date.now() + ttlMs });
     return data;
   });
 }
