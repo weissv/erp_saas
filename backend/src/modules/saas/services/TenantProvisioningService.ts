@@ -171,9 +171,10 @@ export class TenantProvisioningService {
       // Create employee first (required by schema)
       const employee = await tenantPrisma.employee.create({
         data: {
-          fullName: 'Super Admin',
+          firstName: 'Super',
+          lastName: 'Admin',
           position: 'Administrator',
-          phone: '',
+          rate: 1,
           hireDate: new Date(),
         },
       });

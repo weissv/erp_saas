@@ -4,6 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import jwt from 'jsonwebtoken';
 import { authMiddleware, AuthUser } from './auth';
+import { prisma } from '../prisma';
 import { createMockRequest, createMockResponse, createMockNext } from '../test/mocks/express';
 
 // Мок для конфига
@@ -22,15 +23,16 @@ describe('authMiddleware', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(prisma.user.findFirst).mockResolvedValue(validPayload as any);
   });
 
   describe('OPTIONS запросы', () => {
-    it('пропускает preflight запросы', () => {
+    it('пропускает preflight запросы', async () => {
       const req = createMockRequest({ method: 'OPTIONS' });
       const res = createMockResponse();
       const next = createMockNext();
 
-      authMiddleware(req as any, res as any, next);
+      await authMiddleware(req as any, res as any, next);
 
       expect(next).toHaveBeenCalled();
       expect(res.status).not.toHaveBeenCalled();
@@ -38,7 +40,7 @@ describe('authMiddleware', () => {
   });
 
   describe('Токен в cookie', () => {
-    it('извлекает токен из auth_token cookie', () => {
+    it('извлекает токен из auth_token cookie', async () => {
       const token = jwt.sign(validPayload, 'test-secret');
       const req = createMockRequest({
         cookies: { auth_token: token },
@@ -46,7 +48,7 @@ describe('authMiddleware', () => {
       const res = createMockResponse();
       const next = createMockNext();
 
-      authMiddleware(req as any, res as any, next);
+      await authMiddleware(req as any, res as any, next);
 
       expect(next).toHaveBeenCalled();
       expect(req.user).toMatchObject(validPayload);
@@ -54,7 +56,7 @@ describe('authMiddleware', () => {
   });
 
   describe('Токен в Authorization header', () => {
-    it('извлекает токен из Bearer header', () => {
+    it('извлекает токен из Bearer header', async () => {
       const token = jwt.sign(validPayload, 'test-secret');
       const req = createMockRequest({
         headers: {
@@ -65,13 +67,13 @@ describe('authMiddleware', () => {
       const res = createMockResponse();
       const next = createMockNext();
 
-      authMiddleware(req as any, res as any, next);
+      await authMiddleware(req as any, res as any, next);
 
       expect(next).toHaveBeenCalled();
       expect(req.user).toMatchObject(validPayload);
     });
 
-    it('приоритет cookie над header', () => {
+    it('приоритет cookie над header', async () => {
       const cookieToken = jwt.sign({ ...validPayload, id: 1 }, 'test-secret');
       const headerToken = jwt.sign({ ...validPayload, id: 2 }, 'test-secret');
       const req = createMockRequest({
@@ -83,14 +85,14 @@ describe('authMiddleware', () => {
       const res = createMockResponse();
       const next = createMockNext();
 
-      authMiddleware(req as any, res as any, next);
+      await authMiddleware(req as any, res as any, next);
 
       expect(req.user?.id).toBe(1); // cookie user
     });
   });
 
   describe('Без токена', () => {
-    it('возвращает 401 если токен отсутствует', () => {
+    it('возвращает 401 если токен отсутствует', async () => {
       const req = createMockRequest({
         cookies: {},
         headers: {},
@@ -98,14 +100,14 @@ describe('authMiddleware', () => {
       const res = createMockResponse();
       const next = createMockNext();
 
-      authMiddleware(req as any, res as any, next);
+      await authMiddleware(req as any, res as any, next);
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith({ message: 'Unauthorized' });
       expect(next).not.toHaveBeenCalled();
     });
 
-    it('возвращает 401 для пустого Authorization header', () => {
+    it('возвращает 401 для пустого Authorization header', async () => {
       const req = createMockRequest({
         cookies: {},
         headers: { authorization: '' },
@@ -113,12 +115,12 @@ describe('authMiddleware', () => {
       const res = createMockResponse();
       const next = createMockNext();
 
-      authMiddleware(req as any, res as any, next);
+      await authMiddleware(req as any, res as any, next);
 
       expect(res.status).toHaveBeenCalledWith(401);
     });
 
-    it('возвращает 401 для Authorization header без Bearer', () => {
+    it('возвращает 401 для Authorization header без Bearer', async () => {
       const req = createMockRequest({
         cookies: {},
         headers: { authorization: 'Basic sometoken' },
@@ -126,14 +128,14 @@ describe('authMiddleware', () => {
       const res = createMockResponse();
       const next = createMockNext();
 
-      authMiddleware(req as any, res as any, next);
+      await authMiddleware(req as any, res as any, next);
 
       expect(res.status).toHaveBeenCalledWith(401);
     });
   });
 
   describe('Невалидный токен', () => {
-    it('возвращает 401 для просроченного токена', () => {
+    it('возвращает 401 для просроченного токена', async () => {
       const expiredToken = jwt.sign(
         validPayload,
         'test-secret',
@@ -145,14 +147,14 @@ describe('authMiddleware', () => {
       const res = createMockResponse();
       const next = createMockNext();
 
-      authMiddleware(req as any, res as any, next);
+      await authMiddleware(req as any, res as any, next);
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith({ message: 'Invalid token' });
       expect(next).not.toHaveBeenCalled();
     });
 
-    it('возвращает 401 для токена с неверной подписью', () => {
+    it('возвращает 401 для токена с неверной подписью', async () => {
       const wrongSecretToken = jwt.sign(validPayload, 'wrong-secret');
       const req = createMockRequest({
         cookies: { auth_token: wrongSecretToken },
@@ -160,27 +162,27 @@ describe('authMiddleware', () => {
       const res = createMockResponse();
       const next = createMockNext();
 
-      authMiddleware(req as any, res as any, next);
+      await authMiddleware(req as any, res as any, next);
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith({ message: 'Invalid token' });
     });
 
-    it('возвращает 401 для malformed токена', () => {
+    it('возвращает 401 для malformed токена', async () => {
       const req = createMockRequest({
         cookies: { auth_token: 'not.a.valid.jwt.token' },
       });
       const res = createMockResponse();
       const next = createMockNext();
 
-      authMiddleware(req as any, res as any, next);
+      await authMiddleware(req as any, res as any, next);
 
       expect(res.status).toHaveBeenCalledWith(401);
     });
   });
 
   describe('Валидный токен', () => {
-    it('добавляет user в request', () => {
+    it('добавляет user в request', async () => {
       const token = jwt.sign(validPayload, 'test-secret');
       const req = createMockRequest({
         cookies: { auth_token: token },
@@ -188,7 +190,7 @@ describe('authMiddleware', () => {
       const res = createMockResponse();
       const next = createMockNext();
 
-      authMiddleware(req as any, res as any, next);
+      await authMiddleware(req as any, res as any, next);
 
       expect(req.user).toBeDefined();
       expect(req.user?.id).toBe(validPayload.id);
@@ -196,7 +198,7 @@ describe('authMiddleware', () => {
       expect(req.user?.employeeId).toBe(validPayload.employeeId);
     });
 
-    it('вызывает next() для продолжения', () => {
+    it('вызывает next() для продолжения', async () => {
       const token = jwt.sign(validPayload, 'test-secret');
       const req = createMockRequest({
         cookies: { auth_token: token },
@@ -204,7 +206,7 @@ describe('authMiddleware', () => {
       const res = createMockResponse();
       const next = createMockNext();
 
-      authMiddleware(req as any, res as any, next);
+      await authMiddleware(req as any, res as any, next);
 
       expect(next).toHaveBeenCalledTimes(1);
       expect(next).toHaveBeenCalledWith();

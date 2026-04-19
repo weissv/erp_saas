@@ -147,8 +147,10 @@ describe('TenantProvisioningService', () => {
 
       expect(mockTenantEmployeeCreate).toHaveBeenCalledWith({
         data: expect.objectContaining({
-          fullName: 'Super Admin',
+          firstName: 'Super',
+          lastName: 'Admin',
           position: 'Administrator',
+          rate: 1,
         }),
       });
 
