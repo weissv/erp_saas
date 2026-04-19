@@ -6,6 +6,35 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <script>
+      (function () {
+        var supported = { ru: true, en: true, ja: true };
+        var fallback = "ru";
+        var stored = null;
+
+        try {
+          stored = window.localStorage.getItem("miraiEdu.language");
+        } catch (error) {
+          stored = null;
+        }
+
+        var candidates = [];
+
+        if (stored) candidates.push(stored);
+        if (navigator.languages) candidates = candidates.concat(navigator.languages);
+        if (navigator.language) candidates.push(navigator.language);
+
+        for (var i = 0; i < candidates.length; i += 1) {
+          var candidate = String(candidates[i] || "").toLowerCase().split(/[-_]/)[0];
+          if (supported[candidate]) {
+            document.documentElement.lang = candidate;
+            return;
+          }
+        }
+
+        document.documentElement.lang = fallback;
+      })();
+    </script>
     <title>ERP</title>
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/logo.png" type="image/png" />
