@@ -15,6 +15,7 @@ const WAITLIST_TYPE = "WAITLIST";
 const BUG_REPORT_TYPE = "Баг-репорт";
 const MANAGER_ROLES = ["DEVELOPER", "DIRECTOR", "DEPUTY", "ADMIN"];
 const DELETE_ROLES = ["DEVELOPER", "DIRECTOR", "ADMIN"];
+const MESSAGE_PREVIEW_LENGTH = 120;
 
 const STATUS_OPTIONS = [
   { value: "ALL", label: "Все статусы" },
@@ -155,7 +156,9 @@ export default function FeedbackPage() {
       {
         key: "message",
         header: "Описание",
-        render: (row) => row.message.substring(0, 120) + (row.message.length > 120 ? "..." : ""),
+        render: (row) =>
+          row.message.substring(0, MESSAGE_PREVIEW_LENGTH) +
+          (row.message.length > MESSAGE_PREVIEW_LENGTH ? "..." : ""),
       },
       {
         key: "createdAt",

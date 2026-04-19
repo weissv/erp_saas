@@ -237,7 +237,7 @@ export default function LandingPage() {
             >
               {isMobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
-            <BrandMark tagline={copy.brandTagline} href={viewMode === "success" ? "/" : "/"} />
+            <BrandMark tagline={copy.brandTagline} href="/" />
           </div>
 
           <nav
@@ -286,7 +286,7 @@ export default function LandingPage() {
               <a
                 href={demoUrl}
                 onClick={handleDemoClick}
-                className={`${secondaryActionClass} px-4 py-2 whitespace-nowrap`}
+                className={`${secondaryActionClass} whitespace-nowrap px-4 py-2`}
               >
                 {copy.headerDemoCta}
               </a>
@@ -294,7 +294,7 @@ export default function LandingPage() {
                 type="button"
                 onClick={openLoginModal}
                 aria-haspopup="dialog"
-                className={`${secondaryActionClass} px-4 py-2 whitespace-nowrap`}
+                className={`${secondaryActionClass} whitespace-nowrap px-4 py-2`}
               >
                 <LogIn className="h-4 w-4" />
                 {copy.loginCta}

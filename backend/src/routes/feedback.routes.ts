@@ -9,7 +9,6 @@ const router = Router();
 
 const BUG_REPORT_TYPE = "Баг-репорт";
 const WAITLIST_FEEDBACK_TYPE = "WAITLIST";
-const DEFAULT_WAITLIST_ADMIN_CHAT_ID = "8240936731";
 
 const SEVERITY_LABELS: Record<string, string> = {
   LOW: "Низкий",
@@ -39,7 +38,7 @@ function getWaitlistAdminChatIds(): string[] {
   return (
     process.env.WAITLIST_TELEGRAM_ADMIN_CHAT_ID?.trim() ||
     process.env.TELEGRAM_ADMIN_CHAT_ID?.trim() ||
-    DEFAULT_WAITLIST_ADMIN_CHAT_ID
+    ""
   )
     .split(",")
     .map((chatId) => chatId.trim())
@@ -176,20 +175,24 @@ router.post("/", async (req, res) => {
     if (type === WAITLIST_FEEDBACK_TYPE) {
       const chatIds = getWaitlistAdminChatIds();
 
-      await Promise.allSettled(
-        chatIds.map((chatId) =>
-          sendMessageToChatId(
-            chatId,
-            buildTelegramWaitlistMessage({
-              id: feedback.id,
-              schoolName: parentName,
-              contactInfo,
-              message,
-              createdAt: feedback.createdAt,
-            })
+      if (chatIds.length === 0) {
+        logger.warn("WAITLIST_TELEGRAM_ADMIN_CHAT_ID не задан. Telegram-уведомление по waitlist пропущено.");
+      } else {
+        await Promise.allSettled(
+          chatIds.map((chatId) =>
+            sendMessageToChatId(
+              chatId,
+              buildTelegramWaitlistMessage({
+                id: feedback.id,
+                schoolName: parentName,
+                contactInfo,
+                message,
+                createdAt: feedback.createdAt,
+              })
+            )
           )
-        )
-      );
+        );
+      }
     }
 
     return res.status(201).json(feedback);

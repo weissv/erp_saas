@@ -379,7 +379,7 @@ sudo -E bash scripts/setup-ubuntu.sh
 | `STRIPE_SECRET_KEY` | — | Секретный ключ Stripe |
 | `STRIPE_WEBHOOK_SECRET` | — | Webhook секрет Stripe |
 | `TELEGRAM_BOT_TOKEN` | — | Токен Telegram-бота |
-| `WAITLIST_TELEGRAM_ADMIN_CHAT_ID` | `8240936731` | Chat ID администратора для мгновенных waitlist-заявок |
+| `WAITLIST_TELEGRAM_ADMIN_CHAT_ID` | — | Chat ID администратора для мгновенных waitlist-заявок |
 | `STORAGE_BUCKET` | — | Имя S3/R2 бакета |
 | `STORAGE_REGION` | — | Регион S3 |
 | `STORAGE_ENDPOINT` | — | Endpoint S3/R2 |
