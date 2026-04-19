@@ -187,9 +187,9 @@ export function resolveMarketingLanguage(language: string | null | undefined): M
 const MARKETING_COPY: Record<MarketingLanguage, MarketingCopy> = {
   ru: {
     metadata: {
-      title: "Mirai Edu — AI-платформа для управления школой",
+      title: "Mirai — AI-платформа для управления школой",
       description:
-        "Mirai Edu объединяет ERP, LMS, финансы, коммуникации и AI-автоматизацию в единой SaaS-платформе для школ.",
+        "Mirai объединяет ERP, LMS, финансы, коммуникации и AI-автоматизацию в единой SaaS-платформе для школ.",
     },
     brandTagline: "AI-first ERP и LMS для школ в одном контуре",
     navigationAriaLabel: "Разделы лендинга",
@@ -198,10 +198,10 @@ const MARKETING_COPY: Record<MarketingLanguage, MarketingCopy> = {
     loginCta: "Log in",
     waitlistCta: "Встать в очередь",
     hero: {
-      badge: "Mirai Edu · AI-платформа для школ, академий и учебных центров",
+      badge: "Mirai · AI-платформа для школ, академий и учебных центров",
       title: "Запустите школу на AI-native ERP + LMS с единым контуром управления.",
       description:
-        "Mirai Edu ставит школу в очередь на подключение, открывает рабочее демо без страницы входа и помогает перевести администрацию, педагогов и семьи в единый операционный контур с AI-ассистентами и автоматизацией рутинных задач.",
+        "Mirai ставит школу в очередь на подключение, открывает рабочее демо без страницы входа и помогает перевести администрацию, педагогов и семьи в единый операционный контур с AI-ассистентами и автоматизацией рутинных задач.",
       demoCta: "Открыть демо",
       learnMoreCta: "Как идет запуск",
     },
@@ -215,7 +215,7 @@ const MARKETING_COPY: Record<MarketingLanguage, MarketingCopy> = {
       badge: "Продуктовые направления",
       title: "Закрываем ключевые контуры работы образовательного бизнеса",
       description:
-        "Mirai Edu помогает управлять филиалами, финансами, учебным процессом и сервисными задачами в одном цифровом контуре без разрозненных инструментов.",
+        "Mirai помогает управлять филиалами, финансами, учебным процессом и сервисными задачами в одном цифровом контуре без разрозненных инструментов.",
     },
     aiSection: {
       badge: "AI-оркестрация",
@@ -237,7 +237,7 @@ const MARKETING_COPY: Record<MarketingLanguage, MarketingCopy> = {
     },
     implementation: {
       badge: "Запуск и рост",
-      title: "Как проходит запуск Mirai Edu",
+      title: "Как проходит запуск Mirai",
       description:
         "Запуск строится поэтапно: сначала анализируем процессы, затем включаем базовые модули и после этого расширяем платформу под рост школы.",
     },
@@ -245,11 +245,11 @@ const MARKETING_COPY: Record<MarketingLanguage, MarketingCopy> = {
       eyebrow: "Что получает школа",
       title: "Платформа даёт управляемость сегодня и запас для роста завтра.",
       description:
-        "Mirai Edu помогает быстрее запускать процессы, удерживать качество сервиса и выстраивать прозрачную цифровую среду для администрации, педагогов, родителей и студентов.",
+        "Mirai помогает быстрее запускать процессы, удерживать качество сервиса и выстраивать прозрачную цифровую среду для администрации, педагогов, родителей и студентов.",
     },
     waitlist: {
       badge: "Очередь на запуск",
-      title: "Встаньте в очередь на запуск школы в Mirai Edu.",
+      title: "Встаньте в очередь на запуск школы в Mirai.",
       description:
         "Оставьте школу и канал связи. Мы ставим вас в очередь на запуск, резервируем demo-сценарий и отправляем следующий шаг, чтобы быстро открыть ERP, LMS и AI-автоматизацию в одном контуре.",
       schoolLabel: "Школа",
@@ -314,7 +314,7 @@ const MARKETING_COPY: Record<MarketingLanguage, MarketingCopy> = {
       {
         value: "1 платформа",
         label: "вместо набора разрозненных сервисов",
-        description: "Mirai Edu объединяет операционный, академический и сервисный контуры школы.",
+        description: "Mirai объединяет операционный, академический и сервисный контуры школы.",
       },
       {
         value: "24/7",
@@ -516,9 +516,9 @@ const MARKETING_COPY: Record<MarketingLanguage, MarketingCopy> = {
   },
   en: {
     metadata: {
-      title: "Mirai Edu — AI platform for school operations",
+      title: "Mirai — AI platform for school operations",
       description:
-        "Mirai Edu unifies ERP, LMS, finance, communication, and AI automation in one SaaS platform for schools.",
+        "Mirai unifies ERP, LMS, finance, communication, and AI automation in one SaaS platform for schools.",
     },
     brandTagline: "AI-first ERP and LMS for schools in one operating system",
     navigationAriaLabel: "Landing page sections",
@@ -527,10 +527,10 @@ const MARKETING_COPY: Record<MarketingLanguage, MarketingCopy> = {
     loginCta: "Log in",
     waitlistCta: "Join waitlist",
     hero: {
-      badge: "Mirai Edu · AI platform for schools, academies, and learning centers",
+      badge: "Mirai · AI platform for schools, academies, and learning centers",
       title: "Launch your school on an AI-native ERP + LMS with one operating system.",
       description:
-        "Mirai Edu puts your school in the onboarding queue, opens a working demo without a login page, and moves administrators, teachers, and families into one production-ready operating environment with AI copilots and workflow automation.",
+        "Mirai puts your school in the onboarding queue, opens a working demo without a login page, and moves administrators, teachers, and families into one production-ready operating environment with AI copilots and workflow automation.",
       demoCta: "Open demo",
       learnMoreCta: "How launch works",
     },
@@ -544,7 +544,7 @@ const MARKETING_COPY: Record<MarketingLanguage, MarketingCopy> = {
       badge: "Product areas",
       title: "Cover the critical workflows of an education business",
       description:
-        "Mirai Edu helps manage campuses, finance, academics, and service operations in one digital operating layer without fragmented tools.",
+        "Mirai helps manage campuses, finance, academics, and service operations in one digital operating layer without fragmented tools.",
     },
     aiSection: {
       badge: "AI orchestration",
@@ -566,7 +566,7 @@ const MARKETING_COPY: Record<MarketingLanguage, MarketingCopy> = {
     },
     implementation: {
       badge: "Launch and growth",
-      title: "How Mirai Edu goes live",
+      title: "How Mirai goes live",
       description:
         "Launch happens in stages: we map processes first, switch on core modules next, then expand the platform as the school grows.",
     },
@@ -574,11 +574,11 @@ const MARKETING_COPY: Record<MarketingLanguage, MarketingCopy> = {
       eyebrow: "What the school gets",
       title: "Operational control today and growth capacity for tomorrow.",
       description:
-        "Mirai Edu helps schools move faster, protect service quality, and build a transparent digital environment for admins, teachers, parents, and students.",
+        "Mirai helps schools move faster, protect service quality, and build a transparent digital environment for admins, teachers, parents, and students.",
     },
     waitlist: {
       badge: "Launch waitlist",
-      title: "Join the Mirai Edu school launch waitlist.",
+      title: "Join the Mirai school launch waitlist.",
       description:
         "Leave your school name and contact channel. We reserve your launch slot, prepare the demo scenario, and send the next step to activate ERP, LMS, and AI automation in one system.",
       schoolLabel: "School",
@@ -643,7 +643,7 @@ const MARKETING_COPY: Record<MarketingLanguage, MarketingCopy> = {
       {
         value: "1 platform",
         label: "instead of fragmented tools",
-        description: "Mirai Edu unifies school operations, academics, and service workflows.",
+        description: "Mirai unifies school operations, academics, and service workflows.",
       },
       {
         value: "24/7",
@@ -845,9 +845,9 @@ const MARKETING_COPY: Record<MarketingLanguage, MarketingCopy> = {
   },
   ja: {
     metadata: {
-      title: "Mirai Edu — 学校運営のためのAIプラットフォーム",
+      title: "Mirai — 学校運営のためのAIプラットフォーム",
       description:
-        "Mirai Edu は ERP、LMS、財務、コミュニケーション、AI 自動化をひとつの SaaS プラットフォームに統合します。",
+        "Mirai は ERP、LMS、財務、コミュニケーション、AI 自動化をひとつの SaaS プラットフォームに統合します。",
     },
     brandTagline: "学校向けの AI-first ERP と LMS をひとつの運営基盤に",
     navigationAriaLabel: "ランディングページのセクション",
@@ -856,10 +856,10 @@ const MARKETING_COPY: Record<MarketingLanguage, MarketingCopy> = {
     loginCta: "Log in",
     waitlistCta: "順番待ちに登録",
     hero: {
-      badge: "Mirai Edu · 学校・アカデミー・学習センター向け AI プラットフォーム",
+      badge: "Mirai · 学校・アカデミー・学習センター向け AI プラットフォーム",
       title: "AI-native ERP + LMS で、学校運営をひとつの基盤にまとめます。",
       description:
-        "Mirai Edu は学校を導入キューに登録し、ログイン不要の実働デモを提供し、その後は管理者・講師・保護者を AI アシスタントと自動化を備えたひとつの運営環境へ移行します。",
+        "Mirai は学校を導入キューに登録し、ログイン不要の実働デモを提供し、その後は管理者・講師・保護者を AI アシスタントと自動化を備えたひとつの運営環境へ移行します。",
       demoCta: "デモを開く",
       learnMoreCta: "導入の流れ",
     },
@@ -873,7 +873,7 @@ const MARKETING_COPY: Record<MarketingLanguage, MarketingCopy> = {
       badge: "プロダクト領域",
       title: "教育ビジネスの重要な業務をひとつの基盤でカバー",
       description:
-        "Mirai Edu は、校舎運営、財務、学務、サービス業務を、分断されたツールなしでひとつの運営レイヤーにまとめます。",
+        "Mirai は、校舎運営、財務、学務、サービス業務を、分断されたツールなしでひとつの運営レイヤーにまとめます。",
     },
     aiSection: {
       badge: "AI オーケストレーション",
@@ -895,7 +895,7 @@ const MARKETING_COPY: Record<MarketingLanguage, MarketingCopy> = {
     },
     implementation: {
       badge: "導入と拡張",
-      title: "Mirai Edu 導入の流れ",
+      title: "Mirai 導入の流れ",
       description:
         "まず業務を可視化し、次にコア機能を有効化し、その後に学校の成長に合わせて拡張します。",
     },
@@ -903,11 +903,11 @@ const MARKETING_COPY: Record<MarketingLanguage, MarketingCopy> = {
       eyebrow: "学校が得るもの",
       title: "今日の運営統制と、明日の成長余地を同時に確保。",
       description:
-        "Mirai Edu は、学校がより早く動き、サービス品質を守り、管理者・講師・保護者・生徒のための透明なデジタル環境を作るのを支援します。",
+        "Mirai は、学校がより早く動き、サービス品質を守り、管理者・講師・保護者・生徒のための透明なデジタル環境を作るのを支援します。",
     },
     waitlist: {
       badge: "導入順番待ち",
-      title: "Mirai Edu 導入の順番待ちに登録してください。",
+      title: "Mirai 導入の順番待ちに登録してください。",
       description:
         "学校名と連絡先を残してください。導入枠を確保し、デモシナリオを予約し、ERP・LMS・AI 自動化を有効化する次のステップをご案内します。",
       schoolLabel: "学校名",
@@ -972,7 +972,7 @@ const MARKETING_COPY: Record<MarketingLanguage, MarketingCopy> = {
       {
         value: "1 platform",
         label: "分断された複数ツールの代わりに",
-        description: "Mirai Edu は学校運営、学務、サービス業務をひとつに統合します。",
+        description: "Mirai は学校運営、学務、サービス業務をひとつに統合します。",
       },
       {
         value: "24/7",

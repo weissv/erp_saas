@@ -168,7 +168,7 @@ export default function LandingPage() {
 
       <header className="sticky top-0 z-50 border-b border-card bg-[rgba(246,247,251,0.86)] backdrop-blur-[20px]">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-6 sm:py-4 md:flex-nowrap">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
               className="inline-flex items-center justify-center rounded-lg p-2 text-text-secondary transition hover:bg-fill-quaternary md:hidden"
@@ -177,9 +177,11 @@ export default function LandingPage() {
             >
               {isMobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
-            <div>
-              <p className="text-lg font-semibold tracking-[-0.03em] text-text-primary">Mirai Edu</p>
-              <p className="hidden text-sm text-text-tertiary sm:block">{copy.brandTagline}</p>
+            <div className="flex min-w-0 items-baseline gap-3">
+              <p className="shrink-0 text-lg font-semibold tracking-[-0.03em] text-text-primary">ミライ</p>
+              <p className="hidden truncate whitespace-nowrap text-sm text-text-tertiary sm:block">
+                {copy.brandTagline}
+              </p>
             </div>
           </div>
 
@@ -671,7 +673,7 @@ export default function LandingPage() {
       <footer className="border-t border-card/80 bg-[rgba(246,247,251,0.86)]">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-8 text-sm text-text-tertiary sm:flex-row sm:items-center sm:justify-between">
           <p>
-            © {new Date().getFullYear()} Mirai Edu. {copy.footerDescription}
+            © {new Date().getFullYear()} Mirai. {copy.footerDescription}
           </p>
           <div className="flex flex-wrap items-center gap-4">
             {content.navItems.map((item) => (

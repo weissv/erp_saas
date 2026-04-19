@@ -44,7 +44,7 @@ describe("LandingPage", () => {
         name: /AI вшит в операционные сценарии, а не добавлен как отдельный виджет/i,
       })
     ).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Как проходит запуск Mirai Edu/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Как проходит запуск Mirai/i })).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: /Открыть демо/i })[0]).toHaveAttribute(
       "href",
       expect.stringMatching(/^http:\/\/demo\..+$/)
@@ -66,7 +66,7 @@ describe("LandingPage", () => {
         name: /Launch your school on an AI-native ERP \+ LMS with one operating system/i,
       })
     ).toBeInTheDocument();
-    expect(document.title).toBe("Mirai Edu — AI platform for school operations");
+    expect(document.title).toBe("Mirai — AI platform for school operations");
     expect(document.documentElement.lang).toBe("en");
     expect(document.querySelector('meta[name="description"]')).toHaveAttribute(
       "content",
@@ -88,7 +88,7 @@ describe("LandingPage", () => {
     });
 
     expect(window.localStorage.getItem("miraiEdu.language")).toBe("ja");
-    expect(document.title).toBe("Mirai Edu — 学校運営のためのAIプラットフォーム");
+    expect(document.title).toBe("Mirai — 学校運営のためのAIプラットフォーム");
     expect(document.documentElement.lang).toBe("ja");
   });
 });
