@@ -1184,6 +1184,10 @@ function withIcons<T extends { title: string; description: string; bullets?: str
   items: T[],
   icons: readonly LucideIcon[]
 ) {
+  if (items.length > icons.length) {
+    throw new Error("Not enough icons configured for marketing content.");
+  }
+
   return items.map((item, index) => ({
     ...item,
     icon: icons[index],

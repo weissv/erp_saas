@@ -8,6 +8,16 @@ import {
 
 export const MARKETING_LANGUAGE_STORAGE_KEY = "miraiEdu.language";
 
+function getSupportedLanguageFromCandidate(candidate: string | null | undefined): MarketingLanguage | null {
+  const normalizedCandidate = candidate?.toLowerCase().split(/[-_]/)[0];
+
+  if (MARKETING_SUPPORTED_LANGUAGES.includes(normalizedCandidate as MarketingLanguage)) {
+    return normalizedCandidate as MarketingLanguage;
+  }
+
+  return null;
+}
+
 function getBrowserLanguageCandidates() {
   if (typeof navigator === "undefined") {
     return [];
@@ -19,29 +29,24 @@ function getBrowserLanguageCandidates() {
 export function detectPreferredMarketingLanguage(): MarketingLanguage {
   if (typeof window !== "undefined") {
     const storedLanguage = window.localStorage.getItem(MARKETING_LANGUAGE_STORAGE_KEY);
-    const resolvedStoredLanguage = resolveMarketingLanguage(storedLanguage);
+    const resolvedStoredLanguage = getSupportedLanguageFromCandidate(storedLanguage);
 
-    if (storedLanguage && storedLanguage === resolvedStoredLanguage) {
+    if (resolvedStoredLanguage) {
       return resolvedStoredLanguage;
     }
   }
 
   for (const candidate of getBrowserLanguageCandidates()) {
-    const resolvedLanguage = resolveMarketingLanguage(candidate);
-
-    if (candidate && resolvedLanguage === candidate.toLowerCase().split(/[-_]/)[0]) {
+    const resolvedLanguage = getSupportedLanguageFromCandidate(candidate);
+    if (resolvedLanguage) {
       return resolvedLanguage;
     }
   }
 
   if (typeof document !== "undefined") {
     const documentLanguage = document.documentElement.lang;
-    const resolvedDocumentLanguage = resolveMarketingLanguage(documentLanguage);
-
-    if (
-      documentLanguage &&
-      resolvedDocumentLanguage === documentLanguage.toLowerCase().split(/[-_]/)[0]
-    ) {
+    const resolvedDocumentLanguage = getSupportedLanguageFromCandidate(documentLanguage);
+    if (resolvedDocumentLanguage) {
       return resolvedDocumentLanguage;
     }
   }
