@@ -7,20 +7,24 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { DemoProvider } from "./contexts/DemoContext";
 import { resolveHost } from "./lib/host";
 import LmsRouter from "./router/lms-router";
+import { MetrikaRoot, MetrikaRouteTracker } from "./lib/metrika";
 import "../css/index.css";
 
 const isDemoHost = resolveHost().kind === "demo";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <BrowserRouter basename="/lms">
-      <DemoProvider isDemo={isDemoHost}>
-        <TenantProvider>
-          <AuthProvider>
-            <LmsRouter />
-          </AuthProvider>
-        </TenantProvider>
-      </DemoProvider>
-    </BrowserRouter>
+    <MetrikaRoot>
+      <BrowserRouter basename="/lms">
+        <MetrikaRouteTracker />
+        <DemoProvider isDemo={isDemoHost}>
+          <TenantProvider>
+            <AuthProvider>
+              <LmsRouter />
+            </AuthProvider>
+          </TenantProvider>
+        </DemoProvider>
+      </BrowserRouter>
+    </MetrikaRoot>
   </React.StrictMode>
 );

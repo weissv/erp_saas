@@ -10,6 +10,7 @@ import { DemoBanner } from "./components/DemoBanner";
 import AppRouter from "./router";
 import LandingPage from "./pages/LandingPage";
 import { resolveHost } from "./lib/host";
+import { MetrikaRoot, MetrikaRouteTracker } from "./lib/metrika";
 import "./i18n";
 import "../css/index.css"; // Tailwind
 
@@ -25,6 +26,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <MetrikaRouteTracker />
       <DemoProvider isDemo={isDemo}>
         <TenantProvider>
           <AuthProvider>
@@ -41,6 +43,8 @@ function App() {
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
+    <MetrikaRoot>
+      <App />
+    </MetrikaRoot>
   </React.StrictMode>
 );

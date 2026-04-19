@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, Check, ChevronRight, LogIn, PlayCircle } from "lucide-react";
 import {
@@ -9,6 +9,7 @@ import {
 import { getDemoUrl } from "../features/marketing/url";
 import { api } from "../lib/api";
 import { LoginWorkspaceModal } from "../components/modals/LoginWorkspaceModal";
+import { trackMetrikaGoal, trackMetrikaHit } from "../lib/metrika";
 import "../i18n";
 import { setMarketingLanguage } from "../i18n";
 
@@ -56,6 +57,7 @@ export default function LandingPage() {
     message: "",
   });
   const [isSubmittingWaitlist, setIsSubmittingWaitlist] = useState(false);
+  const lastTrackedUrlRef = useRef<string | null>(null);
   const [waitlistState, setWaitlistState] = useState<{
     kind: "idle" | "success" | "error";
     message: string;
@@ -84,6 +86,15 @@ export default function LandingPage() {
     }
 
     meta.setAttribute("content", description);
+
+    if (typeof window !== "undefined") {
+      const currentUrl = window.location.href;
+
+      if (lastTrackedUrlRef.current !== currentUrl) {
+        trackMetrikaHit(currentUrl, title, lastTrackedUrlRef.current ?? document.referrer);
+        lastTrackedUrlRef.current = currentUrl;
+      }
+    }
 
     return () => {
       document.title = previousTitle;
@@ -145,6 +156,10 @@ export default function LandingPage() {
     setIsLoginModalOpen(true);
   };
 
+  const handleDemoClick = () => {
+    trackMetrikaGoal("open_demo");
+  };
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-bg-canvas text-text-primary">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(0,122,255,0.14),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.96),rgba(244,247,255,0.92)_40%,rgba(240,243,250,0.92))]" />
@@ -201,6 +216,7 @@ export default function LandingPage() {
 
             <a
               href={demoUrl}
+              onClick={handleDemoClick}
               className={`${secondaryActionClass} hidden px-4 py-2 sm:inline-flex`}
             >
               {copy.headerDemoCta}
@@ -242,7 +258,7 @@ export default function LandingPage() {
                 {copy.waitlistCta}
                 <ArrowRight className="h-4 w-4" />
               </a>
-              <a href={demoUrl} className={secondaryActionClass}>
+              <a href={demoUrl} onClick={handleDemoClick} className={secondaryActionClass}>
                 <PlayCircle className="h-4 w-4" />
                 {copy.hero.demoCta}
               </a>
