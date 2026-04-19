@@ -205,6 +205,9 @@ export const TIME = {
 export const JWT = {
   EXPIRES_IN: '12h',
   COOKIE_NAME: 'auth_token',
+  CSRF_SECRET_COOKIE_NAME: '_csrf',
+  CSRF_COOKIE_NAME: 'csrf_token',
+  CSRF_HEADER_NAME: 'x-csrf-token',
   COOKIE_MAX_AGE: 12 * 60 * 60 * 1000, // 12 часов
 } as const;
 

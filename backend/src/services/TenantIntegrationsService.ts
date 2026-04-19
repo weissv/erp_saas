@@ -1,39 +1,25 @@
-// src/services/TenantIntegrationsService.ts
-// Fetches per-tenant integration credentials from the database.
-// Services call this at runtime instead of reading process.env.
-
-import { prisma } from "../prisma";
+import type { PrismaClient } from "@prisma/client";
 import { config } from "../config";
+import { getMasterPrisma } from "../lib/masterPrisma";
+import { getRequestPrisma, getRequestTenantId } from "../lib/requestContext";
+import { getTenantPrisma } from "../lib/tenantPrisma";
+import { rootPrisma } from "../prisma";
 import { logger } from "../utils/logger";
 import { EncryptionService } from "./EncryptionService";
 
 /** Default tenant ID for single-tenant / legacy deployments. */
 export const DEFAULT_TENANT_ID = "default";
 
-/**
- * Shape returned to callers — every field is guaranteed present
- * (filled from the DB row or from env-level defaults).
- */
 export interface TenantCredentials {
   tenantId: string;
-
-  // Telegram
   telegramBotToken: string | null;
-
-  // AI – Embeddings (Gemini)
   geminiApiKey: string | null;
-
-  // AI – Chat (Groq / OpenAI-compatible)
   groqApiKey: string | null;
   groqModel: string;
   groqBlitzModel: string;
   groqHeavyModel: string;
-
-  // Google Drive
   googleDriveApiKey: string | null;
   googleDriveFolderId: string;
-
-  // 1C OData
   oneCBaseUrl: string;
   oneCUser: string;
   oneCPassword: string;
@@ -41,17 +27,9 @@ export interface TenantCredentials {
   oneCCronSchedule: string;
 }
 
-// ---------------------------------------------------------------------------
-// In-memory cache with TTL per tenantId
-// ---------------------------------------------------------------------------
 const cache = new Map<string, { data: TenantCredentials; expiresAt: number }>();
-const CACHE_TTL_MS = 60_000; // 1 minute
+const CACHE_TTL_MS = 60_000;
 
-/**
- * Build a TenantCredentials object that falls back to process.env / config
- * values when a DB row field is null (backwards-compatible for single-tenant
- * deployments that still use .env).
- */
 function buildCredentials(
   tenantId: string,
   row: {
@@ -88,14 +66,31 @@ function buildCredentials(
   };
 }
 
-// ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
+async function resolveTenantPrisma(tenantId: string): Promise<PrismaClient> {
+  const requestPrisma = getRequestPrisma();
+  const requestTenantId = getRequestTenantId();
 
-/**
- * Fetches (or returns cached) integration credentials for the given tenant.
- * Falls back to .env / config values for any missing DB fields.
- */
+  if (requestPrisma && requestTenantId === tenantId) {
+    return requestPrisma;
+  }
+
+  if (tenantId === DEFAULT_TENANT_ID) {
+    return rootPrisma;
+  }
+
+  const master = getMasterPrisma();
+  const tenant = await master.tenant.findUnique({
+    where: { id: tenantId },
+    select: { dbUrl: true },
+  });
+
+  if (!tenant?.dbUrl) {
+    throw new Error(`Tenant ${tenantId} not found`);
+  }
+
+  return getTenantPrisma(tenantId, tenant.dbUrl);
+}
+
 export async function getTenantIntegrations(tenantId: string): Promise<TenantCredentials> {
   const now = Date.now();
   const cached = cache.get(tenantId);
@@ -104,12 +99,12 @@ export async function getTenantIntegrations(tenantId: string): Promise<TenantCre
   }
 
   try {
-    const row = await prisma.tenantIntegrations.findUnique({
+    const tenantPrisma = await resolveTenantPrisma(tenantId);
+    const row = await tenantPrisma.tenantIntegrations.findUnique({
       where: { tenantId },
     });
 
     const credentials = buildCredentials(tenantId, row);
-
     cache.set(tenantId, {
       data: credentials,
       expiresAt: now + CACHE_TTL_MS,
@@ -117,46 +112,35 @@ export async function getTenantIntegrations(tenantId: string): Promise<TenantCre
 
     return credentials;
   } catch (error) {
-    // If the table doesn't exist yet (migration not applied), fall back gracefully
     if (
       error instanceof Error &&
       (error.message.includes("does not exist") ||
-        error.message.includes("UNDEFINED_TABLE"))
+        error.message.includes("UNDEFINED_TABLE") ||
+        error.message.includes("not found"))
     ) {
-      logger.warn("[TenantIntegrations] Table not found — falling back to .env values");
+      logger.warn(`[TenantIntegrations] Falling back to .env values for tenant ${tenantId}`);
       return buildCredentials(tenantId, null);
     }
 
     logger.error("[TenantIntegrations] Error fetching credentials:", error);
-    // Return .env fallback on any error to avoid crashing the service
     return buildCredentials(tenantId, null);
   }
 }
 
-/** Alias kept for backward-compatibility with callers using the service object. */
 export const getCredentials = getTenantIntegrations;
 
-/**
- * Invalidates the cache for a specific tenant (e.g. after updating credentials).
- */
 export function invalidateCache(tenantId: string): void {
   cache.delete(tenantId);
 }
 
-/**
- * Clears the entire credentials cache.
- */
 export function invalidateAllCache(): void {
   cache.clear();
 }
 
-/**
- * Retrieves and decrypts the tenant's OpenAI API key.
- * Returns null if no key is configured (callers should throw MissingOpenAiKeyError).
- */
 export async function getDecryptedOpenAiKey(tenantId: string): Promise<string | null> {
   try {
-    const row = await prisma.tenantIntegrations.findUnique({
+    const tenantPrisma = await resolveTenantPrisma(tenantId);
+    const row = await tenantPrisma.tenantIntegrations.findUnique({
       where: { tenantId },
       select: {
         openAiKeyEncrypted: true,

@@ -4,7 +4,7 @@ import app from "./app";
 import { config, validateConfig } from "./config";
 import { logger } from "./utils/logger";
 import { AiService } from "./services/AiService";
-import { initTelegramBot } from "./services/TelegramService";
+import { initTelegramBots } from "./services/TelegramService";
 import { setIntervalWithJitter } from "./services/CronJitterService";
 import { initSocketIO } from "./lib/socketio";
 import { startOneCWorker } from "./modules/onec/queue/onec-sync.worker";
@@ -69,7 +69,7 @@ httpServer.listen(config.port, () => {
   logger.info(`API running on http://0.0.0.0:${config.port}`);
 
   // Инициализируем Telegram бота
-  void initTelegramBot();
+  void initTelegramBots();
 
   // Запускаем синхронизацию Google Drive после задержки,
   // чтобы дать время для инициализации базы данных

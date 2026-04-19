@@ -53,15 +53,13 @@ function SectionHeading({
   );
 }
 
-function BrandMark({ tagline, href = "/" }: { tagline: string; href?: string }) {
+function BrandMark({ href = "/" }: { href?: string }) {
   return (
     <a href={href} aria-label="Mirai homepage" className="group inline-flex min-w-0 items-center gap-3">
-      <span className="inline-flex h-11 min-w-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#007AFF,#34C759)] px-3 text-sm font-semibold tracking-[0.18em] text-white shadow-[0_14px_32px_rgba(0,122,255,0.26)]">
-        ミライ
-      </span>
-      <span className="flex min-w-0 flex-col">
-        <span className="text-lg font-semibold tracking-[-0.04em] text-text-primary">Mirai</span>
-        <span className="hidden truncate text-xs text-text-tertiary sm:block">{tagline}</span>
+      <span
+        className="landing-brand-mark inline-flex h-11 items-center justify-center rounded-[1.15rem] border border-[rgba(29,29,31,0.12)] bg-transparent px-4 text-sm font-semibold uppercase tracking-[0.28em] text-text-primary transition group-hover:border-[rgba(0,122,255,0.32)] group-hover:text-macos-blue"
+      >
+        Mirai
       </span>
     </a>
   );
@@ -227,7 +225,7 @@ export default function LandingPage() {
       <div className="absolute left-1/2 top-24 -z-10 h-80 w-80 -translate-x-1/2 rounded-full bg-[rgba(52,199,89,0.14)] blur-3xl" />
 
       <header className="sticky top-0 z-50 border-b border-card bg-[rgba(246,247,251,0.86)] backdrop-blur-[20px]">
-        <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 sm:px-6 sm:py-4 lg:grid-cols-[auto_minmax(0,1fr)_auto]">
+        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6 sm:py-4">
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
@@ -237,25 +235,25 @@ export default function LandingPage() {
             >
               {isMobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
-            <BrandMark tagline={copy.brandTagline} href="/" />
+            <BrandMark href="/" />
           </div>
 
           <nav
-            className="hidden items-center justify-center gap-6 lg:flex"
+            className="hidden min-w-0 flex-1 items-center justify-center gap-5 overflow-x-auto whitespace-nowrap lg:flex"
             aria-label={copy.navigationAriaLabel}
           >
             {content.navItems.map((item) => (
               <a
                 key={item.href}
                 href={item.href}
-                className="text-sm font-medium text-text-tertiary transition-colors hover:text-text-primary"
+                className="shrink-0 text-sm font-medium text-text-tertiary transition-colors hover:text-text-primary"
               >
                 {item.label}
               </a>
             ))}
           </nav>
 
-          <div className="flex items-center justify-end gap-2 lg:flex-nowrap lg:gap-3">
+          <div className="ml-auto flex items-center justify-end gap-2 lg:flex-nowrap lg:gap-3">
             <div
               className="inline-flex items-center gap-1 rounded-full border border-card bg-white/80 p-1 shadow-subtle"
               role="group"
@@ -283,13 +281,6 @@ export default function LandingPage() {
             </div>
 
             <div className="hidden items-center gap-2 md:flex lg:gap-3">
-              <a
-                href={demoUrl}
-                onClick={handleDemoClick}
-                className={`${secondaryActionClass} whitespace-nowrap px-4 py-2`}
-              >
-                {copy.headerDemoCta}
-              </a>
               <button
                 type="button"
                 onClick={openLoginModal}
@@ -299,14 +290,7 @@ export default function LandingPage() {
                 <LogIn className="h-4 w-4" />
                 {copy.loginCta}
               </button>
-              {viewMode === "landing" ? (
-                <a
-                  href="#waitlist"
-                  className="inline-flex items-center justify-center whitespace-nowrap rounded-full bg-macos-blue px-4 py-2 text-sm font-semibold text-white shadow-subtle transition hover:bg-macos-blue-hover"
-                >
-                  {copy.waitlistCta}
-                </a>
-              ) : (
+              {viewMode === "success" ? (
                 <a
                   href="/"
                   onClick={handleHomeClick}
@@ -314,7 +298,7 @@ export default function LandingPage() {
                 >
                   {copy.successPage.primaryCta}
                 </a>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
@@ -355,25 +339,6 @@ export default function LandingPage() {
                   <LogIn className="h-4 w-4" />
                   {copy.loginCta}
                 </button>
-                <a
-                  href={demoUrl}
-                  onClick={() => {
-                    handleDemoClick();
-                    setIsMobileNavOpen(false);
-                  }}
-                  className={`${primaryActionClass} w-full justify-center px-4 py-2`}
-                >
-                  {copy.headerDemoCta}
-                </a>
-                {viewMode === "landing" ? (
-                  <a
-                    href="#waitlist"
-                    onClick={() => setIsMobileNavOpen(false)}
-                    className={`${secondaryActionClass} w-full justify-center px-4 py-2`}
-                  >
-                    {copy.waitlistCta}
-                  </a>
-                ) : null}
               </div>
             </nav>
           </div>
@@ -389,7 +354,7 @@ export default function LandingPage() {
                   {copy.successPage.eyebrow}
                 </span>
                 <div className="mt-6 flex justify-center">
-                  <BrandMark tagline={copy.brandTagline} />
+                  <BrandMark />
                 </div>
                 <h1 className="mt-8 text-3xl font-semibold tracking-[-0.05em] text-text-primary sm:text-4xl lg:text-5xl">
                   {copy.successPage.title}

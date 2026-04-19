@@ -4,6 +4,7 @@ import cors from "cors";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import { authMiddleware } from "./middleware/auth";
+import { csrfProtection } from "./middleware/csrf";
 import { tenantResolver } from "./middleware/tenantResolver";
 import { errorHandler } from "./middleware/errorHandler";
 import { config } from "./config";
@@ -69,7 +70,7 @@ const corsOptions: cors.CorsOptions = {
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-  allowedHeaders: ["Content-Type", "Authorization", "Origin", "Accept"],
+  allowedHeaders: ["Content-Type", "Authorization", "Origin", "Accept", "X-CSRF-Token"],
   exposedHeaders: ["Set-Cookie"],
   preflightContinue: false,
   optionsSuccessStatus: 204,
@@ -87,7 +88,6 @@ app.use(
 );
 
 app.use(express.json({ limit: "10mb" }));
-app.use(cookieParser());
 app.use(morgan("dev"));
 
 // Health check endpoint (public, no tenant resolution needed)
@@ -111,9 +111,10 @@ app.use((req, _res, next) => {
 });
 
 // Публичные роуты
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", cookieParser(), csrfProtection, authRoutes);
 app.use("/api/public/exams", publicExamsRoutes); // Публичный доступ к контрольным для студентов
 app.use("/api/tenant", tenantRoutes); // Public tenant branding (no auth)
+app.use("/api/feedback", cookieParser(), csrfProtection, feedbackRoutes); // Public waitlist + locally protected feedback actions
 
 // ── 1C Push API (Integration Key auth — not JWT) ────────────────────────
 // This endpoint is called by the 1C Extension using a per-tenant API key.
@@ -122,7 +123,7 @@ app.use("/api/v1/integration", oneCPushSyncRoutes);
 app.use("/api/v1/integration", oneCPushApiRoutes);
 
 // Защита всех последующих роутов
-app.use(authMiddleware);
+app.use(cookieParser(), csrfProtection, authMiddleware);
 
 // 3. Эти роуты теперь защищены:
 app.use("/api/dashboard", dashboardRoutes);
@@ -141,7 +142,6 @@ app.use("/api/groups", groupsRoutes);
 app.use("/api/notifications", notificationsRoutes);
 app.use("/api/documents", documentsRoutes);
 app.use("/api/calendar", calendarRoutes);
-app.use("/api/feedback", feedbackRoutes);
 app.use("/api/procurement", procurementRoutes);
 app.use("/api/recipes", recipesRoutes);
 app.use("/api/staffing", staffingRoutes);

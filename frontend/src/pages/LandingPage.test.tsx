@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import LandingPage from "./LandingPage";
 import i18n, { syncMarketingLanguage } from "../i18n";
@@ -39,6 +39,7 @@ describe("LandingPage", () => {
 
   it("renders the refactored marketing sections in russian", () => {
     render(<LandingPage />);
+    const header = screen.getByRole("banner");
 
     expect(
       screen.getByRole("heading", {
@@ -64,6 +65,9 @@ describe("LandingPage", () => {
     expect(screen.getAllByRole("button", { name: /^Log in$/i })[0]).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /Встать в очередь/i })[0]).toBeInTheDocument();
     expect(screen.getByRole("group", { name: /Выбор языка/i })).toBeInTheDocument();
+    expect(within(header).queryByRole("link", { name: /Демо/i })).not.toBeInTheDocument();
+    expect(within(header).queryByRole("link", { name: /Встать в очередь/i })).not.toBeInTheDocument();
+    expect(within(header).queryByText(/AI-first ERP/i)).not.toBeInTheDocument();
   });
 
   it("uses browser language and updates metadata for english", async () => {
