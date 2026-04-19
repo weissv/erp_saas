@@ -6,6 +6,23 @@ const normalizedHost = rawBaseUrl.replace(/\/+$/, "");
 const apiBase = normalizedHost.endsWith("/api") ? normalizedHost : `${normalizedHost}/api`;
 
 const isAbsoluteUrl = (value: string) => /^https?:\/\//i.test(value);
+const CSRF_COOKIE_NAME = "csrf_token";
+const CSRF_HEADER_NAME = "x-csrf-token";
+const CSRF_SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
+const readCookie = (name: string): string | null => {
+  if (typeof document === "undefined") return null;
+
+  const cookie = document.cookie
+    .split(";")
+    .map((item) => item.trim())
+    .find((item) => item.startsWith(`${name}=`));
+
+  if (!cookie) return null;
+
+  const [, value = ""] = cookie.split("=");
+  return value ? decodeURIComponent(value) : null;
+};
 
 const buildUrl = (path: string) => {
   if (isAbsoluteUrl(path)) return path;
@@ -160,6 +177,7 @@ class API {
 
   private async request<T = any>(path: string, options: RequestInit = {}): Promise<T> {
     const headers = this.normalizeHeaders(options.headers);
+    const method = (options.method || "GET").toUpperCase();
     
     // Устанавливаем Content-Type только если не FormData
     if (!headers["Content-Type"] && !(options.body instanceof FormData)) {
@@ -168,6 +186,13 @@ class API {
     
     if (this.token) {
       headers.Authorization = `Bearer ${this.token}`;
+    }
+
+    if (!CSRF_SAFE_METHODS.has(method) && !headers[CSRF_HEADER_NAME]) {
+      const csrfToken = readCookie(CSRF_COOKIE_NAME);
+      if (csrfToken) {
+        headers[CSRF_HEADER_NAME] = csrfToken;
+      }
     }
 
     let config: RequestInit = {

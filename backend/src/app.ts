@@ -4,6 +4,7 @@ import cors from "cors";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import { authMiddleware } from "./middleware/auth";
+import { csrfProtection } from "./middleware/csrf";
 import { tenantResolver } from "./middleware/tenantResolver";
 import { errorHandler } from "./middleware/errorHandler";
 import { config } from "./config";
@@ -69,7 +70,7 @@ const corsOptions: cors.CorsOptions = {
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-  allowedHeaders: ["Content-Type", "Authorization", "Origin", "Accept"],
+  allowedHeaders: ["Content-Type", "Authorization", "Origin", "Accept", "X-CSRF-Token"],
   exposedHeaders: ["Set-Cookie"],
   preflightContinue: false,
   optionsSuccessStatus: 204,
@@ -89,6 +90,7 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 app.use(morgan("dev"));
+app.use(csrfProtection);
 
 // Health check endpoint (public, no tenant resolution needed)
 app.get("/api/health", (_req, res) => {

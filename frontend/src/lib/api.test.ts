@@ -17,7 +17,7 @@ vi.stubGlobal('import', {
 });
 
 // Импортируем после моков
-import { ApiRequestError } from './api';
+import { api, ApiRequestError } from './api';
 
 describe('ApiRequestError', () => {
   describe('Конструктор', () => {
@@ -108,6 +108,8 @@ describe('ApiRequestError', () => {
 describe('API Client Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    api.setToken(null);
+    document.cookie = 'csrf_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
     mockFetch.mockResolvedValue({
       ok: true,
       status: 200,
@@ -208,6 +210,36 @@ describe('API Client Integration', () => {
 
       // В реальном тесте: api.setToken('test-token');
       // Проверяем что fetch был вызван с Authorization header
+    });
+
+    it('добавляет X-CSRF-Token для mutating-запросов из cookie', async () => {
+      document.cookie = 'csrf_token=test-csrf-token; path=/';
+
+      await api.post('/test', { ok: true });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'x-csrf-token': 'test-csrf-token',
+          }),
+        })
+      );
+    });
+
+    it('не добавляет X-CSRF-Token для GET-запросов', async () => {
+      document.cookie = 'csrf_token=test-csrf-token; path=/';
+
+      await api.get('/test');
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: expect.not.objectContaining({
+            'x-csrf-token': 'test-csrf-token',
+          }),
+        })
+      );
     });
 
     it('не перезаписывает Content-Type для FormData', async () => {
