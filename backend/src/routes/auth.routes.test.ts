@@ -2,6 +2,7 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import request from "supertest";
 import { describe, expect, it, vi } from "vitest";
+import { csrfProtection } from "../middleware/csrf";
 
 vi.mock("../prisma", () => ({
   prisma: {
@@ -17,6 +18,7 @@ function createApp() {
   const app = express();
   app.use(express.json());
   app.use(cookieParser());
+  app.use(csrfProtection);
   app.use("/api/auth", authRoutes);
   return app;
 }
@@ -35,6 +37,8 @@ describe("auth.routes csrf cookies", () => {
   it("clears auth and csrf cookies on logout", async () => {
     const response = await request(createApp())
       .post("/api/auth/logout")
+      .set("Origin", "http://localhost:5173")
+      .set("X-CSRF-Token", "csrf")
       .set("Cookie", ["auth_token=token", "csrf_token=csrf"]);
 
     expect(response.status).toBe(200);

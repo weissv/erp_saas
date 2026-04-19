@@ -95,7 +95,7 @@ export function UserForm({ initialData, onSuccess, onCancel}: UserFormProps) {
  setTelegramLinkError(null);
 
  try {
- const result = await api.get<{ url: string }>(`/api/users/${initialData.id}/telegram-link`);
+ const result = await api.get<{ url: string }>(`/users/${initialData.id}/telegram-link`);
  if (!cancelled) {
  setTelegramConnectUrl(result.url);
  }

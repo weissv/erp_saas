@@ -88,9 +88,7 @@ app.use(
 );
 
 app.use(express.json({ limit: "10mb" }));
-app.use(cookieParser());
 app.use(morgan("dev"));
-app.use(csrfProtection);
 
 // Health check endpoint (public, no tenant resolution needed)
 app.get("/api/health", (_req, res) => {
@@ -113,10 +111,10 @@ app.use((req, _res, next) => {
 });
 
 // Публичные роуты
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", cookieParser(), csrfProtection, authRoutes);
 app.use("/api/public/exams", publicExamsRoutes); // Публичный доступ к контрольным для студентов
 app.use("/api/tenant", tenantRoutes); // Public tenant branding (no auth)
-app.use("/api/feedback", feedbackRoutes); // Public waitlist + locally protected feedback actions
+app.use("/api/feedback", cookieParser(), csrfProtection, feedbackRoutes); // Public waitlist + locally protected feedback actions
 
 // ── 1C Push API (Integration Key auth — not JWT) ────────────────────────
 // This endpoint is called by the 1C Extension using a per-tenant API key.
@@ -125,7 +123,7 @@ app.use("/api/v1/integration", oneCPushSyncRoutes);
 app.use("/api/v1/integration", oneCPushApiRoutes);
 
 // Защита всех последующих роутов
-app.use(authMiddleware);
+app.use(cookieParser(), csrfProtection, authMiddleware);
 
 // 3. Эти роуты теперь защищены:
 app.use("/api/dashboard", dashboardRoutes);
