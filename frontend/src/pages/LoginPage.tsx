@@ -45,8 +45,8 @@ export default function LoginPage() {
   ];
 
   return (
-    <div className="relative mx-auto flex min-h-[85vh] max-w-5xl flex-col justify-center px-6">
-      <div className="relative grid gap-10 rounded-[20px] bg-surface-primary border border-card shadow-floating p-10 lg:grid-cols-2">
+    <div className="relative mx-auto flex min-h-[85vh] max-w-5xl flex-col justify-center px-4 sm:px-6">
+      <div className="relative grid gap-8 rounded-[20px] bg-surface-primary border border-card shadow-floating p-5 sm:p-8 lg:gap-10 lg:p-10 lg:grid-cols-2">
 
         {/* Left — Brand */}
         <div className="relative flex flex-col justify-between">
