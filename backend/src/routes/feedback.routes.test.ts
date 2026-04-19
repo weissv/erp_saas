@@ -2,21 +2,22 @@ import express from "express";
 import request from "supertest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mockPrisma = {
-  feedback: {
-    create: vi.fn(),
-    findMany: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
+const { mockPrisma, mockSendMessageToChatId, mockNotifyRole } = vi.hoisted(() => ({
+  mockPrisma: {
+    feedback: {
+      create: vi.fn(),
+      findMany: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
+    user: {
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+    },
   },
-  user: {
-    findUnique: vi.fn(),
-    findFirst: vi.fn(),
-  },
-};
-
-const mockSendMessageToChatId = vi.fn();
-const mockNotifyRole = vi.fn();
+  mockSendMessageToChatId: vi.fn(),
+  mockNotifyRole: vi.fn(),
+}));
 
 vi.mock("../prisma", () => ({
   prisma: mockPrisma,
