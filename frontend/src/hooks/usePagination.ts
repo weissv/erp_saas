@@ -82,7 +82,7 @@ export function usePagination(options: UsePaginationOptions = {}): UsePagination
     const maxVisible = 5;
     
     let start = Math.max(1, page - Math.floor(maxVisible / 2));
-    let end = Math.min(totalPages, start + maxVisible - 1);
+    const end = Math.min(totalPages, start + maxVisible - 1);
     
     // Корректируем start если end слишком близко к totalPages
     if (end - start + 1 < maxVisible) {

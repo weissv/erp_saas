@@ -209,17 +209,19 @@ export const createFetchMock = (responses: Map<string, any>) => {
 /**
  * Мок для API ответа с пагинацией
  */
-export const createPaginatedResponse = <T>(
+export function createPaginatedResponse<T>(
   items: T[],
   page = 1,
   pageSize = 10
-): { items: T[]; total: number; page: number; pageSize: number; totalPages: number } => ({
-  items,
-  total: items.length,
-  page,
-  pageSize,
-  totalPages: Math.ceil(items.length / pageSize),
-});
+): { items: T[]; total: number; page: number; pageSize: number; totalPages: number } {
+  return {
+    items,
+    total: items.length,
+    page,
+    pageSize,
+    totalPages: Math.ceil(items.length / pageSize),
+  };
+}
 
 /**
  * Генерирует случайный ID

@@ -155,7 +155,6 @@ export function useApi<T>({
         setLoading(false);
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url, page, initialPageSize, search, searchFieldsKey, filtersKey, sortBy, sortOrder, enabled, showErrorToast]);
 
   const refresh = useCallback(async () => {

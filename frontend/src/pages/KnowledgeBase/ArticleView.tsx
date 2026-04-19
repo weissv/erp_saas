@@ -29,7 +29,7 @@ import { MacosAlertDialog} from"../../components/MacosAlertDialog";
 // Для полноценного Markdown рекомендуется установить react-markdown
 // ============================================================================
 function renderMarkdown(md: string): string {
- let html = md
+ const html = md
  // Блоки кода
  .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto my-4 text-sm"><code>$2</code></pre>')
  // Инлайн-код
@@ -49,7 +49,7 @@ function renderMarkdown(md: string): string {
  // Ссылки
  .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2"target="_blank"rel="noopener"class="text-macos-blue hover:underline">$1</a>')
  // Маркированные списки
- .replace(/^[\-\*] (.+)$/gm, '<li class="ml-4 list-disc">$1</li>')
+ .replace(/^[-*] (.+)$/gm, '<li class="ml-4 list-disc">$1</li>')
  // Нумерованные списки
  .replace(/^\d+\. (.+)$/gm, '<li class="ml-4 list-decimal">$1</li>')
  // Абзацы

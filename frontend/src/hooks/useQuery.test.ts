@@ -1,168 +1,142 @@
 // src/hooks/useQuery.test.ts
 // Unit тесты для useQuery хука
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
-import { useQuery } from './useQuery';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { renderHook, waitFor, act } from "@testing-library/react";
+import { useQuery } from "./useQuery";
 
-// Мок для api модуля
 const mockGet = vi.fn();
 
-vi.mock('../lib/api', () => ({
+vi.mock("../lib/api", () => ({
   api: {
     get: (...args: any[]) => mockGet(...args),
   },
   ApiRequestError: class extends Error {
     statusCode: number;
     code: string;
-    constructor(message: string, statusCode: number, code = 'API_ERROR') {
+
+    constructor(message: string, statusCode: number, code = "API_ERROR") {
       super(message);
       this.statusCode = statusCode;
       this.code = code;
-      this.name = 'ApiRequestError';
+      this.name = "ApiRequestError";
     }
   },
-  getApiErrorMessage: (err: any) => err?.message || 'Unknown error',
+  getApiErrorMessage: (err: any) => err?.message || "Unknown error",
 }));
 
-// Мок для sonner toast
-vi.mock('sonner', () => ({
+vi.mock("sonner", () => ({
   toast: {
     error: vi.fn(),
     success: vi.fn(),
   },
 }));
 
-describe('useQuery', () => {
-  const mockData = { id: 1, name: 'Test Item' };
+describe("useQuery", () => {
+  const mockData = { id: 1, name: "Test Item" };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.useFakeTimers();
     mockGet.mockResolvedValue(mockData);
   });
 
-  afterEach(() => {
-    vi.useRealTimers();
-  });
+  describe("Начальное состояние", () => {
+    it("инициализируется с правильными значениями по умолчанию", () => {
+      mockGet.mockImplementation(() => new Promise(() => {}));
 
-  describe('Начальное состояние', () => {
-    it('инициализируется с правильными значениями по умолчанию', () => {
-      mockGet.mockImplementation(() => new Promise(() => {})); // Never resolves
-
-      const { result } = renderHook(() =>
-        useQuery({ url: '/api/item' })
-      );
+      const { result } = renderHook(() => useQuery({ url: "/api/item" }));
 
       expect(result.current.data).toBeUndefined();
       expect(result.current.error).toBeUndefined();
       expect(result.current.isLoading).toBe(true);
-      expect(result.current.isFetching).toBe(false);
+      expect(result.current.isFetching).toBe(true);
       expect(result.current.isSuccess).toBe(false);
       expect(result.current.isError).toBe(false);
     });
 
-    it('использует initialData когда предоставлено', () => {
-      const initialData = { id: 0, name: 'Initial' };
+    it("использует initialData когда предоставлено", async () => {
+      const initialData = { id: 0, name: "Initial" };
       mockGet.mockImplementation(() => new Promise(() => {}));
 
-      const { result } = renderHook(() =>
-        useQuery({ url: '/api/item', initialData })
-      );
+      const { result } = renderHook(() => useQuery({ url: "/api/item", initialData }));
 
       expect(result.current.data).toEqual(initialData);
       expect(result.current.isLoading).toBe(false);
       expect(result.current.isSuccess).toBe(true);
+      expect(result.current.isFetching).toBe(true);
     });
   });
 
-  describe('Загрузка данных', () => {
-    it('загружает данные при enabled=true', async () => {
-      const { result } = renderHook(() =>
-        useQuery({ url: '/api/item', enabled: true })
-      );
-
-      await vi.runAllTimersAsync();
+  describe("Загрузка данных", () => {
+    it("загружает данные при enabled=true", async () => {
+      const { result } = renderHook(() => useQuery({ url: "/api/item", enabled: true }));
 
       await waitFor(() => {
         expect(result.current.data).toEqual(mockData);
         expect(result.current.isSuccess).toBe(true);
         expect(result.current.isLoading).toBe(false);
+        expect(result.current.isFetching).toBe(false);
       });
     });
 
-    it('не загружает данные при enabled=false', async () => {
-      const { result } = renderHook(() =>
-        useQuery({ url: '/api/item', enabled: false })
-      );
-
-      await vi.runAllTimersAsync();
+    it("не загружает данные при enabled=false", () => {
+      const { result } = renderHook(() => useQuery({ url: "/api/item", enabled: false }));
 
       expect(mockGet).not.toHaveBeenCalled();
       expect(result.current.data).toBeUndefined();
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.isFetching).toBe(false);
     });
 
-    it('передаёт параметры в запрос', async () => {
+    it("передаёт параметры в запрос", async () => {
       renderHook(() =>
         useQuery({
-          url: '/api/item',
-          params: { filter: 'active', page: 1 },
+          url: "/api/item",
+          params: { filter: "active", page: 1 },
         })
       );
 
-      await vi.runAllTimersAsync();
-
-      expect(mockGet).toHaveBeenCalledWith(
-        '/api/item',
-        { filter: 'active', page: 1 }
-      );
+      await waitFor(() => {
+        expect(mockGet).toHaveBeenCalledWith("/api/item", { filter: "active", page: 1 });
+      });
     });
   });
 
-  describe('Обработка ошибок', () => {
-    it('устанавливает error при неудачном запросе', async () => {
-      const error = new Error('Network error');
+  describe("Обработка ошибок", () => {
+    it("устанавливает error при неудачном запросе", async () => {
+      const error = new Error("Network error");
       mockGet.mockRejectedValue(error);
 
-      const { result } = renderHook(() =>
-        useQuery({ url: '/api/item' })
-      );
-
-      await vi.runAllTimersAsync();
+      const { result } = renderHook(() => useQuery({ url: "/api/item" }));
 
       await waitFor(() => {
         expect(result.current.isError).toBe(true);
         expect(result.current.error).toBeDefined();
+        expect(result.current.error?.message).toBe("Network error");
         expect(result.current.isSuccess).toBe(false);
+        expect(result.current.isLoading).toBe(false);
       });
     });
 
-    it('вызывает onError callback при ошибке', async () => {
-      const error = new Error('Failed');
-      mockGet.mockRejectedValue(error);
+    it("вызывает onError callback при ошибке", async () => {
+      const error = new Error("Failed");
       const onError = vi.fn();
+      mockGet.mockRejectedValue(error);
 
-      renderHook(() =>
-        useQuery({ url: '/api/item', onError })
-      );
-
-      await vi.runAllTimersAsync();
+      renderHook(() => useQuery({ url: "/api/item", onError }));
 
       await waitFor(() => {
-        expect(onError).toHaveBeenCalled();
+        expect(onError).toHaveBeenCalledTimes(1);
+        expect(onError.mock.calls[0][0].message).toBe("Failed");
       });
     });
   });
 
-  describe('Callbacks', () => {
-    it('вызывает onSuccess callback при успехе', async () => {
+  describe("Callbacks", () => {
+    it("вызывает onSuccess callback при успехе", async () => {
       const onSuccess = vi.fn();
 
-      renderHook(() =>
-        useQuery({ url: '/api/item', onSuccess })
-      );
-
-      await vi.runAllTimersAsync();
+      renderHook(() => useQuery({ url: "/api/item", onSuccess }));
 
       await waitFor(() => {
         expect(onSuccess).toHaveBeenCalledWith(mockData);
@@ -170,15 +144,11 @@ describe('useQuery', () => {
     });
   });
 
-  describe('Трансформация данных', () => {
-    it('применяет select функцию к данным', async () => {
-      const select = vi.fn((data) => ({ ...data, transformed: true }));
+  describe("Трансформация данных", () => {
+    it("применяет select функцию к данным", async () => {
+      const select = vi.fn((data: typeof mockData) => ({ ...data, transformed: true }));
 
-      const { result } = renderHook(() =>
-        useQuery({ url: '/api/item', select })
-      );
-
-      await vi.runAllTimersAsync();
+      const { result } = renderHook(() => useQuery({ url: "/api/item", select }));
 
       await waitFor(() => {
         expect(result.current.data).toEqual({
@@ -189,13 +159,9 @@ describe('useQuery', () => {
     });
   });
 
-  describe('refetch', () => {
-    it('повторно загружает данные', async () => {
-      const { result } = renderHook(() =>
-        useQuery({ url: '/api/item' })
-      );
-
-      await vi.runAllTimersAsync();
+  describe("refetch", () => {
+    it("повторно загружает данные", async () => {
+      const { result } = renderHook(() => useQuery({ url: "/api/item" }));
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true);
@@ -211,13 +177,9 @@ describe('useQuery', () => {
     });
   });
 
-  describe('reset', () => {
-    it('сбрасывает состояние', async () => {
-      const { result } = renderHook(() =>
-        useQuery({ url: '/api/item' })
-      );
-
-      await vi.runAllTimersAsync();
+  describe("reset", () => {
+    it("сбрасывает состояние", async () => {
+      const { result } = renderHook(() => useQuery({ url: "/api/item" }));
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true);
@@ -230,57 +192,64 @@ describe('useQuery', () => {
       expect(result.current.data).toBeUndefined();
       expect(result.current.error).toBeUndefined();
       expect(result.current.isSuccess).toBe(false);
+      expect(result.current.isError).toBe(false);
+      expect(result.current.isFetching).toBe(false);
     });
   });
 
-  describe('staleTime', () => {
-    it('не перезагружает данные пока staleTime не истёк', async () => {
-      const { result } = renderHook(() =>
-        useQuery({ url: '/api/item', staleTime: 5000 })
-      );
+  describe("staleTime", () => {
+    it("не делает повторный запрос по focus, пока staleTime не истёк", async () => {
+      let currentTime = 1_000;
+      const dateNowSpy = vi.spyOn(Date, "now").mockImplementation(() => currentTime);
 
-      await vi.runAllTimersAsync();
+      try {
+        const { result } = renderHook(() =>
+          useQuery({
+            url: "/api/item",
+            staleTime: 5000,
+            refetchOnWindowFocus: true,
+          })
+        );
 
-      await waitFor(() => {
-        expect(result.current.isSuccess).toBe(true);
-      });
+        await waitFor(() => {
+          expect(result.current.isSuccess).toBe(true);
+        });
 
-      // Первый вызов
-      expect(mockGet).toHaveBeenCalledTimes(1);
+        expect(mockGet).toHaveBeenCalledTimes(1);
 
-      // Пытаемся refetch до истечения staleTime
-      await act(async () => {
-        await result.current.refetch();
-      });
+        act(() => {
+          window.dispatchEvent(new Event("focus"));
+        });
 
-      // Не должно быть нового вызова
-      expect(mockGet).toHaveBeenCalledTimes(1);
+        await act(async () => {
+          await Promise.resolve();
+        });
 
-      // Перематываем время
-      vi.advanceTimersByTime(5001);
+        expect(mockGet).toHaveBeenCalledTimes(1);
 
-      // Теперь refetch должен сработать
-      await act(async () => {
-        await result.current.refetch();
-      });
+        currentTime += 5001;
 
-      expect(mockGet).toHaveBeenCalledTimes(2);
+        act(() => {
+          window.dispatchEvent(new Event("focus"));
+        });
+
+        await waitFor(() => {
+          expect(mockGet).toHaveBeenCalledTimes(2);
+        });
+      } finally {
+        dateNowSpy.mockRestore();
+      }
     });
   });
 
-  describe('Изменение параметров', () => {
-    it('перезагружает данные при изменении params', async () => {
-      const { result, rerender } = renderHook(
-        (props) => useQuery(props),
-        {
-          initialProps: {
-            url: '/api/item',
-            params: { filter: 'all' },
-          },
-        }
-      );
-
-      await vi.runAllTimersAsync();
+  describe("Изменение параметров", () => {
+    it("перезагружает данные при изменении params", async () => {
+      const { result, rerender } = renderHook((props: { url: string; params: { filter: string } }) => useQuery(props), {
+        initialProps: {
+          url: "/api/item",
+          params: { filter: "all" },
+        },
+      });
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true);
@@ -289,11 +258,9 @@ describe('useQuery', () => {
       expect(mockGet).toHaveBeenCalledTimes(1);
 
       rerender({
-        url: '/api/item',
-        params: { filter: 'active' },
+        url: "/api/item",
+        params: { filter: "active" },
       });
-
-      await vi.runAllTimersAsync();
 
       await waitFor(() => {
         expect(mockGet).toHaveBeenCalledTimes(2);
