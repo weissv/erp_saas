@@ -151,7 +151,7 @@ export default function LandingPage() {
       <div className="absolute left-1/2 top-24 -z-10 h-80 w-80 -translate-x-1/2 rounded-full bg-[rgba(52,199,89,0.14)] blur-3xl" />
 
       <header className="sticky top-0 z-50 border-b border-card bg-[rgba(246,247,251,0.86)] backdrop-blur-[20px]">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-4">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-4 md:flex-nowrap">
           <div>
             <p className="text-lg font-semibold tracking-[-0.03em] text-text-primary">Mirai Edu</p>
             <p className="text-sm text-text-tertiary">{copy.brandTagline}</p>
