@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, MouseEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, Check, ChevronRight, LogIn, Menu, PlayCircle, X } from "lucide-react";
 import {
@@ -15,12 +15,21 @@ import { setMarketingLanguage } from "../i18n";
 
 const MIN_WAITLIST_MESSAGE_LENGTH = 10;
 const WAITLIST_FEEDBACK_TYPE = "WAITLIST";
+const WAITLIST_SUCCESS_PATH = "/waitlist/success";
 const primaryActionClass =
   "inline-flex items-center justify-center gap-2 rounded-full bg-macos-blue px-6 py-3 text-sm font-semibold text-white shadow-subtle transition hover:bg-macos-blue-hover";
 const secondaryActionClass =
   "inline-flex items-center justify-center gap-2 rounded-full border border-card bg-surface-primary px-6 py-3 text-sm font-semibold text-text-primary shadow-subtle transition hover:bg-white";
 const tertiaryActionClass =
   "inline-flex items-center justify-center gap-2 rounded-full px-2 py-3 text-sm font-semibold text-macos-blue transition hover:opacity-80";
+
+function getMarketingViewMode(): "landing" | "success" {
+  if (typeof window === "undefined") {
+    return "landing";
+  }
+
+  return window.location.pathname === WAITLIST_SUCCESS_PATH ? "success" : "landing";
+}
 
 function SectionHeading({
   badge,
@@ -44,6 +53,20 @@ function SectionHeading({
   );
 }
 
+function BrandMark({ tagline, href = "/" }: { tagline: string; href?: string }) {
+  return (
+    <a href={href} className="group inline-flex min-w-0 items-center gap-3">
+      <span className="inline-flex h-11 min-w-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#007AFF,#34C759)] px-3 text-sm font-semibold tracking-[0.18em] text-white shadow-[0_14px_32px_rgba(0,122,255,0.26)]">
+        ミライ
+      </span>
+      <span className="flex min-w-0 flex-col">
+        <span className="text-lg font-semibold tracking-[-0.04em] text-text-primary">Mirai</span>
+        <span className="hidden truncate text-xs text-text-tertiary sm:block">{tagline}</span>
+      </span>
+    </a>
+  );
+}
+
 export default function LandingPage() {
   const { i18n } = useTranslation();
   const demoUrl = getDemoUrl();
@@ -52,6 +75,7 @@ export default function LandingPage() {
   const { copy } = content;
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"landing" | "success">(() => getMarketingViewMode());
   const [waitlistForm, setWaitlistForm] = useState({
     schoolName: "",
     contactInfo: "",
@@ -70,8 +94,10 @@ export default function LandingPage() {
   useEffect(() => {
     const previousTitle = document.title;
     const previousLanguage = document.documentElement.lang;
-    const title = copy.metadata.title;
-    const description = copy.metadata.description;
+    const title =
+      viewMode === "success" ? copy.successPage.metadataTitle : copy.metadata.title;
+    const description =
+      viewMode === "success" ? copy.successPage.metadataDescription : copy.metadata.description;
 
     document.title = title;
     document.documentElement.lang = language;
@@ -106,7 +132,28 @@ export default function LandingPage() {
         meta?.setAttribute("content", previousDescription);
       }
     };
-  }, [copy.metadata.description, copy.metadata.title, language]);
+  }, [
+    copy.metadata.description,
+    copy.metadata.title,
+    copy.successPage.metadataDescription,
+    copy.successPage.metadataTitle,
+    language,
+    viewMode,
+  ]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const handlePopState = () => {
+      setViewMode(getMarketingViewMode());
+      setIsMobileNavOpen(false);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   const handleWaitlistSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -139,10 +186,11 @@ export default function LandingPage() {
         contactInfo: "",
         message: "",
       });
-      setWaitlistState({
-        kind: "success",
-        message: copy.waitlist.successMessage,
-      });
+      if (typeof window !== "undefined") {
+        window.history.pushState({}, "", WAITLIST_SUCCESS_PATH);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      setViewMode("success");
     } catch (error: any) {
       setWaitlistState({
         kind: "error",
@@ -161,32 +209,39 @@ export default function LandingPage() {
     trackMetrikaGoal("open_demo");
   };
 
+  const handleHomeClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    event.preventDefault();
+    window.history.pushState({}, "", "/");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setViewMode("landing");
+    setIsMobileNavOpen(false);
+  };
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-bg-canvas text-text-primary">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(0,122,255,0.14),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.96),rgba(244,247,255,0.92)_40%,rgba(240,243,250,0.92))]" />
       <div className="absolute left-1/2 top-24 -z-10 h-80 w-80 -translate-x-1/2 rounded-full bg-[rgba(52,199,89,0.14)] blur-3xl" />
 
       <header className="sticky top-0 z-50 border-b border-card bg-[rgba(246,247,251,0.86)] backdrop-blur-[20px]">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-6 sm:py-4 md:flex-nowrap">
+        <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 sm:px-6 sm:py-4 lg:grid-cols-[auto_minmax(0,1fr)_auto]">
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
-              className="inline-flex items-center justify-center rounded-lg p-2 text-text-secondary transition hover:bg-fill-quaternary md:hidden"
+              className="inline-flex items-center justify-center rounded-lg p-2 text-text-secondary transition hover:bg-fill-quaternary lg:hidden"
               onClick={() => setIsMobileNavOpen((v) => !v)}
               aria-label="Toggle navigation"
             >
               {isMobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
-            <div className="flex min-w-0 items-baseline gap-3">
-              <p className="shrink-0 text-lg font-semibold tracking-[-0.03em] text-text-primary">ミライ</p>
-              <p className="hidden truncate whitespace-nowrap text-sm text-text-tertiary sm:block">
-                {copy.brandTagline}
-              </p>
-            </div>
+            <BrandMark tagline={copy.brandTagline} href={viewMode === "success" ? "/" : "/"} />
           </div>
 
           <nav
-            className="hidden items-center gap-6 md:flex"
+            className="hidden items-center justify-center gap-6 lg:flex"
             aria-label={copy.navigationAriaLabel}
           >
             {content.navItems.map((item) => (
@@ -200,7 +255,7 @@ export default function LandingPage() {
             ))}
           </nav>
 
-          <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:gap-3">
+          <div className="flex items-center justify-end gap-2 lg:flex-nowrap lg:gap-3">
             <div
               className="inline-flex items-center gap-1 rounded-full border border-card bg-white/80 p-1 shadow-subtle"
               role="group"
@@ -227,58 +282,98 @@ export default function LandingPage() {
               })}
             </div>
 
-            <a
-              href={demoUrl}
-              onClick={handleDemoClick}
-              className={`${secondaryActionClass} hidden px-4 py-2 sm:inline-flex`}
-            >
-              {copy.headerDemoCta}
-            </a>
-            <button
-              type="button"
-              onClick={openLoginModal}
-              aria-haspopup="dialog"
-              className={`${secondaryActionClass} hidden px-4 py-2 sm:inline-flex`}
-            >
-              <LogIn className="h-4 w-4" />
-              {copy.loginCta}
-            </button>
-            <a
-              href="#waitlist"
-              className="inline-flex items-center justify-center rounded-full bg-macos-blue px-3 py-1.5 text-xs font-medium text-white shadow-subtle transition hover:bg-macos-blue-hover sm:px-4 sm:py-2 sm:text-sm"
-            >
-              {copy.waitlistCta}
-            </a>
+            <div className="hidden items-center gap-2 md:flex lg:gap-3">
+              <a
+                href={demoUrl}
+                onClick={handleDemoClick}
+                className={`${secondaryActionClass} px-4 py-2 whitespace-nowrap`}
+              >
+                {copy.headerDemoCta}
+              </a>
+              <button
+                type="button"
+                onClick={openLoginModal}
+                aria-haspopup="dialog"
+                className={`${secondaryActionClass} px-4 py-2 whitespace-nowrap`}
+              >
+                <LogIn className="h-4 w-4" />
+                {copy.loginCta}
+              </button>
+              {viewMode === "landing" ? (
+                <a
+                  href="#waitlist"
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-full bg-macos-blue px-4 py-2 text-sm font-semibold text-white shadow-subtle transition hover:bg-macos-blue-hover"
+                >
+                  {copy.waitlistCta}
+                </a>
+              ) : (
+                <a
+                  href="/"
+                  onClick={handleHomeClick}
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-full bg-macos-blue px-4 py-2 text-sm font-semibold text-white shadow-subtle transition hover:bg-macos-blue-hover"
+                >
+                  {copy.successPage.primaryCta}
+                </a>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Mobile navigation dropdown */}
         {isMobileNavOpen && (
-          <div className="border-t border-card px-4 pb-4 pt-2 md:hidden">
+          <div className="border-t border-card px-4 pb-4 pt-2 lg:hidden">
             <nav className="flex flex-col gap-1" aria-label={copy.navigationAriaLabel}>
-              {content.navItems.map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setIsMobileNavOpen(false)}
-                  className="rounded-xl px-4 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-fill-quaternary hover:text-text-primary"
-                >
-                  {item.label}
-                </a>
-              ))}
-              <div className="mt-2 flex flex-col gap-2 sm:hidden">
+              {viewMode === "landing"
+                ? content.navItems.map((item) => (
+                    <a
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setIsMobileNavOpen(false)}
+                      className="rounded-xl px-4 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-fill-quaternary hover:text-text-primary"
+                    >
+                      {item.label}
+                    </a>
+                  ))
+                : (
+                    <a
+                      href="/"
+                      onClick={handleHomeClick}
+                      className="rounded-xl px-4 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-fill-quaternary hover:text-text-primary"
+                    >
+                      {copy.successPage.primaryCta}
+                    </a>
+                  )}
+              <div className="mt-2 flex flex-col gap-2">
                 <button
                   type="button"
-                  onClick={() => { openLoginModal(); setIsMobileNavOpen(false); }}
+                  onClick={() => {
+                    openLoginModal();
+                    setIsMobileNavOpen(false);
+                  }}
                   aria-haspopup="dialog"
                   className={`${secondaryActionClass} w-full justify-center px-4 py-2`}
                 >
                   <LogIn className="h-4 w-4" />
                   {copy.loginCta}
                 </button>
-                <a href={demoUrl} onClick={handleDemoClick} className={`${primaryActionClass} w-full justify-center px-4 py-2`}>
+                <a
+                  href={demoUrl}
+                  onClick={() => {
+                    handleDemoClick();
+                    setIsMobileNavOpen(false);
+                  }}
+                  className={`${primaryActionClass} w-full justify-center px-4 py-2`}
+                >
                   {copy.headerDemoCta}
                 </a>
+                {viewMode === "landing" ? (
+                  <a
+                    href="#waitlist"
+                    onClick={() => setIsMobileNavOpen(false)}
+                    className={`${secondaryActionClass} w-full justify-center px-4 py-2`}
+                  >
+                    {copy.waitlistCta}
+                  </a>
+                ) : null}
               </div>
             </nav>
           </div>
@@ -286,6 +381,35 @@ export default function LandingPage() {
       </header>
 
       <main className="relative z-10">
+        {viewMode === "success" ? (
+          <section className="mx-auto flex min-h-[calc(100vh-10rem)] max-w-5xl items-center px-4 py-16 sm:px-6 sm:py-20">
+            <div className="glass-panel w-full p-8 sm:p-10 lg:p-14">
+              <div className="mx-auto max-w-3xl text-center">
+                <span className="mezon-chip bg-white/90 text-[11px] font-semibold uppercase tracking-[0.2em] text-macos-blue">
+                  {copy.successPage.eyebrow}
+                </span>
+                <div className="mt-6 flex justify-center">
+                  <BrandMark tagline={copy.brandTagline} />
+                </div>
+                <h1 className="mt-8 text-3xl font-semibold tracking-[-0.05em] text-text-primary sm:text-4xl lg:text-5xl">
+                  {copy.successPage.title}
+                </h1>
+                <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-text-tertiary sm:text-lg">
+                  {copy.successPage.description}
+                </p>
+                <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+                  <a href="/" onClick={handleHomeClick} className={primaryActionClass}>
+                    {copy.successPage.primaryCta}
+                  </a>
+                  <a href={demoUrl} onClick={handleDemoClick} className={secondaryActionClass}>
+                    {copy.successPage.secondaryCta}
+                  </a>
+                </div>
+              </div>
+            </div>
+          </section>
+        ) : (
+          <>
         <section className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:gap-12 sm:px-6 sm:py-16 md:py-20 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] lg:items-center lg:py-24">
           <div>
             <span className="mezon-chip text-[11px] font-semibold uppercase tracking-[0.2em] text-macos-blue">
@@ -638,36 +762,8 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 sm:pb-16">
-          <div className="glass-panel p-6">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-macos-blue">
-                  {copy.unifiedExperience.eyebrow}
-                </p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-text-primary">
-                  {copy.unifiedExperience.title}
-                </h2>
-                <p className="mt-3 max-w-3xl text-sm leading-6 text-text-tertiary">
-                  {copy.unifiedExperience.description}
-                </p>
-              </div>
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <a href={demoUrl} className={secondaryActionClass}>
-                  {copy.unifiedExperience.demoCta}
-                </a>
-                <button
-                  type="button"
-                  onClick={openLoginModal}
-                  aria-haspopup="dialog"
-                  className={primaryActionClass}
-                >
-                  {copy.loginCta}
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
+        </>
+        )}
       </main>
 
       <footer className="border-t border-card/80 bg-[rgba(246,247,251,0.86)]">
@@ -676,11 +772,17 @@ export default function LandingPage() {
             © {new Date().getFullYear()} Mirai. {copy.footerDescription}
           </p>
           <div className="flex flex-wrap items-center gap-4">
-            {content.navItems.map((item) => (
-              <a key={item.href} href={item.href} className="transition-colors hover:text-text-primary">
-                {item.label}
+            {viewMode === "landing" ? (
+              content.navItems.map((item) => (
+                <a key={item.href} href={item.href} className="transition-colors hover:text-text-primary">
+                  {item.label}
+                </a>
+              ))
+            ) : (
+              <a href="/" onClick={handleHomeClick} className="transition-colors hover:text-text-primary">
+                {copy.successPage.primaryCta}
               </a>
-            ))}
+            )}
           </div>
         </div>
       </footer>

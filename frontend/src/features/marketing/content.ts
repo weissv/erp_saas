@@ -122,11 +122,14 @@ export interface MarketingCopy {
     submitIdle: string;
     submitLoading: string;
   };
-  unifiedExperience: {
+  successPage: {
+    metadataTitle: string;
+    metadataDescription: string;
     eyebrow: string;
     title: string;
     description: string;
-    demoCta: string;
+    primaryCta: string;
+    secondaryCta: string;
   };
   footerDescription: string;
   loginModal: {
@@ -265,12 +268,16 @@ const MARKETING_COPY: Record<MarketingLanguage, MarketingCopy> = {
       submitIdle: "Встать в очередь",
       submitLoading: "Отправляем...",
     },
-    unifiedExperience: {
-      eyebrow: "Единый сценарий",
-      title: "Визитка, demo, ERP, LMS и AI-подсказки говорят одним визуальным языком.",
+    successPage: {
+      metadataTitle: "Mirai — заявка отправлена",
+      metadataDescription:
+        "Mirai получил заявку на запуск школы. Следующий шаг придёт в указанный канал связи.",
+      eyebrow: "Заявка отправлена",
+      title: "Спасибо. Заявка на запуск Mirai уже в работе.",
       description:
-        "Одинаковые токены, одна типографика, общая навигационная логика и единый бренд-контур помогают пользователю бесшовно переходить от витрины к ежедневной работе школы.",
-      demoCta: "Демо",
+        "Мы сразу получили вашу заявку, зафиксировали школу в очереди и свяжемся по указанному каналу связи с ближайшим следующим шагом.",
+      primaryCta: "Вернуться на главную",
+      secondaryCta: "Открыть demo",
     },
     footerDescription: "Цифровая AI-платформа для управления школой.",
     loginModal: {
@@ -594,12 +601,16 @@ const MARKETING_COPY: Record<MarketingLanguage, MarketingCopy> = {
       submitIdle: "Join waitlist",
       submitLoading: "Sending...",
     },
-    unifiedExperience: {
-      eyebrow: "Unified experience",
-      title: "Landing, demo, ERP, LMS, and AI guidance speak one visual language.",
+    successPage: {
+      metadataTitle: "Mirai — request sent",
+      metadataDescription:
+        "Mirai received your school launch request and will follow up in the contact channel you provided.",
+      eyebrow: "Request sent",
+      title: "Thank you. Your Mirai launch request is already in progress.",
       description:
-        "Shared tokens, typography, navigation logic, and brand system let users move seamlessly from the landing page to daily school operations.",
-      demoCta: "Demo",
+        "We received the request immediately, reserved your place in the queue, and will contact you in the submitted channel with the next launch step.",
+      primaryCta: "Back to landing",
+      secondaryCta: "Open demo",
     },
     footerDescription: "AI platform for modern school operations.",
     loginModal: {
@@ -923,12 +934,16 @@ const MARKETING_COPY: Record<MarketingLanguage, MarketingCopy> = {
       submitIdle: "順番待ちに登録",
       submitLoading: "送信中...",
     },
-    unifiedExperience: {
-      eyebrow: "統一された体験",
-      title: "ランディング、デモ、ERP、LMS、AI ガイダンスがひとつの視覚言語でつながります。",
+    successPage: {
+      metadataTitle: "Mirai — 申込みを受け付けました",
+      metadataDescription:
+        "Mirai が学校導入リクエストを受け取り、指定された連絡先へ次の案内を送ります。",
+      eyebrow: "送信完了",
+      title: "ありがとうございます。Mirai 導入リクエストを受け付けました。",
       description:
-        "共通のトークン、タイポグラフィ、ナビゲーション、ブランド設計により、ランディングから日常業務までシームレスに移動できます。",
-      demoCta: "デモ",
+        "申込みはすぐに記録され、導入キューに枠を確保しました。次のステップを入力いただいた連絡先へご案内します。",
+      primaryCta: "ランディングに戻る",
+      secondaryCta: "デモを開く",
     },
     footerDescription: "学校運営のための AI プラットフォーム。",
     loginModal: {

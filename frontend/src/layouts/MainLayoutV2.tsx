@@ -155,7 +155,7 @@ const MODULES: ModuleDefinition[] = [
       { path: "/maintenance", label: "Заявки" },
       { path: "/notifications", label: "Уведомления" },
       { path: "/action-log", label: "Журнал действий" },
-      { path: "/feedback", label: "Баг-репорт" },
+      { path: "/feedback", label: "Заявки и баг-репорты" },
       { path: "/ai-assistant", label: "ИИ-Методист" },
     ],
   },
