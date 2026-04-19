@@ -1,5 +1,5 @@
 // src/routes/feedback.routes.ts
-import { Router } from "express";
+import { NextFunction, Request, Response, Router } from "express";
 import { prisma } from "../prisma";
 import { authMiddleware } from "../middleware/auth";
 import { checkRole } from "../middleware/checkRole";
@@ -10,6 +10,7 @@ const router = Router();
 
 const BUG_REPORT_TYPE = "Баг-репорт";
 const WAITLIST_FEEDBACK_TYPE = "WAITLIST";
+const feedbackRateLimitBuckets = new Map<string, { count: number; resetAt: number }>();
 
 const SEVERITY_LABELS: Record<string, string> = {
   LOW: "Низкий",
@@ -44,6 +45,33 @@ function getWaitlistAdminChatIds(): string[] {
     .split(",")
     .map((chatId) => chatId.trim())
     .filter(Boolean);
+}
+
+function createFeedbackRateLimiter(namespace: string, maxRequests: number, windowMs: number) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const actorKey = req.user?.id ? `user:${req.user.id}` : `ip:${req.ip ?? "unknown"}`;
+    const key = `${namespace}:${actorKey}`;
+    const now = Date.now();
+    const current = feedbackRateLimitBuckets.get(key);
+
+    if (!current || current.resetAt <= now) {
+      feedbackRateLimitBuckets.set(key, {
+        count: 1,
+        resetAt: now + windowMs,
+      });
+      next();
+      return;
+    }
+
+    if (current.count >= maxRequests) {
+      res.status(429).json({ message: "Too many requests" });
+      return;
+    }
+
+    current.count += 1;
+    feedbackRateLimitBuckets.set(key, current);
+    next();
+  };
 }
 
 function buildStoredBugMessage(payload: {
@@ -125,7 +153,12 @@ function buildTelegramWaitlistMessage(payload: {
 }
 
 // GET /api/feedback - List all feedback (filter by status, type)
-router.get("/", authMiddleware, checkRole(["DEPUTY", "ADMIN"]), async (req, res) => {
+router.get(
+  "/",
+  authMiddleware,
+  createFeedbackRateLimiter("feedback:list", 120, 60_000),
+  checkRole(["DEPUTY", "ADMIN"]),
+  async (req: Request, res: Response) => {
   const { status, type } = req.query;
   
   const feedback = await prisma.feedback.findMany({
@@ -140,7 +173,10 @@ router.get("/", authMiddleware, checkRole(["DEPUTY", "ADMIN"]), async (req, res)
 });
 
 // POST /api/feedback - Create new public feedback / waitlist request
-router.post("/", async (req, res) => {
+router.post(
+  "/",
+  createFeedbackRateLimiter("feedback:public", 10, 10 * 60_000),
+  async (req: Request, res: Response) => {
   try {
     const parentName = normalizeSingleLineText(req.body?.parentName);
     const contactInfo = normalizeSingleLineText(req.body?.contactInfo);
@@ -206,7 +242,11 @@ router.post("/", async (req, res) => {
 });
 
 // POST /api/feedback/bug-report - Create authenticated bug report and notify developers in Telegram
-router.post("/bug-report", authMiddleware, async (req, res) => {
+router.post(
+  "/bug-report",
+  authMiddleware,
+  createFeedbackRateLimiter("feedback:bug-report", 15, 10 * 60_000),
+  async (req: Request, res: Response) => {
   try {
     const currentUser = req.user;
 
@@ -294,7 +334,12 @@ router.post("/bug-report", authMiddleware, async (req, res) => {
 });
 
 // PUT /api/feedback/:id - Update feedback status/response
-router.put("/:id", authMiddleware, checkRole(["DEPUTY", "ADMIN"]), async (req, res) => {
+router.put(
+  "/:id",
+  authMiddleware,
+  createFeedbackRateLimiter("feedback:update", 60, 60_000),
+  checkRole(["DEPUTY", "ADMIN"]),
+  async (req: Request, res: Response) => {
   const { id } = req.params;
   const { status, response } = req.body;
   
@@ -311,7 +356,12 @@ router.put("/:id", authMiddleware, checkRole(["DEPUTY", "ADMIN"]), async (req, r
 });
 
 // DELETE /api/feedback/:id - Delete feedback
-router.delete("/:id", authMiddleware, checkRole(["ADMIN"]), async (req, res) => {
+router.delete(
+  "/:id",
+  authMiddleware,
+  createFeedbackRateLimiter("feedback:delete", 30, 60_000),
+  checkRole(["ADMIN"]),
+  async (req: Request, res: Response) => {
   const { id } = req.params;
   
   await prisma.feedback.delete({

@@ -53,7 +53,11 @@ router.get(
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    await userService.findById(targetUserId, false);
+    const targetUser = await userService.findById(targetUserId, false);
+
+    if (targetUser.telegramChatId) {
+      return res.status(409).json({ message: "Telegram already connected" });
+    }
 
     const url = await getTelegramConnectionLink(targetUserId, req.tenantId);
     if (!url) {

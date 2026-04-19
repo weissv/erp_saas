@@ -85,25 +85,40 @@ async function getTenantContext(tenantId: string): Promise<TenantContext> {
   };
 }
 
-function getTelegramLinkSecret(): string {
-  return config.jwtSecret || "mirai-telegram-dev-secret";
+function getTelegramLinkSecret(): string | null {
+  if (!config.jwtSecret) {
+    logger.warn("JWT_SECRET is not configured. Secure Telegram deep links are disabled.");
+    return null;
+  }
+
+  return config.jwtSecret;
 }
 
 function signTelegramLink(userId: number, tenantId: string): string {
+  const secret = getTelegramLinkSecret();
+  if (!secret) {
+    throw new Error("JWT_SECRET is not configured");
+  }
+
   return jwt.sign(
     {
       type: "telegram-connect",
       tenantId,
       userId,
     } satisfies TelegramLinkPayload,
-    getTelegramLinkSecret(),
+    secret,
     { expiresIn: "7d" }
   );
 }
 
 function verifyTelegramLink(token: string): TelegramLinkPayload | null {
   try {
-    const payload = jwt.verify(token, getTelegramLinkSecret()) as Partial<TelegramLinkPayload>;
+    const secret = getTelegramLinkSecret();
+    if (!secret) {
+      return null;
+    }
+
+    const payload = jwt.verify(token, secret) as Partial<TelegramLinkPayload>;
 
     if (
       payload.type !== "telegram-connect" ||
@@ -506,5 +521,10 @@ export async function getTelegramConnectionLink(
     return null;
   }
 
-  return `https://t.me/${runtime.username}?start=${signTelegramLink(userId, resolvedTenantId)}`;
+  try {
+    return `https://t.me/${runtime.username}?start=${signTelegramLink(userId, resolvedTenantId)}`;
+  } catch (error) {
+    logger.error(`[${resolvedTenantId}] Failed to create Telegram connect link:`, error);
+    return null;
+  }
 }
