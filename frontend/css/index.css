@@ -28,6 +28,10 @@
 		box-shadow: var(--shadow-card);
 		border-radius: var(--radius-xl);
 	}
+
+	.landing-brand-mark {
+		font-family: "LINE Seed JP", "Inter", system-ui, sans-serif;
+	}
 }
 
 @layer utilities {

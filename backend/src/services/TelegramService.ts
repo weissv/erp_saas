@@ -107,6 +107,7 @@ function signTelegramLink(userId: number, tenantId: string): string {
       userId,
     } satisfies TelegramLinkPayload,
     secret,
+    // 48 hours gives admins enough time to use the link while still limiting replay risk.
     { expiresIn: "48h" }
   );
 }

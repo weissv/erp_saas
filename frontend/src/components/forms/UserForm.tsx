@@ -79,7 +79,9 @@ export function UserForm({ initialData, onSuccess, onCancel}: UserFormProps) {
 }, [isEditing]);
 
  useEffect(() => {
- if (!isEditing || !initialData?.id || initialData.telegramChatId) {
+ const shouldSkipTelegramLink = !isEditing || !initialData?.id || Boolean(initialData.telegramChatId);
+
+ if (shouldSkipTelegramLink) {
  setTelegramConnectUrl(null);
  setTelegramLinkError(null);
  setIsLoadingTelegramLink(false);

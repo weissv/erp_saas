@@ -56,7 +56,9 @@ router.get(
     const targetUser = await userService.findById(targetUserId, false);
 
     if (targetUser.telegramChatId) {
-      return res.status(409).json({ message: "Telegram already connected" });
+      return res.status(409).json({
+        message: "Telegram is already connected. To reconnect, first unlink the existing connection.",
+      });
     }
 
     const url = await getTelegramConnectionLink(targetUserId, req.tenantId);
