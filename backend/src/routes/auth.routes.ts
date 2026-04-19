@@ -2,7 +2,6 @@
 import { Router, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { randomBytes } from "node:crypto";
 import { config } from "../config";
 import { JWT } from "../constants";
 import { extractTenantSubdomain } from "../middleware/tenantResolver";
@@ -30,27 +29,27 @@ function setAuthCookie(res: Response, token: string) {
   });
 }
 
-function createCsrfToken(): string {
-  return randomBytes(32).toString("hex");
-}
-
 function setCsrfCookie(res: Response, csrfToken: string) {
   res.cookie(JWT.CSRF_COOKIE_NAME, csrfToken, {
     httpOnly: false,
     secure: config.nodeEnv === "production",
     sameSite: "lax" as const,
     maxAge: JWT.COOKIE_MAX_AGE,
+    path: "/",
   });
-}
-
-function ensureCsrfCookie(req: Request, res: Response): void {
-  const existingToken = req.cookies?.[JWT.CSRF_COOKIE_NAME];
-  setCsrfCookie(res, existingToken || createCsrfToken());
 }
 
 function isDemoTenantRequest(req: Request): boolean {
   return extractTenantSubdomain(req) === DEMO_SUBDOMAIN;
 }
+
+router.get("/csrf", (_req: Request, res: Response) => {
+  if (typeof _req.csrfToken === "function") {
+    setCsrfCookie(res, _req.csrfToken());
+  }
+
+  return res.json({ ok: true });
+});
 
 // Публичный роут для входа
 router.post("/login", asyncHandler(async (req: Request, res: Response) => {
@@ -84,7 +83,9 @@ router.post("/login", asyncHandler(async (req: Request, res: Response) => {
 
   const token = createAuthToken(user);
   setAuthCookie(res, token);
-  setCsrfCookie(res, createCsrfToken());
+  if (typeof req.csrfToken === "function") {
+    setCsrfCookie(res, req.csrfToken());
+  }
   
   // Remove sensitive data
   const { passwordHash, ...sanitizedUser } = user;
@@ -110,7 +111,9 @@ router.post("/demo-access", asyncHandler(async (req: Request, res: Response) => 
 
   const token = createAuthToken(user);
   setAuthCookie(res, token);
-  setCsrfCookie(res, createCsrfToken());
+  if (typeof req.csrfToken === "function") {
+    setCsrfCookie(res, req.csrfToken());
+  }
 
   const { passwordHash, ...sanitizedUser } = user;
   return res.json({ user: sanitizedUser, token });
@@ -118,7 +121,9 @@ router.post("/demo-access", asyncHandler(async (req: Request, res: Response) => 
 
 // Session probe route: returns null instead of 401 when user is not authenticated
 router.get("/me", asyncHandler(async (req: Request, res: Response) => {
-  ensureCsrfCookie(req, res);
+  if (typeof req.csrfToken === "function") {
+    setCsrfCookie(res, req.csrfToken());
+  }
   let token = req.cookies?.[JWT.COOKIE_NAME];
 
   if (!token) {
@@ -172,6 +177,14 @@ router.post("/logout", (_req: Request, res: Response) => {
     expires: new Date(0),
     secure: config.nodeEnv === "production",
     sameSite: "lax" as const,
+    path: "/",
+  });
+  res.cookie(JWT.CSRF_SECRET_COOKIE_NAME, "", {
+    httpOnly: true,
+    expires: new Date(0),
+    secure: config.nodeEnv === "production",
+    sameSite: "lax" as const,
+    path: "/",
   });
   return res.status(200).json({ message: "Logged out successfully" });
 });

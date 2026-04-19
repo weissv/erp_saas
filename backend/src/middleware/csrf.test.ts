@@ -1,121 +1,117 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import express from "express";
+import cookieParser from "cookie-parser";
+import request from "supertest";
+import { describe, expect, it } from "vitest";
 import { JWT } from "../constants";
 import { csrfProtection } from "./csrf";
-import { createMockNext, createMockRequest, createMockResponse } from "../test/mocks/express";
+
+function createApp() {
+  const app = express();
+  app.use(express.json());
+  app.use(cookieParser());
+  app.use(csrfProtection);
+
+  app.get("/csrf/bootstrap", (req, res) => {
+    if (typeof req.csrfToken === "function") {
+      res.cookie(JWT.COOKIE_NAME, "auth-cookie");
+      res.cookie(JWT.CSRF_COOKIE_NAME, req.csrfToken(), {
+        httpOnly: false,
+        sameSite: "lax",
+      });
+    }
+
+    res.json({ ok: true });
+  });
+
+  app.post("/public", (_req, res) => {
+    res.json({ ok: true });
+  });
+
+  app.post("/protected", (_req, res) => {
+    res.json({ ok: true });
+  });
+
+  app.post("/api/v1/integration/push", (_req, res) => {
+    res.json({ ok: true });
+  });
+
+  return app;
+}
 
 describe("csrfProtection", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+  it("rejects public mutating requests without csrf bootstrap", async () => {
+    const response = await request(createApp())
+      .post("/public")
+      .set("Origin", "http://localhost:5173")
+      .send({ ok: true });
+
+    expect(response.status).toBe(403);
+    expect(response.body).toEqual({ message: "CSRF validation failed" });
   });
 
-  it("passes safe requests", () => {
-    const req = createMockRequest({ method: "GET" });
-    const res = createMockResponse();
-    const next = createMockNext();
+  it("rejects authenticated mutating requests without origin", async () => {
+    const bootstrap = await request(createApp()).get("/csrf/bootstrap");
 
-    csrfProtection(req as any, res as any, next);
+    const response = await request(createApp())
+      .post("/protected")
+      .set("Cookie", bootstrap.headers["set-cookie"]);
 
-    expect(next).toHaveBeenCalled();
+    expect(response.status).toBe(403);
+    expect(response.body).toEqual({ message: "Missing request origin" });
   });
 
-  it("allows public mutating requests without auth cookie", () => {
-    const req = createMockRequest({
-      method: "POST",
-      originalUrl: "/api/feedback",
-      cookies: {},
-    });
-    const res = createMockResponse();
-    const next = createMockNext();
+  it("rejects authenticated mutating requests with invalid csrf token", async () => {
+    const bootstrap = await request(createApp()).get("/csrf/bootstrap");
 
-    csrfProtection(req as any, res as any, next);
+    const response = await request(createApp())
+      .post("/protected")
+      .set("Origin", "http://localhost:5173")
+      .set("X-CSRF-Token", "wrong-token")
+      .set("Cookie", bootstrap.headers["set-cookie"]);
 
-    expect(next).toHaveBeenCalled();
+    expect(response.status).toBe(403);
+    expect(response.body).toEqual({ message: "CSRF validation failed" });
   });
 
-  it("rejects authenticated mutating requests without origin", () => {
-    const req = createMockRequest({
-      method: "POST",
-      originalUrl: "/api/children",
-      cookies: {
-        [JWT.COOKIE_NAME]: "auth-cookie",
-        [JWT.CSRF_COOKIE_NAME]: "csrf-cookie",
-      },
-    });
-    const res = createMockResponse();
-    const next = createMockNext();
+  it("allows authenticated mutating requests with valid origin and csrf token", async () => {
+    const bootstrap = await request(createApp()).get("/csrf/bootstrap");
+    const setCookies = bootstrap.headers["set-cookie"] as unknown as string[];
+    const csrfCookie = setCookies.find((cookie) => cookie.startsWith(`${JWT.CSRF_COOKIE_NAME}=`));
+    const csrfToken = csrfCookie?.split(";")[0].split("=")[1];
 
-    csrfProtection(req as any, res as any, next);
+    const response = await request(createApp())
+      .post("/protected")
+      .set("Origin", "http://localhost:5173")
+      .set("X-CSRF-Token", csrfToken || "")
+      .set("Cookie", setCookies);
 
-    expect(next).not.toHaveBeenCalled();
-    expect(res.status).toHaveBeenCalledWith(403);
-    expect(res.json).toHaveBeenCalledWith({ message: "Missing request origin" });
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ ok: true });
   });
 
-  it("rejects authenticated mutating requests with invalid csrf token", () => {
-    const req = createMockRequest({
-      method: "POST",
-      originalUrl: "/api/children",
-      cookies: {
-        [JWT.COOKIE_NAME]: "auth-cookie",
-        [JWT.CSRF_COOKIE_NAME]: "csrf-cookie",
-      },
-      headers: {
-        origin: "http://localhost:5173",
-      },
-    }) as any;
-    req.get = vi.fn((name: string) => {
-      if (name.toLowerCase() === "origin") return "http://localhost:5173";
-      if (name.toLowerCase() === JWT.CSRF_HEADER_NAME) return "wrong-token";
-      return undefined;
-    });
-    const res = createMockResponse();
-    const next = createMockNext();
+  it("allows public mutating requests after csrf bootstrap", async () => {
+    const bootstrap = await request(createApp()).get("/csrf/bootstrap");
+    const setCookies = bootstrap.headers["set-cookie"] as unknown as string[];
+    const csrfCookie = setCookies.find((cookie) => cookie.startsWith(`${JWT.CSRF_COOKIE_NAME}=`));
+    const csrfToken = csrfCookie?.split(";")[0].split("=")[1];
 
-    csrfProtection(req as any, res as any, next);
+    const publicCookies = setCookies.filter((cookie) => !cookie.startsWith(`${JWT.COOKIE_NAME}=`));
 
-    expect(next).not.toHaveBeenCalled();
-    expect(res.status).toHaveBeenCalledWith(403);
-    expect(res.json).toHaveBeenCalledWith({ message: "CSRF validation failed" });
+    const response = await request(createApp())
+      .post("/public")
+      .set("Origin", "http://localhost:5173")
+      .set("X-CSRF-Token", csrfToken || "")
+      .set("Cookie", publicCookies)
+      .send({ ok: true });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ ok: true });
   });
 
-  it("allows authenticated mutating requests with valid origin and csrf token", () => {
-    const req = createMockRequest({
-      method: "POST",
-      originalUrl: "/api/children",
-      cookies: {
-        [JWT.COOKIE_NAME]: "auth-cookie",
-        [JWT.CSRF_COOKIE_NAME]: "csrf-cookie",
-      },
-      headers: {
-        origin: "http://localhost:5173",
-      },
-    }) as any;
-    req.get = vi.fn((name: string) => {
-      if (name.toLowerCase() === "origin") return "http://localhost:5173";
-      if (name.toLowerCase() === JWT.CSRF_HEADER_NAME) return "csrf-cookie";
-      return undefined;
-    });
-    const res = createMockResponse();
-    const next = createMockNext();
+  it("skips technical integration routes", async () => {
+    const response = await request(createApp()).post("/api/v1/integration/push").send({ ok: true });
 
-    csrfProtection(req as any, res as any, next);
-
-    expect(next).toHaveBeenCalled();
-  });
-
-  it("skips technical integration routes", () => {
-    const req = createMockRequest({
-      method: "POST",
-      originalUrl: "/api/v1/integration/push",
-      cookies: {
-        [JWT.COOKIE_NAME]: "auth-cookie",
-      },
-    });
-    const res = createMockResponse();
-    const next = createMockNext();
-
-    csrfProtection(req as any, res as any, next);
-
-    expect(next).toHaveBeenCalled();
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ ok: true });
   });
 });

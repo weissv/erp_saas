@@ -227,6 +227,43 @@ describe('API Client Integration', () => {
       );
     });
 
+    it('запрашивает csrf bootstrap, если cookie ещё нет', async () => {
+      mockFetch
+        .mockImplementationOnce(() => {
+          document.cookie = 'csrf_token=bootstrapped-token; path=/';
+          return Promise.resolve({
+            ok: true,
+            status: 200,
+            json: () => Promise.resolve({ ok: true }),
+          });
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ success: true, data: { ok: true } }),
+        });
+
+      await api.post('/test', { ok: true });
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        1,
+        expect.stringContaining('/api/auth/csrf'),
+        expect.objectContaining({
+          method: 'GET',
+          credentials: 'include',
+        })
+      );
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
+        expect.any(String),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'x-csrf-token': 'bootstrapped-token',
+          }),
+        })
+      );
+    });
+
     it('не добавляет X-CSRF-Token для GET-запросов', async () => {
       document.cookie = 'csrf_token=test-csrf-token; path=/';
 

@@ -20,8 +20,22 @@ const readCookie = (name: string): string | null => {
 
   if (!cookie) return null;
 
-  const [, value = ""] = cookie.split("=");
+  const separatorIndex = cookie.indexOf("=");
+  const value = separatorIndex >= 0 ? cookie.slice(separatorIndex + 1) : "";
   return value ? decodeURIComponent(value) : null;
+};
+
+const ensureCsrfToken = async (): Promise<string | null> => {
+  const existingToken = readCookie(CSRF_COOKIE_NAME);
+  if (existingToken) return existingToken;
+  if (typeof fetch === "undefined") return null;
+
+  await fetch(buildUrl("/auth/csrf"), {
+    method: "GET",
+    credentials: "include",
+  }).catch(() => null);
+
+  return readCookie(CSRF_COOKIE_NAME);
 };
 
 const buildUrl = (path: string) => {
@@ -189,7 +203,7 @@ class API {
     }
 
     if (!CSRF_SAFE_METHODS.has(method) && !headers[CSRF_HEADER_NAME]) {
-      const csrfToken = readCookie(CSRF_COOKIE_NAME);
+      const csrfToken = await ensureCsrfToken();
       if (csrfToken) {
         headers[CSRF_HEADER_NAME] = csrfToken;
       }

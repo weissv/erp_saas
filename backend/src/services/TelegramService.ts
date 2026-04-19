@@ -391,7 +391,7 @@ export async function initTelegramBots(): Promise<void> {
       select: { id: true },
     });
 
-    await Promise.allSettled(tenants.map(({ id }) => ensureTelegramBot(id)));
+    await Promise.allSettled(tenants.map(({ id }: { id: string }) => ensureTelegramBot(id)));
   } catch (error) {
     logger.warn("Не удалось инициализировать Telegram-ботов из master DB, пробуем legacy режим.");
     await ensureTelegramBot(DEFAULT_TENANT_ID);

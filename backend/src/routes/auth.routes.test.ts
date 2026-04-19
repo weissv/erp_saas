@@ -12,6 +12,10 @@ vi.mock("../prisma", () => ({
   },
 }));
 
+vi.mock("../middleware/tenantResolver", () => ({
+  extractTenantSubdomain: () => null,
+}));
+
 import authRoutes from "./auth.routes";
 
 function createApp() {
@@ -35,16 +39,22 @@ describe("auth.routes csrf cookies", () => {
   });
 
   it("clears auth and csrf cookies on logout", async () => {
+    const bootstrap = await request(createApp()).get("/api/auth/me");
+    const setCookies = bootstrap.headers["set-cookie"] as unknown as string[];
+    const csrfCookie = setCookies.find((cookie) => cookie.startsWith("csrf_token="));
+    const csrfToken = csrfCookie?.split(";")[0].split("=")[1];
+
     const response = await request(createApp())
       .post("/api/auth/logout")
       .set("Origin", "http://localhost:5173")
-      .set("X-CSRF-Token", "csrf")
-      .set("Cookie", ["auth_token=token", "csrf_token=csrf"]);
+      .set("X-CSRF-Token", csrfToken || "")
+      .set("Cookie", [`auth_token=token`, ...setCookies]);
 
     expect(response.status).toBe(200);
     expect(response.headers["set-cookie"]).toEqual(
       expect.arrayContaining([
         expect.stringContaining("auth_token="),
+        expect.stringContaining("_csrf="),
         expect.stringContaining("csrf_token="),
       ])
     );

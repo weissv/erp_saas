@@ -1,10 +1,19 @@
 import type { NextFunction, Request, Response } from "express";
+import csrf from "csurf";
 import { config } from "../config";
 import { JWT } from "../constants";
 import { isAllowedOrigin } from "../utils/origin";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const SKIPPED_PREFIXES = ["/api/webhooks/stripe", "/api/v1/integration"];
+const csrfCookieProtection = csrf({
+  cookie: {
+    key: JWT.CSRF_SECRET_COOKIE_NAME,
+    httpOnly: true,
+    secure: config.nodeEnv === "production",
+    sameSite: "lax",
+  },
+});
 
 function getRequestOrigin(req: Request): string | null {
   const origin = req.get("origin");
@@ -30,7 +39,7 @@ function isSkippedPath(req: Request): boolean {
 }
 
 export function csrfProtection(req: Request, res: Response, next: NextFunction): void {
-  if (SAFE_METHODS.has(req.method.toUpperCase()) || isSkippedPath(req)) {
+  if (isSkippedPath(req)) {
     next();
     return;
   }
@@ -47,24 +56,23 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction):
     return;
   }
 
-  const authCookie = req.cookies?.[JWT.COOKIE_NAME];
-  if (!authCookie) {
-    next();
-    return;
-  }
-
-  if (!requestOrigin) {
+  if (!SAFE_METHODS.has(req.method.toUpperCase()) && !requestOrigin) {
     res.status(403).json({ message: "Missing request origin" });
     return;
   }
 
-  const csrfCookie = req.cookies?.[JWT.CSRF_COOKIE_NAME];
-  const csrfHeader = req.get(JWT.CSRF_HEADER_NAME);
+  csrfCookieProtection(req, res, (error?: unknown) => {
+    if (!error) {
+      next();
+      return;
+    }
 
-  if (!csrfCookie || !csrfHeader || csrfCookie !== csrfHeader) {
-    res.status(403).json({ message: "CSRF validation failed" });
-    return;
-  }
+    const code = (error as { code?: string }).code;
+    if (code === "EBADCSRFTOKEN") {
+      res.status(403).json({ message: "CSRF validation failed" });
+      return;
+    }
 
-  next();
+    next(error as Error);
+  });
 }
