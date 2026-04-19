@@ -180,7 +180,7 @@ export default function GroupsPage() {
 
  return (
  <div className="space-y-6">
- <div className="flex items-center justify-between mb-6">
+ <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
  <div className="flex items-center gap-2">
  <div className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-[rgba(0,122,255,0.08)] text-macos-blue">
  <Users className="h-5 w-5"/>

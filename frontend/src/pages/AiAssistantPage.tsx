@@ -950,7 +950,7 @@ export default function AiAssistantPage() {
  </div>
  
  {/* Statistics */}
- <div className="grid grid-cols-4 gap-2 text-center text-xs mt-2">
+ <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs mt-2">
  <div className="bg-[rgba(52,199,89,0.06)] rounded p-2">
  <div className="font-semibold text-macos-green">{syncStatus.synced}</div>
  <div className="text-macos-green">Добавлено</div>

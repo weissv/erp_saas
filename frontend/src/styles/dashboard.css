@@ -116,7 +116,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  border-radius: 28px;
+  border-radius: clamp(18px, 4vw, 28px);
   overflow: hidden;
   -webkit-backdrop-filter: blur(24px) saturate(145%);
           backdrop-filter: blur(24px) saturate(145%);
@@ -1463,4 +1463,84 @@
 }
 .personalization-action-row:hover {
   background: var(--fill-quaternary);
+}
+
+
+/* ================================================================
+   RESPONSIVE — DASHBOARD
+   ================================================================ */
+@media (max-width: 768px) {
+  .bento-card {
+    border-radius: clamp(18px, 4vw, 28px);
+  }
+  .bento-card__header {
+    padding: 12px 14px 0;
+  }
+  .bento-card__body {
+    padding: 8px 14px 14px;
+  }
+  .bento-card:hover {
+    transform: none;
+  }
+  .bento-overview__metrics {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+  }
+  .bento-overview__metric {
+    padding: 12px 14px;
+    border-radius: 14px;
+  }
+  .bento-overview__metric-value {
+    font-size: 22px;
+  }
+  .bento-kpi-grid {
+    gap: 8px;
+  }
+  .bento-kpi-item {
+    padding: 8px 10px;
+    border-radius: 10px;
+  }
+  .bento-kpi-item__value {
+    font-size: 18px;
+  }
+  .bento-attendance__big-num {
+    font-size: 36px;
+  }
+  .bento-overview__summary {
+    padding: 10px 12px;
+    gap: 12px;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .bento-card {
+    border-radius: 16px;
+  }
+  .bento-card__header {
+    padding: 10px 12px 0;
+  }
+  .bento-card__body {
+    padding: 6px 12px 12px;
+  }
+  .bento-card__title {
+    font-size: 10px;
+  }
+  .bento-overview__metrics {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  .bento-overview__metric {
+    padding: 10px 12px;
+    border-radius: 12px;
+  }
+  .bento-overview__metric-value {
+    font-size: 20px;
+  }
+  .bento-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+  .bento-attendance__big-num {
+    font-size: 28px;
+  }
 }

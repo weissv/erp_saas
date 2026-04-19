@@ -313,7 +313,7 @@ export default function InventoryPage() {
  </div>
 
  {/* Filter tabs */}
- <div className="grid grid-cols-4 gap-4">
+ <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
  {filterCards.map(({ type, label, count, icon: Icon, accent, iconBg, ring}) => (
  <Card
  key={type}

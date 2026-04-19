@@ -384,7 +384,7 @@ export default function ExamTakePage() {
  <p className="text-secondary mb-6">{result.message}</p>
 
  {result.result && (
- <div className="grid grid-cols-3 gap-4 mb-6">
+ <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
  <div className="bg-fill-quaternary rounded-lg p-4">
  <p className="text-sm text-secondary">Набрано баллов</p>
  <p className="text-3xl font-bold text-primary">

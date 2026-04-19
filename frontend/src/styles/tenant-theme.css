@@ -1835,10 +1835,14 @@ body {
   .mezon-workspace-hero__top {
     flex-direction: column;
   }
+  .mezon-workspace-hero__headline h1 {
+    font-size: clamp(1.6rem, 4vw, 2.8rem);
+  }
 }
 
 @media (max-width: 768px) {
   .mezon-top-bar__title span { display: none; }
+  .mezon-top-bar__title strong { font-size: 12px; }
   .mezon-mobile-menu-btn { display: flex; }
   .mezon-mobile-overlay { display: block; }
   .mezon-mobile-close { display: flex; }
@@ -1858,13 +1862,20 @@ body {
     width: 100%;
     justify-content: center;
   }
+  .mezon-top-bar__cluster--compact {
+    display: none;
+  }
   .mezon-top-bar__leading {
     width: 100%;
     justify-content: space-between;
   }
   .mezon-window-controls { display: none; }
 
-  .mezon-shell { width: min(calc(100% - 16px), var(--content-max-width)); padding-top: 14px; }
+  .mezon-shell {
+    width: min(calc(100% - 16px), var(--content-max-width));
+    padding-top: 14px;
+    gap: 12px;
+  }
 
   .mezon-sidenav {
     position: fixed;
@@ -1886,16 +1897,47 @@ body {
   .mezon-section-title { font-size: clamp(1.25rem, 5vw, 1.75rem); }
   .mezon-card { padding: var(--space-4); border-radius: 24px; }
   .mezon-hero-panel { padding: var(--space-4); border-radius: 24px; }
-  .mezon-workspace-hero { border-radius: 26px; }
-  .mezon-workspace-hero__headline h1 { font-size: clamp(1.8rem, 9vw, 2.6rem); }
+  .mezon-workspace-hero { border-radius: 26px; padding: clamp(16px, 3vw, 24px); }
+  .mezon-workspace-hero__headline h1 { font-size: clamp(1.5rem, 7vw, 2.2rem); }
+  .mezon-workspace-hero__headline p { font-size: 14px; line-height: 1.6; }
   .mezon-workspace-hero__actions > * { width: 100%; justify-content: center; }
+  .mezon-workspace-hero__meta {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .mezon-workspace-hero__meta-card {
+    padding: 14px 16px;
+  }
+
+  .mezon-workspace-content {
+    gap: 14px;
+  }
 }
 
 @media (max-width: 480px) {
-  .mezon-top-bar { width: calc(100% - 12px); padding: 10px; }
-  .mezon-shell { width: calc(100% - 12px); padding-top: 12px; }
+  .mezon-top-bar { width: calc(100% - 12px); padding: 10px; border-radius: 20px; }
+  .mezon-shell { width: calc(100% - 12px); padding-top: 12px; gap: 10px; }
   .mezon-section-title { font-size: 1.25rem; }
-  .mezon-card { padding: var(--space-3); }
-  .mezon-workspace-hero { padding: 18px; }
+  .mezon-card { padding: var(--space-3); border-radius: 20px; }
+  .mezon-workspace-hero { padding: 14px; border-radius: 22px; gap: 12px; }
+  .mezon-workspace-hero__headline h1 { font-size: clamp(1.3rem, 6vw, 1.8rem); margin-top: 10px; }
+  .mezon-workspace-hero__headline p { font-size: 13px; margin-top: 10px; }
+  .mezon-workspace-hero__eyebrow { font-size: 10px; padding: 6px 10px; }
+  .mezon-workspace-hero__actions { gap: 8px; }
   .mezon-top-bar__cluster .mezon-chip:nth-child(n+2) { display: none; }
+  .mezon-sidenav { border-radius: 22px; }
+  .mezon-sidenav__brand { padding: 12px; border-radius: 18px; }
+  .mezon-nav-link { padding: 8px 10px; font-size: 12px; border-radius: 14px; }
+  .mezon-chip { font-size: 11px; padding: 4px 8px; }
+  .mezon-toolbar-pill { font-size: 11px; padding: 5px 10px; min-height: 30px; }
+  .mezon-btn { font-size: 13px; padding: 8px 14px; }
+}
+
+@media (max-width: 360px) {
+  .mezon-top-bar { width: calc(100% - 8px); padding: 8px; border-radius: 18px; }
+  .mezon-shell { width: calc(100% - 8px); padding-top: 10px; }
+  .mezon-workspace-hero { padding: 12px; border-radius: 18px; }
+  .mezon-workspace-hero__headline h1 { font-size: 1.2rem; }
+  .mezon-workspace-hero__meta-card { padding: 10px 12px; border-radius: 16px; }
+  .mezon-card { border-radius: 16px; }
 }

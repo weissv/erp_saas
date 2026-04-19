@@ -117,7 +117,7 @@ export default function MainLayout() {
           {user && (
             <span className="mezon-toolbar-pill">
               <span className="mezon-toolbar-pill__dot" />
-              <span className="truncate max-w-[180px]">{userName}</span>
+              <span className="truncate max-w-[100px] sm:max-w-[180px]">{userName}</span>
               <span className="hidden text-[var(--text-tertiary)] sm:inline">· {userRoleLabel}</span>
             </span>
           )}
