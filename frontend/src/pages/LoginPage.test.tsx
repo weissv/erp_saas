@@ -1,263 +1,224 @@
 // src/pages/LoginPage.test.tsx
 // Unit тесты для страницы авторизации
 
-import { describe, it, expect, vi, beforeEach} from 'vitest';
-import { render, screen, fireEvent, waitFor} from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { BrowserRouter} from 'react-router-dom';
-import LoginPage from './LoginPage';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { BrowserRouter } from "react-router-dom";
+import LoginPage from "./LoginPage";
 
-// Мок для useAuth
 const mockLogin = vi.fn();
-vi.mock('../hooks/useAuth', () => ({
- useAuth: () => ({
- login: mockLogin,
- user: null,
- isAuthenticated: false,
-}),
-}));
-
-// Мок для useTenant
-vi.mock('../contexts/TenantContext', () => ({
- useTenant: () => ({
-  tenant: {
-    name: 'Test ERP',
-    logoUrl: '/logo.png',
-    faviconUrl: '/favicon.ico',
-    primaryColor: '#007AFF',
-    supportEmail: '',
-    supportPhone: '',
-  },
-  isLoading: false,
- }),
-}));
-
-// Мок для useNavigate
 const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async () => {
- const actual = await vi.importActual('react-router-dom');
- return {
- ...actual,
- useNavigate: () => mockNavigate,
-};
-});
 
-// Мок для toast
-vi.mock('sonner', () => ({
- toast: {
- success: vi.fn(),
- error: vi.fn(),
-},
+vi.mock("../hooks/useAuth", () => ({
+  useAuth: () => ({
+    login: mockLogin,
+    user: null,
+    isAuthenticated: false,
+  }),
 }));
 
-const renderLoginPage = () => {
- return render(
- <BrowserRouter>
- <LoginPage />
- </BrowserRouter>
- );
-};
+vi.mock("../contexts/TenantContext", () => ({
+  useTenant: () => ({
+    tenant: {
+      name: "Test ERP",
+      logoUrl: "/logo.png",
+      faviconUrl: "/favicon.ico",
+      primaryColor: "#007AFF",
+      supportEmail: "",
+      supportPhone: "",
+    },
+    isLoading: false,
+  }),
+}));
 
-describe('LoginPage', () => {
- beforeEach(() => {
- vi.clearAllMocks();
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual("react-router-dom");
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
 });
 
- describe('Рендеринг', () => {
- it('отображает форму логина', () => {
- renderLoginPage();
+vi.mock("sonner", () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
 
- expect(screen.getByLabelText(/логин/i)).toBeInTheDocument();
- expect(screen.getByLabelText(/пароль/i)).toBeInTheDocument();
- expect(screen.getByRole('button', { name: /войти/i})).toBeInTheDocument();
-});
+const renderLoginPage = () =>
+  render(
+    <BrowserRouter>
+      <LoginPage />
+    </BrowserRouter>
+  );
 
- it('отображает заголовок', () => {
- renderLoginPage();
+const getPasswordInput = () => screen.getByLabelText(/^пароль$/i, { selector: "input" });
 
- expect(screen.getByText(/управляйте школой/i)).toBeInTheDocument();
-});
+describe("LoginPage", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
- it('отображает selling points', () => {
- renderLoginPage();
+  describe("Рендеринг", () => {
+    it("отображает форму логина", () => {
+      renderLoginPage();
 
- expect(screen.getByText(/цифровые дашборды/i)).toBeInTheDocument();
- expect(screen.getByText(/контуры питания/i)).toBeInTheDocument();
- expect(screen.getByText(/документооборот/i)).toBeInTheDocument();
-});
+      expect(screen.getByLabelText(/логин/i)).toBeInTheDocument();
+      expect(getPasswordInput()).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /войти/i })).toBeInTheDocument();
+    });
 
- it('отображает tenant badge', () => {
- renderLoginPage();
+    it("отображает заголовок", () => {
+      renderLoginPage();
 
- expect(screen.getByText(/Test ERP/i)).toBeInTheDocument();
-});
-});
+      expect(screen.getByText(/управляйте школой/i)).toBeInTheDocument();
+    });
 
- describe('Валидация формы', () => {
- it('показывает ошибку для пустого логина', async () => {
- renderLoginPage();
+    it("отображает selling points", () => {
+      renderLoginPage();
 
- const submitButton = screen.getByRole('button', { name: /войти/i});
- await userEvent.click(submitButton);
+      expect(screen.getByText(/цифровые дашборды/i)).toBeInTheDocument();
+      expect(screen.getByText(/контуры питания/i)).toBeInTheDocument();
+      expect(screen.getByText(/документооборот/i)).toBeInTheDocument();
+    });
 
- await waitFor(() => {
- expect(screen.getByText(/логин обязателен/i)).toBeInTheDocument();
-});
-});
+    it("отображает tenant badge", () => {
+      renderLoginPage();
 
- it('показывает ошибку для пустого пароля', async () => {
- renderLoginPage();
+      expect(screen.getByText(/Test ERP/i)).toBeInTheDocument();
+    });
+  });
 
- const loginInput = screen.getByLabelText(/логин/i);
- await userEvent.type(loginInput, 'testuser');
+  describe("Валидация формы", () => {
+    it("показывает ошибку для пустого логина", async () => {
+      renderLoginPage();
 
- const submitButton = screen.getByRole('button', { name: /войти/i});
- await userEvent.click(submitButton);
+      await userEvent.click(screen.getByRole("button", { name: /войти/i }));
 
- await waitFor(() => {
- expect(screen.getByText(/пароль обязателен/i)).toBeInTheDocument();
-});
-});
-});
+      await waitFor(() => {
+        expect(screen.getByText(/логин обязателен/i)).toBeInTheDocument();
+      });
+    });
 
- describe('Отправка формы', () => {
- it('вызывает login с правильными данными', async () => {
- mockLogin.mockResolvedValue({});
- renderLoginPage();
+    it("показывает ошибку для пустого пароля", async () => {
+      renderLoginPage();
 
- const loginInput = screen.getByLabelText(/логин/i);
- const passwordInput = screen.getByLabelText(/пароль/i);
+      await userEvent.type(screen.getByLabelText(/логин/i), "testuser");
+      await userEvent.click(screen.getByRole("button", { name: /войти/i }));
 
- await userEvent.type(loginInput, 'admin@test.com');
- await userEvent.type(passwordInput, 'password123');
+      await waitFor(() => {
+        expect(screen.getByText(/пароль обязателен/i)).toBeInTheDocument();
+      });
+    });
+  });
 
- const submitButton = screen.getByRole('button', { name: /войти/i});
- await userEvent.click(submitButton);
+  describe("Отправка формы", () => {
+    it("вызывает login с правильными данными", async () => {
+      mockLogin.mockResolvedValue({});
+      renderLoginPage();
 
- await waitFor(() => {
- expect(mockLogin).toHaveBeenCalledWith('admin@test.com', 'password123');
-});
-});
+      await userEvent.type(screen.getByLabelText(/логин/i), "admin@test.com");
+      await userEvent.type(getPasswordInput(), "password123");
+      await userEvent.click(screen.getByRole("button", { name: /войти/i }));
 
- it('показывает состояние загрузки', async () => {
- mockLogin.mockImplementation(() => new Promise(() => {})); // Never resolves
- renderLoginPage();
+      await waitFor(() => {
+        expect(mockLogin).toHaveBeenCalledWith("admin@test.com", "password123");
+      });
+    });
 
- const loginInput = screen.getByLabelText(/логин/i);
- const passwordInput = screen.getByLabelText(/пароль/i);
+    it("показывает состояние загрузки", async () => {
+      mockLogin.mockImplementation(() => new Promise(() => {}));
+      renderLoginPage();
 
- await userEvent.type(loginInput, 'admin@test.com');
- await userEvent.type(passwordInput, 'password123');
+      await userEvent.type(screen.getByLabelText(/логин/i), "admin@test.com");
+      await userEvent.type(getPasswordInput(), "password123");
+      await userEvent.click(screen.getByRole("button", { name: /войти/i }));
 
- const submitButton = screen.getByRole('button', { name: /войти/i});
- await userEvent.click(submitButton);
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: /входим/i })).toBeInTheDocument();
+      });
+    });
 
- await waitFor(() => {
- expect(screen.getByText(/входим/i)).toBeInTheDocument();
-});
-});
+    it("перенаправляет на главную после успешного входа", async () => {
+      mockLogin.mockResolvedValue({});
+      renderLoginPage();
 
- it('перенаправляет на главную после успешного входа', async () => {
- mockLogin.mockResolvedValue({});
- renderLoginPage();
+      await userEvent.type(screen.getByLabelText(/логин/i), "admin@test.com");
+      await userEvent.type(getPasswordInput(), "password123");
+      await userEvent.click(screen.getByRole("button", { name: /войти/i }));
 
- const loginInput = screen.getByLabelText(/логин/i);
- const passwordInput = screen.getByLabelText(/пароль/i);
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith("/");
+      });
+    });
+  });
 
- await userEvent.type(loginInput, 'admin@test.com');
- await userEvent.type(passwordInput, 'password123');
+  describe("Обработка ошибок", () => {
+    it("показывает toast при неверных учётных данных", async () => {
+      const { toast } = await import("sonner");
+      mockLogin.mockRejectedValue(new Error("Invalid credentials"));
+      renderLoginPage();
 
- const submitButton = screen.getByRole('button', { name: /войти/i});
- await userEvent.click(submitButton);
+      await userEvent.type(screen.getByLabelText(/логин/i), "wrong@test.com");
+      await userEvent.type(getPasswordInput(), "wrongpassword");
+      await userEvent.click(screen.getByRole("button", { name: /войти/i }));
 
- await waitFor(() => {
- expect(mockNavigate).toHaveBeenCalledWith('/');
-});
-});
-});
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalled();
+      });
+    });
 
- describe('Обработка ошибок', () => {
- it('показывает toast при неверных учётных данных', async () => {
- const { toast} = await import('sonner');
- mockLogin.mockRejectedValue(new Error('Invalid credentials'));
- renderLoginPage();
+    it("обрабатывает ошибку без сообщения", async () => {
+      const { toast } = await import("sonner");
+      mockLogin.mockRejectedValue({});
+      renderLoginPage();
 
- const loginInput = screen.getByLabelText(/логин/i);
- const passwordInput = screen.getByLabelText(/пароль/i);
+      await userEvent.type(screen.getByLabelText(/логин/i), "test@test.com");
+      await userEvent.type(getPasswordInput(), "test");
+      await userEvent.click(screen.getByRole("button", { name: /войти/i }));
 
- await userEvent.type(loginInput, 'wrong@test.com');
- await userEvent.type(passwordInput, 'wrongpassword');
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith(
+          "Ошибка входа",
+          expect.objectContaining({
+            description: expect.any(String),
+          })
+        );
+      });
+    });
+  });
 
- const submitButton = screen.getByRole('button', { name: /войти/i});
- await userEvent.click(submitButton);
+  describe("Accessibility", () => {
+    it("поля связаны с labels через htmlFor", () => {
+      renderLoginPage();
 
- await waitFor(() => {
- expect(toast.error).toHaveBeenCalled();
-});
-});
+      const loginLabel = screen.getByText("Логин");
+      const loginInput = screen.getByLabelText(/логин/i);
 
- it('обрабатывает ошибку без сообщения', async () => {
- const { toast} = await import('sonner');
- mockLogin.mockRejectedValue({});
- renderLoginPage();
+      expect(loginLabel).toHaveAttribute("for", "login");
+      expect(loginInput).toHaveAttribute("id", "login");
+    });
 
- const loginInput = screen.getByLabelText(/логин/i);
- const passwordInput = screen.getByLabelText(/пароль/i);
+    it("форма имеет правильные autocomplete атрибуты", () => {
+      renderLoginPage();
 
- await userEvent.type(loginInput, 'test@test.com');
- await userEvent.type(passwordInput, 'test');
+      expect(screen.getByLabelText(/логин/i)).toHaveAttribute("autocomplete", "off");
+      expect(getPasswordInput()).toHaveAttribute("autocomplete", "new-password");
+    });
 
- const submitButton = screen.getByRole('button', { name: /войти/i});
- await userEvent.click(submitButton);
+    it("кнопка disabled во время отправки", async () => {
+      mockLogin.mockImplementation(() => new Promise(() => {}));
+      renderLoginPage();
 
- await waitFor(() => {
- expect(toast.error).toHaveBeenCalledWith(
- 'Ошибка входа',
- expect.objectContaining({
- description: expect.any(String),
-})
- );
-});
-});
-});
+      await userEvent.type(screen.getByLabelText(/логин/i), "test@test.com");
+      await userEvent.type(getPasswordInput(), "test");
+      await userEvent.click(screen.getByRole("button", { name: /войти/i }));
 
- describe('Accessibility', () => {
- it('поля связаны с labels через htmlFor', () => {
- renderLoginPage();
-
- const loginLabel = screen.getByText('Логин');
- const loginInput = screen.getByLabelText(/логин/i);
-
- expect(loginLabel).toHaveAttribute('for', 'login');
- expect(loginInput).toHaveAttribute('id', 'login');
-});
-
- it('форма имеет правильные autocomplete атрибуты', () => {
- renderLoginPage();
-
- const loginInput = screen.getByLabelText(/логин/i);
- const passwordInput = screen.getByLabelText(/пароль/i);
-
- expect(loginInput).toHaveAttribute('autocomplete', 'off');
- expect(passwordInput).toHaveAttribute('autocomplete', 'new-password');
-});
-
- it('кнопка disabled во время отправки', async () => {
- mockLogin.mockImplementation(() => new Promise(() => {}));
- renderLoginPage();
-
- const loginInput = screen.getByLabelText(/логин/i);
- const passwordInput = screen.getByLabelText(/пароль/i);
-
- await userEvent.type(loginInput, 'test@test.com');
- await userEvent.type(passwordInput, 'test');
-
- const submitButton = screen.getByRole('button', { name: /войти/i});
- await userEvent.click(submitButton);
-
- await waitFor(() => {
- expect(screen.getByRole('button')).toBeDisabled();
-});
-});
-});
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: /входим/i })).toBeDisabled();
+      });
+    });
+  });
 });

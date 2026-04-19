@@ -1,277 +1,229 @@
 // src/components/DataTable/DataTable.test.tsx
 // Unit тесты для DataTable компонента
 
-import { describe, it, expect, vi, beforeEach} from 'vitest';
-import { render, screen, fireEvent, within} from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { DataTable, Column} from './DataTable';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { DataTable, Column } from "./DataTable";
 
-// Мок для URL и Blob
-const mockCreateObjectURL = vi.fn(() => 'blob:test-url');
+const mockCreateObjectURL = vi.fn(() => "blob:test-url");
 const mockRevokeObjectURL = vi.fn();
 URL.createObjectURL = mockCreateObjectURL;
 URL.revokeObjectURL = mockRevokeObjectURL;
 
-// Мок для createElement и click
 const mockClick = vi.fn();
 const originalCreateElement = document.createElement.bind(document);
-vi.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
- const element = originalCreateElement(tagName);
- if (tagName === 'a') {
- element.click = mockClick;
-}
- return element;
+vi.spyOn(document, "createElement").mockImplementation((tagName: string) => {
+  const element = originalCreateElement(tagName);
+  if (tagName === "a") {
+    element.click = mockClick;
+  }
+  return element;
 });
 
 interface TestData {
- id: number;
- name: string;
- email: string;
- status: string;
- amount: number;
+  id: number;
+  name: string;
+  email: string;
+  status: string;
+  amount: number;
 }
 
 const testData: TestData[] = [
- { id: 1, name: 'Иван Иванов', email: 'ivan@test.com', status: 'active', amount: 1000},
- { id: 2, name: 'Анна Петрова', email: 'anna@test.com', status: 'inactive', amount: 2000},
- { id: 3, name: 'Пётр Сидоров', email: 'petr@test.com', status: 'active', amount: 3000},
+  { id: 1, name: "Иван Иванов", email: "ivan@test.com", status: "active", amount: 1000 },
+  { id: 2, name: "Анна Петрова", email: "anna@test.com", status: "inactive", amount: 2000 },
+  { id: 3, name: "Пётр Сидоров", email: "petr@test.com", status: "active", amount: 3000 },
 ];
 
 const testColumns: Column<TestData>[] = [
- { key: 'id', header: 'ID'},
- { key: 'name', header: 'Имя'},
- { key: 'email', header: 'Email'},
- { key: 'status', header: 'Статус'},
- { key: 'amount', header: 'Сумма'},
+  { key: "id", header: "ID" },
+  { key: "name", header: "Имя" },
+  { key: "email", header: "Email" },
+  { key: "status", header: "Статус" },
+  { key: "amount", header: "Сумма" },
 ];
 
-describe('DataTable', () => {
- const defaultProps = {
- data: testData,
- columns: testColumns,
- page: 1,
- pageSize: 10,
- total: 3,
- onPageChange: vi.fn(),
-};
+describe("DataTable", () => {
+  const defaultProps = {
+    data: testData,
+    columns: testColumns,
+    page: 1,
+    pageSize: 10,
+    total: 3,
+    onPageChange: vi.fn(),
+  };
 
- beforeEach(() => {
- vi.clearAllMocks();
-});
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
- describe('Рендеринг', () => {
- it('отображает заголовки колонок', () => {
- render(<DataTable {...defaultProps} />);
+  describe("Рендеринг", () => {
+    it("отображает заголовки колонок", () => {
+      render(<DataTable {...defaultProps} />);
 
- expect(screen.getByText('ID')).toBeInTheDocument();
- expect(screen.getByText('Имя')).toBeInTheDocument();
- expect(screen.getByText('Email')).toBeInTheDocument();
- expect(screen.getByText('Статус')).toBeInTheDocument();
- expect(screen.getByText('Сумма')).toBeInTheDocument();
-});
+      expect(screen.getByText("ID")).toBeInTheDocument();
+      expect(screen.getByText("Имя")).toBeInTheDocument();
+      expect(screen.getByText("Email")).toBeInTheDocument();
+      expect(screen.getByText("Статус")).toBeInTheDocument();
+      expect(screen.getByText("Сумма")).toBeInTheDocument();
+    });
 
- it('отображает данные в ячейках', () => {
- render(<DataTable {...defaultProps} />);
+    it("отображает данные в ячейках", () => {
+      render(<DataTable {...defaultProps} />);
 
- expect(screen.getByText('Иван Иванов')).toBeInTheDocument();
- expect(screen.getByText('ivan@test.com')).toBeInTheDocument();
- expect(screen.getByText('active')).toBeInTheDocument();
-});
+      expect(screen.getByText("Иван Иванов")).toBeInTheDocument();
+      expect(screen.getByText("ivan@test.com")).toBeInTheDocument();
+      expect(screen.getAllByText("active")).toHaveLength(2);
+    });
 
- it('отображает общее количество записей', () => {
- render(<DataTable {...defaultProps} />);
+    it("отображает общее количество записей", () => {
+      render(<DataTable {...defaultProps} />);
 
- expect(screen.getByText('Всего: 3')).toBeInTheDocument();
-});
+      expect(screen.getByText(/Всего:/i).parentElement).toHaveTextContent("Всего: 3");
+    });
 
- it('отображает текущую страницу и общее количество страниц', () => {
- render(<DataTable {...defaultProps} />);
+    it("отображает текущую страницу и общее количество страниц", () => {
+      render(<DataTable {...defaultProps} />);
 
- expect(screen.getByText('1 / 1')).toBeInTheDocument();
-});
+      expect(screen.getByText(/1\s*\/\s*1/i)).toBeInTheDocument();
+    });
 
- it('отображает сообщение при пустых данных', () => {
- render(<DataTable {...defaultProps} data={[]} total={0} />);
+    it("отображает сообщение при пустых данных", () => {
+      render(<DataTable {...defaultProps} data={[]} total={0} />);
 
- expect(screen.getByText('Нет данных')).toBeInTheDocument();
-});
-});
+      expect(screen.getByText("Нет данных")).toBeInTheDocument();
+    });
+  });
 
- describe('Пагинация', () => {
- it('вызывает onPageChange при клике на"Вперёд"', async () => {
- const onPageChange = vi.fn();
- render(
- <DataTable
- {...defaultProps}
- total={30}
- pageSize={10}
- onPageChange={onPageChange}
- />
- );
+  describe("Пагинация", () => {
+    it('вызывает onPageChange при клике на "Следующая страница"', async () => {
+      const onPageChange = vi.fn();
+      render(<DataTable {...defaultProps} total={30} pageSize={10} onPageChange={onPageChange} />);
 
- const nextButton = screen.getByRole('button', { name: /Вперёд/i});
- await userEvent.click(nextButton);
+      await userEvent.click(screen.getByRole("button", { name: /Следующая страница/i }));
 
- expect(onPageChange).toHaveBeenCalledWith(2);
-});
+      expect(onPageChange).toHaveBeenCalledWith(2);
+    });
 
- it('вызывает onPageChange при клике на"Назад"', async () => {
- const onPageChange = vi.fn();
- render(
- <DataTable
- {...defaultProps}
- page={2}
- total={30}
- pageSize={10}
- onPageChange={onPageChange}
- />
- );
+    it('вызывает onPageChange при клике на "Предыдущая страница"', async () => {
+      const onPageChange = vi.fn();
+      render(<DataTable {...defaultProps} page={2} total={30} pageSize={10} onPageChange={onPageChange} />);
 
- const prevButton = screen.getByRole('button', { name: /Назад/i});
- await userEvent.click(prevButton);
+      await userEvent.click(screen.getByRole("button", { name: /Предыдущая страница/i }));
 
- expect(onPageChange).toHaveBeenCalledWith(1);
-});
+      expect(onPageChange).toHaveBeenCalledWith(1);
+    });
 
- it('отключает кнопку"Назад"на первой странице', () => {
- render(<DataTable {...defaultProps} page={1} />);
+    it('отключает кнопку "Предыдущая страница" на первой странице', () => {
+      render(<DataTable {...defaultProps} page={1} />);
 
- const prevButton = screen.getByRole('button', { name: /Назад/i});
- expect(prevButton).toBeDisabled();
-});
+      expect(screen.getByRole("button", { name: /Предыдущая страница/i })).toBeDisabled();
+    });
 
- it('отключает кнопку"Вперёд"на последней странице', () => {
- render(
- <DataTable
- {...defaultProps}
- page={3}
- total={30}
- pageSize={10}
- />
- );
+    it('отключает кнопку "Следующая страница" на последней странице', () => {
+      render(<DataTable {...defaultProps} page={3} total={30} pageSize={10} />);
 
- const nextButton = screen.getByRole('button', { name: /Вперёд/i});
- expect(nextButton).toBeDisabled();
-});
+      expect(screen.getByRole("button", { name: /Следующая страница/i })).toBeDisabled();
+    });
 
- it('корректно рассчитывает количество страниц', () => {
- render(
- <DataTable
- {...defaultProps}
- total={25}
- pageSize={10}
- />
- );
+    it("корректно рассчитывает количество страниц", () => {
+      render(<DataTable {...defaultProps} total={25} pageSize={10} />);
 
- expect(screen.getByText('1 / 3')).toBeInTheDocument();
-});
-});
+      expect(screen.getByText(/1\s*\/\s*3/i)).toBeInTheDocument();
+    });
+  });
 
- describe('Кастомный рендеринг ячеек', () => {
- it('использует кастомный render для колонки', () => {
- const customColumns: Column<TestData>[] = [
- ...testColumns.slice(0, 3),
- {
- key: 'status',
- header: 'Статус',
- render: (row) => (
- <span data-testid="custom-status"className={row.status === 'active' ? 'green' : 'red'}>
- {row.status === 'active' ? 'Активен' : 'Неактивен'}
- </span>
- ),
-},
- testColumns[4],
- ];
+  describe("Кастомный рендеринг ячеек", () => {
+    it("использует кастомный render для колонки", () => {
+      const customColumns: Column<TestData>[] = [
+        ...testColumns.slice(0, 3),
+        {
+          key: "status",
+          header: "Статус",
+          render: (row) => (
+            <span data-testid="custom-status" className={row.status === "active" ? "green" : "red"}>
+              {row.status === "active" ? "Активен" : "Неактивен"}
+            </span>
+          ),
+        },
+        testColumns[4],
+      ];
 
- render(<DataTable {...defaultProps} columns={customColumns} />);
+      render(<DataTable {...defaultProps} columns={customColumns} />);
 
- const customStatuses = screen.getAllByTestId('custom-status');
- expect(customStatuses).toHaveLength(3);
- expect(customStatuses[0]).toHaveTextContent('Активен');
- expect(customStatuses[1]).toHaveTextContent('Неактивен');
-});
-});
+      const customStatuses = screen.getAllByTestId("custom-status");
+      expect(customStatuses).toHaveLength(3);
+      expect(customStatuses[0]).toHaveTextContent("Активен");
+      expect(customStatuses[1]).toHaveTextContent("Неактивен");
+    });
+  });
 
- describe('Экспорт CSV', () => {
- it('экспортирует данные в CSV при клике на кнопку', async () => {
- render(<DataTable {...defaultProps} />);
+  describe("Экспорт CSV", () => {
+    it("экспортирует данные в CSV при клике на кнопку", async () => {
+      render(<DataTable {...defaultProps} />);
 
- const exportButton = screen.getByRole('button', { name: /Экспорт CSV/i});
- await userEvent.click(exportButton);
+      await userEvent.click(screen.getByRole("button", { name: /Экспорт данных в CSV/i }));
 
- expect(mockCreateObjectURL).toHaveBeenCalled();
- expect(mockClick).toHaveBeenCalled();
- expect(mockRevokeObjectURL).toHaveBeenCalled();
-});
-});
+      expect(mockCreateObjectURL).toHaveBeenCalled();
+      expect(mockClick).toHaveBeenCalled();
+      expect(mockRevokeObjectURL).toHaveBeenCalled();
+    });
+  });
 
- describe('Опция wrapCells', () => {
- it('применяет классы для переноса текста когда wrapCells=true', () => {
- const { container} = render(<DataTable {...defaultProps} wrapCells={true} />);
+  describe("Опция wrapCells", () => {
+    it("применяет классы для переноса текста когда wrapCells=true", () => {
+      const { container } = render(<DataTable {...defaultProps} wrapCells />);
 
- const table = container.querySelector('table');
- expect(table).toHaveClass('table-fixed');
+      expect(container.querySelector("table")).toHaveClass("table-fixed");
+      container.querySelectorAll("th").forEach((cell) => {
+        expect(cell).toHaveClass("whitespace-normal");
+        expect(cell).toHaveClass("break-words");
+      });
+    });
 
- const headerCells = container.querySelectorAll('th');
- headerCells.forEach((cell) => {
- expect(cell).toHaveClass('whitespace-normal');
- expect(cell).toHaveClass('break-words');
-});
-});
+    it("применяет классы без переноса когда wrapCells=false", () => {
+      const { container } = render(<DataTable {...defaultProps} wrapCells={false} />);
 
- it('применяет классы без переноса когда wrapCells=false', () => {
- const { container} = render(<DataTable {...defaultProps} wrapCells={false} />);
+      expect(container.querySelector("table")).not.toHaveClass("table-fixed");
+      container.querySelectorAll("th").forEach((cell) => {
+        expect(cell).toHaveClass("whitespace-nowrap");
+      });
+    });
+  });
 
- const table = container.querySelector('table');
- expect(table).not.toHaveClass('table-fixed');
+  describe("Обработка null/undefined значений", () => {
+    it("отображает пустую строку для null значений", () => {
+      const dataWithNull: TestData[] = [{ id: 1, name: "Тест", email: null as any, status: "active", amount: 1000 }];
 
- const headerCells = container.querySelectorAll('th');
- headerCells.forEach((cell) => {
- expect(cell).toHaveClass('whitespace-nowrap');
-});
-});
-});
+      render(<DataTable {...defaultProps} data={dataWithNull} total={1} />);
 
- describe('Обработка null/undefined значений', () => {
- it('отображает пустую строку для null значений', () => {
- const dataWithNull: TestData[] = [
- { id: 1, name: 'Тест', email: null as any, status: 'active', amount: 1000},
- ];
+      expect(screen.getAllByRole("row")).toHaveLength(2);
+    });
 
- render(<DataTable {...defaultProps} data={dataWithNull} total={1} />);
+    it("отображает пустую строку для undefined значений", () => {
+      const dataWithUndefined: Partial<TestData>[] = [{ id: 1, name: "Тест", status: "active" }];
 
- const rows = screen.getAllByRole('row');
- expect(rows).toHaveLength(2); // header + 1 data row
-});
+      render(<DataTable {...defaultProps} data={dataWithUndefined as TestData[]} total={1} />);
 
- it('отображает пустую строку для undefined значений', () => {
- const dataWithUndefined: Partial<TestData>[] = [
- { id: 1, name: 'Тест', status: 'active'},
- ];
+      expect(screen.getAllByRole("row")).toHaveLength(2);
+    });
+  });
 
- render(<DataTable {...defaultProps} data={dataWithUndefined as TestData[]} total={1} />);
+  describe("Доступность (a11y)", () => {
+    it("таблица имеет корректную структуру", () => {
+      const { container } = render(<DataTable {...defaultProps} />);
 
- const rows = screen.getAllByRole('row');
- expect(rows).toHaveLength(2);
-});
-});
+      expect(container.querySelector("table")).toBeInTheDocument();
+      expect(container.querySelector("thead")).toBeInTheDocument();
+      expect(container.querySelector("tbody")).toBeInTheDocument();
+    });
 
- describe('Доступность (a11y)', () => {
- it('таблица имеет корректную структуру', () => {
- const { container} = render(<DataTable {...defaultProps} />);
+    it("кнопки пагинации доступны для keyboard navigation", () => {
+      render(<DataTable {...defaultProps} total={30} pageSize={10} />);
 
- expect(container.querySelector('table')).toBeInTheDocument();
- expect(container.querySelector('thead')).toBeInTheDocument();
- expect(container.querySelector('tbody')).toBeInTheDocument();
-});
-
- it('кнопки пагинации доступны для keyboard navigation', () => {
- render(<DataTable {...defaultProps} total={30} pageSize={10} />);
-
- const buttons = screen.getAllByRole('button');
- buttons.forEach((button) => {
- expect(button).not.toHaveAttribute('tabindex', '-1');
-});
-});
-});
+      screen.getAllByRole("button").forEach((button) => {
+        expect(button).not.toHaveAttribute("tabindex", "-1");
+      });
+    });
+  });
 });

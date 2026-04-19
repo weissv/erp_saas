@@ -1,203 +1,186 @@
 // src/pages/DashboardPage.test.tsx
-// Unit тесты для страницы Dashboard (модульный дашборд)
+// Unit тесты для страницы Dashboard
 
-import { describe, it, expect, vi, beforeEach} from 'vitest';
-import { render, screen, waitFor} from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { BrowserRouter} from 'react-router-dom';
-import DashboardPage from './DashboardPage';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { BrowserRouter } from "react-router-dom";
+import DashboardPage from "./DashboardPage";
 
-// Мок bootstrap-ответа
+const mockRefetch = vi.fn();
+const mockSavePreferences = vi.fn();
+const mockSaveLayout = vi.fn();
+const mockResetPreferences = vi.fn();
+const mockUseDashboardPreferences = vi.fn();
+
 const mockBootstrap = {
- preferences: {
- layout: [
- { widgetId: 'kpi-overview', x: 0, y: 0, w: 12, h: 2},
- { widgetId: 'attendance-today', x: 0, y: 2, w: 4, h: 2},
- { widgetId: 'finance-overview', x: 4, y: 2, w: 4, h: 3},
- ],
- enabledWidgets: ['kpi-overview', 'attendance-today', 'finance-overview', 'quick-actions'],
- collapsedSections: [],
- pinnedActions: [],
- widgetFilters: {},
- savedViews: [],
- activeView: null,
-},
- availableWidgets: [
- { id: 'kpi-overview', title: 'Ключевые показатели', category: 'kpi', description: '', defaultSize: { w: 12, h: 2}, minSize: { w: 6, h: 2}, canHide: false, canResize: true, refreshInterval: 300000},
- { id: 'attendance-today', title: 'Посещаемость сегодня', category: 'kpi', description: '', defaultSize: { w: 4, h: 2}, minSize: { w: 3, h: 2}, canHide: true, canResize: true, refreshInterval: 300000},
- { id: 'finance-overview', title: 'Финансовый обзор', category: 'finance', description: '', defaultSize: { w: 6, h: 3}, minSize: { w: 4, h: 2}, canHide: true, canResize: true, refreshInterval: 600000},
- { id: 'quick-actions', title: 'Быстрые действия', category: 'actions', description: '', defaultSize: { w: 12, h: 1}, minSize: { w: 6, h: 1}, canHide: false, canResize: false, refreshInterval: 0},
- ],
- quickActions: [
- { id: 'add-child', label: 'Добавить ребёнка', icon: 'UserPlus', path: '/children'},
- { id: 'mark-attendance', label: 'Отметить посещаемость', icon: 'CheckSquare', path: '/attendance'},
- ],
- overview: {
- generatedAt: new Date().toISOString(),
- metrics: [
- { id: 'children', label: 'Дети на учёте', value: 150, hint: '145 присутствуют сегодня', tone: 'primary'},
- { id: 'employees', label: 'Активные сотрудники', value: 35, hint: '30 отметок за день', tone: 'success'},
- ],
- alerts: [
- { id: 'maintenance', label: 'Активные заявки', value: 3, tone: 'warning', path: '/maintenance'},
- ],
- visibleWidgetCount: 4,
- quickActionCount: 2,
-},
+  preferences: {
+    layout: [
+      { widgetId: "kpi-overview", x: 0, y: 0, w: 12, h: 2 },
+      { widgetId: "quick-actions", x: 0, y: 2, w: 12, h: 2 },
+    ],
+    enabledWidgets: ["kpi-overview", "quick-actions"],
+    collapsedSections: [],
+    pinnedActions: [],
+    widgetFilters: {},
+    savedViews: [],
+    activeView: null,
+  },
+  availableWidgets: [
+    {
+      id: "kpi-overview",
+      title: "Ключевые показатели",
+      category: "kpi",
+      description: "",
+      defaultSize: { w: 12, h: 2 },
+      minSize: { w: 6, h: 2 },
+      maxSize: { w: 12, h: 4 },
+      canHide: false,
+      canResize: true,
+      refreshInterval: 300000,
+    },
+    {
+      id: "quick-actions",
+      title: "Быстрые действия",
+      category: "actions",
+      description: "",
+      defaultSize: { w: 12, h: 2 },
+      minSize: { w: 6, h: 2 },
+      maxSize: { w: 12, h: 4 },
+      canHide: false,
+      canResize: false,
+      refreshInterval: 0,
+    },
+  ],
+  quickActions: [
+    { id: "add-child", label: "Добавить ребёнка", icon: "UserPlus", path: "/children" },
+    { id: "mark-attendance", label: "Отметить посещаемость", icon: "CheckSquare", path: "/attendance" },
+  ],
+  overview: {
+    generatedAt: new Date().toISOString(),
+    metrics: [
+      { id: "children", label: "Дети на учёте", value: 150, hint: "145 присутствуют сегодня", tone: "primary" },
+      { id: "employees", label: "Активные сотрудники", value: 35, hint: "30 отметок за день", tone: "success" },
+    ],
+    alerts: [{ id: "maintenance", label: "Активные заявки", value: 3, tone: "warning", path: "/maintenance" }],
+    visibleWidgetCount: 2,
+    quickActionCount: 2,
+  },
 };
 
-const mockKpiData = {
- childrenCount: 150,
- employeesCount: 35,
- activeClubs: 8,
- income: 5000000,
- expense: 3500000,
-};
-
-const mockAttendanceData = {
- childrenPresent: 145,
- childrenOnMeals: 140,
- employeeAttendance: { PRESENT: 30, SICK_LEAVE: 2},
- date: '2024-10-15',
-};
-
-const mockFinanceData = {
- period: 30,
- income: { total: 5000000, count: 45},
- expense: { total: 3500000, count: 30},
- balance: 1500000,
-};
-
-// Мок API
-vi.mock('../lib/api', () => ({
- api: {
- get: vi.fn((url: string) => {
- if (url.includes('bootstrap')) return Promise.resolve(mockBootstrap);
- if (url.includes('widgets/kpi-overview')) return Promise.resolve(mockKpiData);
- if (url.includes('widgets/attendance-today')) return Promise.resolve(mockAttendanceData);
- if (url.includes('widgets/finance-overview')) return Promise.resolve(mockFinanceData);
- return Promise.resolve({});
-}),
- put: vi.fn(() => Promise.resolve(mockBootstrap.preferences)),
- post: vi.fn(() => Promise.resolve(mockBootstrap.preferences)),
-},
+vi.mock("../hooks/useDashboardPreferences", () => ({
+  useDashboardPreferences: () => mockUseDashboardPreferences(),
 }));
 
-// Мок useAuth
-vi.mock('../hooks/useAuth', () => ({
- useAuth: () => ({
- user: { id: 1, role: 'ADMIN', email: 'admin@test.com'},
- isAuthenticated: true,
-}),
+vi.mock("../components/dashboard/DashboardLayout", () => ({
+  default: ({ availableWidgets }: { availableWidgets: Array<{ id: string; title: string }> }) => (
+    <div data-testid="dashboard-layout">
+      {availableWidgets.map((widget) => (
+        <span key={widget.id}>{widget.title}</span>
+      ))}
+    </div>
+  ),
 }));
 
-// Мок toast
-vi.mock('sonner', () => ({
- toast: {
- success: vi.fn(),
- error: vi.fn(),
-},
+vi.mock("../components/dashboard/PersonalizationPanel", () => ({
+  default: ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) =>
+    isOpen ? (
+      <div data-testid="personalization-panel">
+        <button type="button" onClick={onClose}>
+          Закрыть панель
+        </button>
+      </div>
+    ) : null,
 }));
 
-const renderDashboard = () => {
- return render(
- <BrowserRouter>
- <DashboardPage />
- </BrowserRouter>
- );
-};
+vi.mock("sonner", () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
 
-describe('DashboardPage', () => {
- beforeEach(() => {
- vi.clearAllMocks();
-});
+const renderDashboard = () =>
+  render(
+    <BrowserRouter>
+      <DashboardPage />
+    </BrowserRouter>
+  );
 
- describe('Рендеринг', () => {
- it('показывает заголовок дашборда после загрузки', async () => {
- renderDashboard();
+describe("DashboardPage", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUseDashboardPreferences.mockReturnValue({
+      bootstrap: mockBootstrap,
+      preferences: mockBootstrap.preferences,
+      isLoading: false,
+      error: null,
+      savePreferences: mockSavePreferences,
+      saveLayout: mockSaveLayout,
+      resetPreferences: mockResetPreferences,
+      refetch: mockRefetch,
+    });
+  });
 
- await waitFor(() => {
- expect(screen.getByText('Дашборд')).toBeInTheDocument();
-});
-});
+  it("показывает заголовок и overview-данные", () => {
+    renderDashboard();
 
- it('отображает overview-метрики после загрузки', async () => {
- renderDashboard();
+    expect(screen.getByRole("heading", { name: "Дашборд" })).toBeInTheDocument();
+    expect(screen.getByText("Дети на учёте")).toBeInTheDocument();
+    expect(screen.getByText("Активные заявки")).toBeInTheDocument();
+    expect(screen.getByText("Ключевые показатели")).toBeInTheDocument();
+  });
 
- await waitFor(() => {
- expect(screen.getByText('Дети на учёте')).toBeInTheDocument();
- expect(screen.getByText('150')).toBeInTheDocument();
-});
-});
+  it("показывает кнопки управления", () => {
+    renderDashboard();
 
- it('отображает overview-алерты', async () => {
- renderDashboard();
+    expect(screen.getByRole("button", { name: /Редактировать/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Настроить/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Обновить/i })).toBeInTheDocument();
+  });
 
- await waitFor(() => {
- expect(screen.getByText('Активные заявки')).toBeInTheDocument();
-});
-});
-});
+  it("переключает режим редактирования", async () => {
+    const user = userEvent.setup();
+    renderDashboard();
 
- describe('Панель управления', () => {
- it('показывает кнопку редактирования', async () => {
- renderDashboard();
+    await user.click(screen.getByRole("button", { name: /Редактировать/i }));
 
- await waitFor(() => {
- expect(screen.getByText('Редактировать')).toBeInTheDocument();
-});
-});
+    expect(screen.getByRole("button", { name: /Готово/i })).toBeInTheDocument();
+  });
 
- it('показывает кнопку настроек', async () => {
- renderDashboard();
+  it("открывает панель настроек", async () => {
+    const user = userEvent.setup();
+    renderDashboard();
 
- await waitFor(() => {
- expect(screen.getByText('Настроить')).toBeInTheDocument();
-});
-});
+    await user.click(screen.getByRole("button", { name: /Настроить/i }));
 
- it('переключает режим редактирования', async () => {
- renderDashboard();
+    expect(screen.getByTestId("personalization-panel")).toBeInTheDocument();
+  });
 
- await waitFor(() => {
- expect(screen.getByText('Редактировать')).toBeInTheDocument();
-});
+  it("вызывает refetch при обновлении", async () => {
+    const user = userEvent.setup();
+    renderDashboard();
 
- await userEvent.click(screen.getByText('Редактировать'));
- expect(screen.getByText('Готово')).toBeInTheDocument();
-});
-});
+    await user.click(screen.getByRole("button", { name: /Обновить/i }));
 
- describe('Data Fetching', () => {
- it('загружает bootstrap при монтировании', async () => {
- const { api} = await import('../lib/api');
- renderDashboard();
+    expect(mockRefetch).toHaveBeenCalledTimes(1);
+  });
 
- await waitFor(() => {
- expect(api.get).toHaveBeenCalledWith('/api/dashboard/bootstrap');
-});
-});
+  it("показывает состояние ошибки", () => {
+    mockUseDashboardPreferences.mockReturnValue({
+      bootstrap: null,
+      preferences: null,
+      isLoading: false,
+      error: "API Error",
+      savePreferences: mockSavePreferences,
+      saveLayout: mockSaveLayout,
+      resetPreferences: mockResetPreferences,
+      refetch: mockRefetch,
+    });
 
- it('загружает данные виджетов', async () => {
- const { api} = await import('../lib/api');
- renderDashboard();
+    renderDashboard();
 
- await waitFor(() => {
- expect(api.get).toHaveBeenCalledWith(expect.stringContaining('/api/dashboard/widgets/'));
-});
-});
-});
-
- describe('Обработка ошибок', () => {
- it('показывает состояние ошибки при провале bootstrap', async () => {
- const { api} = await import('../lib/api');
- vi.mocked(api.get).mockRejectedValueOnce(new Error('API Error'));
-
- renderDashboard();
-
- await waitFor(() => {
- expect(screen.getByText('Повторить')).toBeInTheDocument();
-});
-});
-});
+    expect(screen.getByText("API Error")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Повторить/i })).toBeInTheDocument();
+  });
 });
