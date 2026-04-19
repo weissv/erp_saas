@@ -1,19 +1,41 @@
-// src/services/TelegramService.ts
-import { Telegraf, Context } from 'telegraf';
-import { prisma } from '../prisma';
-import { Role } from '@prisma/client';
-import { getTenantIntegrations, DEFAULT_TENANT_ID } from './TenantIntegrationsService';
+import jwt from "jsonwebtoken";
+import type { PrismaClient, Role } from "@prisma/client";
+import { Telegraf, type Context } from "telegraf";
+import { config } from "../config";
+import { getMasterPrisma } from "../lib/masterPrisma";
+import { getRequestPrisma, getRequestTenantId } from "../lib/requestContext";
+import { getTenantPrisma } from "../lib/tenantPrisma";
+import { rootPrisma } from "../prisma";
 import { logger } from "../utils/logger";
+import { DEFAULT_TENANT_ID, getTenantIntegrations } from "./TenantIntegrationsService";
 
-// Telegram Bot instances per tenant
-const bots = new Map<string, Telegraf>();
+interface TelegramLinkPayload {
+  type: "telegram-connect";
+  tenantId: string;
+  userId: number;
+}
+
+interface TelegramBotRuntime {
+  bot: Telegraf;
+  tenantId: string;
+  tenantName: string;
+  username: string | null;
+}
+
+interface TenantContext {
+  prisma: PrismaClient;
+  tenantName: string;
+}
+
+const bots = new Map<string, TelegramBotRuntime>();
+let shutdownHooksRegistered = false;
 
 function looksLikeTelegramToken(token: string): boolean {
   return /^\d+:[A-Za-z0-9_-]{20,}$/.test(token);
 }
 
 function isTelegramUnauthorizedError(error: unknown): boolean {
-  if (!error || typeof error !== 'object') {
+  if (!error || typeof error !== "object") {
     return false;
   }
 
@@ -21,231 +43,367 @@ function isTelegramUnauthorizedError(error: unknown): boolean {
   return response?.error_code === 401;
 }
 
-/**
- * Инициализация Telegram бота для указанного тенанта.
- * Токен читается из TenantIntegrations, а не из .env.
- */
-export async function initTelegramBot(tenantId: string = DEFAULT_TENANT_ID): Promise<void> {
+function resolveTenantId(tenantId?: string): string {
+  return tenantId ?? getRequestTenantId() ?? DEFAULT_TENANT_ID;
+}
+
+async function getTenantContext(tenantId: string): Promise<TenantContext> {
+  const requestPrisma = getRequestPrisma();
+  const requestTenantId = getRequestTenantId();
+
+  if (requestPrisma && requestTenantId === tenantId) {
+    return {
+      prisma: requestPrisma,
+      tenantName: "Mirai",
+    };
+  }
+
+  if (tenantId === DEFAULT_TENANT_ID) {
+    return {
+      prisma: rootPrisma,
+      tenantName: "Mirai",
+    };
+  }
+
+  const master = getMasterPrisma();
+  const tenant = await master.tenant.findUnique({
+    where: { id: tenantId },
+    select: {
+      dbUrl: true,
+      name: true,
+      subdomain: true,
+    },
+  });
+
+  if (!tenant?.dbUrl) {
+    throw new Error(`Tenant ${tenantId} not found`);
+  }
+
+  return {
+    prisma: getTenantPrisma(tenantId, tenant.dbUrl),
+    tenantName: tenant.name?.trim() || tenant.subdomain || "Mirai",
+  };
+}
+
+function getTelegramLinkSecret(): string {
+  return config.jwtSecret || "mirai-telegram-dev-secret";
+}
+
+function signTelegramLink(userId: number, tenantId: string): string {
+  return jwt.sign(
+    {
+      type: "telegram-connect",
+      tenantId,
+      userId,
+    } satisfies TelegramLinkPayload,
+    getTelegramLinkSecret(),
+    { expiresIn: "7d" }
+  );
+}
+
+function verifyTelegramLink(token: string): TelegramLinkPayload | null {
+  try {
+    const payload = jwt.verify(token, getTelegramLinkSecret()) as Partial<TelegramLinkPayload>;
+
+    if (
+      payload.type !== "telegram-connect" ||
+      typeof payload.tenantId !== "string" ||
+      typeof payload.userId !== "number"
+    ) {
+      return null;
+    }
+
+    return payload as TelegramLinkPayload;
+  } catch {
+    return null;
+  }
+}
+
+function getStartPayload(ctx: Context): string | null {
+  const message = ctx.message;
+  if (!message || !("text" in message)) {
+    return null;
+  }
+
+  const parts = message.text.trim().split(/\s+/);
+  return parts.length > 1 ? parts[1] : null;
+}
+
+function buildHelpMessage(tenantName: string): string {
+  return [
+    `🤖 <b>${tenantName}</b> — Telegram-бот уведомлений`,
+    "",
+    "Доступные команды:",
+    "• <b>/start</b> — подключить Telegram по ссылке из системы",
+    "• <b>/status</b> — проверить текущую привязку",
+    "• <b>/unlink</b> — отвязать Telegram от аккаунта",
+    "• <b>/help</b> — показать справку",
+  ].join("\n");
+}
+
+function registerShutdownHooks(): void {
+  if (shutdownHooksRegistered) {
+    return;
+  }
+
+  const stopAllBots = (signal: "SIGINT" | "SIGTERM") => {
+    for (const runtime of bots.values()) {
+      runtime.bot.stop(signal);
+    }
+  };
+
+  process.once("SIGINT", () => stopAllBots("SIGINT"));
+  process.once("SIGTERM", () => stopAllBots("SIGTERM"));
+  shutdownHooksRegistered = true;
+}
+
+async function ensureTelegramBot(tenantId: string): Promise<TelegramBotRuntime | null> {
+  const existing = bots.get(tenantId);
+  if (existing) {
+    return existing;
+  }
+
   const creds = await getTenantIntegrations(tenantId);
   const token = creds.telegramBotToken?.trim();
-  
+
   if (!token) {
     logger.warn(`[${tenantId}] TELEGRAM_BOT_TOKEN не установлен. Telegram уведомления отключены.`);
-    return;
+    return null;
   }
 
   if (!looksLikeTelegramToken(token)) {
     logger.warn(`[${tenantId}] TELEGRAM_BOT_TOKEN имеет некорректный формат. Telegram уведомления отключены.`);
-    return;
-  }
-
-  // Already running for this tenant
-  if (bots.has(tenantId)) {
-    return;
+    return null;
   }
 
   try {
+    const tenantContext = await getTenantContext(tenantId);
     const telegramBot = new Telegraf(token);
 
-    // Обработка команды /start <userId>
     telegramBot.start(async (ctx: Context) => {
-      const message = ctx.message;
-      if (!message || !('text' in message)) return;
-
-      const text = message.text;
       const chatId = ctx.chat?.id?.toString();
-      
       if (!chatId) {
-        await ctx.reply('❌ Ошибка: не удалось получить Chat ID.');
+        await ctx.reply("❌ Не удалось определить Chat ID. Попробуйте ещё раз.");
         return;
       }
 
-      // Извлекаем userId из команды /start <userId>
-      const parts = text.split(' ');
-      if (parts.length < 2) {
+      const payloadToken = getStartPayload(ctx);
+      if (!payloadToken) {
+        await ctx.reply(buildHelpMessage(tenantContext.tenantName), { parse_mode: "HTML" });
+        return;
+      }
+
+      const payload = verifyTelegramLink(payloadToken);
+      if (!payload || payload.tenantId !== tenantId) {
         await ctx.reply(
-          '👋 Добро пожаловать!\n\n' +
-          'Чтобы связать ваш аккаунт с системой уведомлений, ' +
-          'используйте ссылку из вашего профиля в системе.'
+          "❌ Ссылка для подключения недействительна или устарела. Сгенерируйте новую ссылку в системе."
         );
         return;
       }
 
-      const userIdParam = parts[1];
-      const userId = parseInt(userIdParam, 10);
-
-      if (isNaN(userId)) {
-        await ctx.reply('❌ Неверный ID пользователя.');
-        return;
-      }
-
       try {
-        // Проверяем, не привязан ли уже этот Telegram к другому пользователю
-        const existingUser = await prisma.user.findUnique({
+        const existingUser = await tenantContext.prisma.user.findUnique({
           where: { telegramChatId: chatId },
+          select: { id: true },
         });
 
-        if (existingUser && existingUser.id !== userId) {
+        if (existingUser && existingUser.id !== payload.userId) {
           await ctx.reply(
-            '⚠️ Этот Telegram аккаунт уже привязан к другому пользователю.\n' +
-            'Отвяжите его сначала через настройки профиля.'
+            "⚠️ Этот Telegram уже привязан к другому аккаунту. Сначала выполните /unlink в текущем аккаунте."
           );
           return;
         }
 
-        // Привязываем Telegram Chat ID к пользователю
-        const user = await prisma.user.update({
-          where: { id: userId },
-          data: { telegramChatId: chatId },
+        const user = await tenantContext.prisma.user.findFirst({
+          where: {
+            id: payload.userId,
+            deletedAt: null,
+          },
           include: { employee: true },
         });
 
-        const userName = user.employee 
-          ? `${user.employee.firstName} ${user.employee.lastName}` 
-          : user.email;
-
-        await ctx.reply(
-          `✅ Telegram успешно привязан!\n\n` +
-          `👤 Пользователь: ${userName}\n` +
-          `📧 Email: ${user.email}\n` +
-          `🔔 Теперь вы будете получать уведомления о заявках.`
-        );
-
-        logger.info(`Telegram привязан: User ${userId} -> Chat ${chatId}`);
-      } catch (error) {
-        logger.error('Ошибка привязки Telegram:', error);
-        
-        const prismaError = error as { code?: string };
-        if (prismaError?.code === 'P2025') {
-          await ctx.reply('❌ Пользователь с таким ID не найден в системе.');
-        } else {
-          await ctx.reply('❌ Произошла ошибка при привязке аккаунта. Попробуйте позже.');
-        }
-      }
-    });
-
-    // Команда /unlink для отвязки аккаунта
-    telegramBot.command('unlink', async (ctx: Context) => {
-      const chatId = ctx.chat?.id?.toString();
-      
-      if (!chatId) return;
-
-      try {
-        const user = await prisma.user.findUnique({
-          where: { telegramChatId: chatId },
-        });
-
         if (!user) {
-          await ctx.reply('ℹ️ Ваш Telegram не привязан ни к одному аккаунту.');
+          await ctx.reply("❌ Учётная запись не найдена или уже деактивирована.");
           return;
         }
 
-        await prisma.user.update({
+        await tenantContext.prisma.user.update({
+          where: { id: user.id },
+          data: { telegramChatId: chatId },
+        });
+
+        const userName = user.employee
+          ? `${user.employee.firstName} ${user.employee.lastName}`
+          : user.email;
+
+        await ctx.reply(
+          [
+            "✅ <b>Telegram подключён</b>",
+            "",
+            `<b>Школа:</b> ${tenantContext.tenantName}`,
+            `<b>Пользователь:</b> ${userName}`,
+            `<b>Email:</b> ${user.email}`,
+            "",
+            "Теперь вы будете получать системные уведомления в этот чат.",
+          ].join("\n"),
+          { parse_mode: "HTML" }
+        );
+
+        logger.info(`[${tenantId}] Telegram привязан: user=${user.id}, chat=${chatId}`);
+      } catch (error) {
+        logger.error(`[${tenantId}] Ошибка привязки Telegram:`, error);
+        await ctx.reply("❌ Не удалось завершить привязку. Попробуйте ещё раз немного позже.");
+      }
+    });
+
+    telegramBot.command("unlink", async (ctx: Context) => {
+      const chatId = ctx.chat?.id?.toString();
+      if (!chatId) {
+        return;
+      }
+
+      try {
+        const user = await tenantContext.prisma.user.findUnique({
+          where: { telegramChatId: chatId },
+          select: { id: true },
+        });
+
+        if (!user) {
+          await ctx.reply("ℹ️ Этот Telegram ещё не привязан ни к одной учётной записи.");
+          return;
+        }
+
+        await tenantContext.prisma.user.update({
           where: { id: user.id },
           data: { telegramChatId: null },
         });
 
-        await ctx.reply('✅ Telegram успешно отвязан от вашего аккаунта.');
-        logger.info(`Telegram отвязан: User ${user.id}`);
+        await ctx.reply("✅ Telegram успешно отвязан от аккаунта.");
+        logger.info(`[${tenantId}] Telegram отвязан: user=${user.id}`);
       } catch (error) {
-        logger.error('Ошибка отвязки Telegram:', error);
-        await ctx.reply('❌ Произошла ошибка. Попробуйте позже.');
+        logger.error(`[${tenantId}] Ошибка отвязки Telegram:`, error);
+        await ctx.reply("❌ Не удалось отвязать Telegram. Попробуйте позже.");
       }
     });
 
-    // Команда /status для проверки привязки
-    telegramBot.command('status', async (ctx: Context) => {
+    telegramBot.command("status", async (ctx: Context) => {
       const chatId = ctx.chat?.id?.toString();
-      
-      if (!chatId) return;
+      if (!chatId) {
+        return;
+      }
 
       try {
-        const user = await prisma.user.findUnique({
+        const user = await tenantContext.prisma.user.findUnique({
           where: { telegramChatId: chatId },
           include: { employee: true },
         });
 
         if (!user) {
-          await ctx.reply('ℹ️ Ваш Telegram не привязан ни к одному аккаунту.');
+          await ctx.reply(
+            `ℹ️ Telegram ещё не подключён.\n\nОткройте ссылку подключения в системе ${tenantContext.tenantName}.`
+          );
           return;
         }
 
-        const userName = user.employee 
-          ? `${user.employee.firstName} ${user.employee.lastName}` 
+        const userName = user.employee
+          ? `${user.employee.firstName} ${user.employee.lastName}`
           : user.email;
 
         await ctx.reply(
-          `📊 Статус привязки:\n\n` +
-          `✅ Аккаунт привязан\n` +
-          `👤 Пользователь: ${userName}\n` +
-          `📧 Email: ${user.email}\n` +
-          `🎭 Роль: ${user.role}`
+          [
+            "📊 <b>Статус подключения</b>",
+            "",
+            `<b>Школа:</b> ${tenantContext.tenantName}`,
+            `<b>Пользователь:</b> ${userName}`,
+            `<b>Email:</b> ${user.email}`,
+            `<b>Роль:</b> ${user.role}`,
+          ].join("\n"),
+          { parse_mode: "HTML" }
         );
       } catch (error) {
-        logger.error('Ошибка проверки статуса:', error);
-        await ctx.reply('❌ Произошла ошибка. Попробуйте позже.');
+        logger.error(`[${tenantId}] Ошибка проверки статуса Telegram:`, error);
+        await ctx.reply("❌ Не удалось получить статус подключения.");
       }
     });
 
-    // Команда /help
     telegramBot.help(async (ctx: Context) => {
-      await ctx.reply(
-        '📖 Команды бота:\n\n' +
-        '/start - Привязать Telegram к аккаунту (через ссылку из системы)\n' +
-        '/status - Проверить статус привязки\n' +
-        '/unlink - Отвязать Telegram от аккаунта\n' +
-        '/help - Показать эту справку'
-      );
+      await ctx.reply(buildHelpMessage(tenantContext.tenantName), { parse_mode: "HTML" });
     });
 
     const me = await telegramBot.telegram.getMe();
     await telegramBot.launch();
-    bots.set(tenantId, telegramBot);
 
-    logger.info(`[${tenantId}] Telegram бот успешно запущен${me.username ? ` как @${me.username}` : ''}`);
+    const runtime: TelegramBotRuntime = {
+      bot: telegramBot,
+      tenantId,
+      tenantName: tenantContext.tenantName,
+      username: me.username ?? null,
+    };
 
-    // Graceful shutdown
-    process.once('SIGINT', () => telegramBot.stop('SIGINT'));
-    process.once('SIGTERM', () => telegramBot.stop('SIGTERM'));
+    bots.set(tenantId, runtime);
+    registerShutdownHooks();
 
+    logger.info(
+      `[${tenantId}] Telegram бот успешно запущен${me.username ? ` как @${me.username}` : ""}`
+    );
+
+    return runtime;
   } catch (error) {
     bots.delete(tenantId);
 
     if (isTelegramUnauthorizedError(error)) {
       logger.warn(`[${tenantId}] TELEGRAM_BOT_TOKEN недействителен. Telegram уведомления отключены.`);
-      return;
+      return null;
     }
 
     logger.error(
       `[${tenantId}] Ошибка инициализации Telegram бота:`,
       error instanceof Error ? error : String(error),
     );
+    return null;
   }
 }
 
-/**
- * Отправить уведомление всем пользователям с определённой ролью.
- */
-export async function notifyRole(role: Role, message: string, tenantId: string = DEFAULT_TENANT_ID): Promise<void> {
-  const bot = bots.get(tenantId) ?? null;
-  if (!bot) {
-    logger.warn(`[${tenantId}] Telegram бот не инициализирован. Уведомление не отправлено.`);
+export async function initTelegramBot(tenantId: string = DEFAULT_TENANT_ID): Promise<void> {
+  await ensureTelegramBot(resolveTenantId(tenantId));
+}
+
+export async function initTelegramBots(): Promise<void> {
+  try {
+    const master = getMasterPrisma();
+    const tenants = await master.tenant.findMany({
+      select: { id: true },
+    });
+
+    await Promise.allSettled(tenants.map(({ id }) => ensureTelegramBot(id)));
+  } catch (error) {
+    logger.warn("Не удалось инициализировать Telegram-ботов из master DB, пробуем legacy режим.");
+    await ensureTelegramBot(DEFAULT_TENANT_ID);
+  }
+}
+
+export async function notifyRole(
+  role: Role,
+  message: string,
+  tenantId: string = DEFAULT_TENANT_ID
+): Promise<void> {
+  const resolvedTenantId = resolveTenantId(tenantId);
+  const runtime = await ensureTelegramBot(resolvedTenantId);
+  if (!runtime) {
+    logger.warn(`[${resolvedTenantId}] Telegram бот не инициализирован. Уведомление не отправлено.`);
     return;
   }
 
   try {
-    // Находим всех пользователей с указанной ролью и привязанным Telegram
-    const users = await prisma.user.findMany({
+    const tenantContext = await getTenantContext(resolvedTenantId);
+    const users = await tenantContext.prisma.user.findMany({
       where: {
-        role: role,
+        role,
         telegramChatId: { not: null },
       },
       select: {
         id: true,
         telegramChatId: true,
-        employee: {
-          select: { firstName: true, lastName: true },
-        },
       },
     });
 
@@ -254,40 +412,41 @@ export async function notifyRole(role: Role, message: string, tenantId: string =
       return;
     }
 
-    // Отправляем сообщение каждому пользователю
     const results = await Promise.allSettled(
       users.map(async (user) => {
-        if (user.telegramChatId) {
-          await bot.telegram.sendMessage(user.telegramChatId, message, {
-            parse_mode: 'HTML',
-          });
-          return user.id;
+        if (!user.telegramChatId) {
+          return;
         }
+
+        await runtime.bot.telegram.sendMessage(user.telegramChatId, message, {
+          parse_mode: "HTML",
+        });
       })
     );
 
-    const successful = results.filter((r) => r.status === 'fulfilled').length;
-    const failed = results.filter((r) => r.status === 'rejected').length;
-
+    const successful = results.filter((result) => result.status === "fulfilled").length;
+    const failed = results.filter((result) => result.status === "rejected").length;
     logger.info(`Уведомление для роли ${role}: отправлено ${successful}, ошибок ${failed}`);
-
   } catch (error) {
     logger.error(`Ошибка отправки уведомления для роли ${role}:`, error);
   }
 }
 
-/**
- * Отправить сообщение конкретному пользователю по ID.
- */
-export async function sendTelegramMessage(userId: number, message: string, tenantId: string = DEFAULT_TENANT_ID): Promise<boolean> {
-  const bot = bots.get(tenantId) ?? null;
-  if (!bot) {
-    logger.warn(`[${tenantId}] Telegram бот не инициализирован. Сообщение не отправлено.`);
+export async function sendTelegramMessage(
+  userId: number,
+  message: string,
+  tenantId: string = DEFAULT_TENANT_ID
+): Promise<boolean> {
+  const resolvedTenantId = resolveTenantId(tenantId);
+  const runtime = await ensureTelegramBot(resolvedTenantId);
+  if (!runtime) {
+    logger.warn(`[${resolvedTenantId}] Telegram бот не инициализирован. Сообщение не отправлено.`);
     return false;
   }
 
   try {
-    const user = await prisma.user.findUnique({
+    const tenantContext = await getTenantContext(resolvedTenantId);
+    const user = await tenantContext.prisma.user.findUnique({
       where: { id: userId },
       select: { telegramChatId: true },
     });
@@ -297,32 +456,33 @@ export async function sendTelegramMessage(userId: number, message: string, tenan
       return false;
     }
 
-    await bot.telegram.sendMessage(user.telegramChatId, message, {
-      parse_mode: 'HTML',
+    await runtime.bot.telegram.sendMessage(user.telegramChatId, message, {
+      parse_mode: "HTML",
     });
 
     logger.info(`Сообщение отправлено пользователю ${userId}`);
     return true;
-
   } catch (error) {
     logger.error(`Ошибка отправки сообщения пользователю ${userId}:`, error);
     return false;
   }
 }
 
-/**
- * Отправить сообщение по Telegram Chat ID напрямую.
- */
-export async function sendMessageToChatId(chatId: string, message: string, tenantId: string = DEFAULT_TENANT_ID): Promise<boolean> {
-  const bot = bots.get(tenantId) ?? null;
-  if (!bot) {
-    logger.warn(`[${tenantId}] Telegram бот не инициализирован. Сообщение не отправлено.`);
+export async function sendMessageToChatId(
+  chatId: string,
+  message: string,
+  tenantId: string = DEFAULT_TENANT_ID
+): Promise<boolean> {
+  const resolvedTenantId = resolveTenantId(tenantId);
+  const runtime = await ensureTelegramBot(resolvedTenantId);
+  if (!runtime) {
+    logger.warn(`[${resolvedTenantId}] Telegram бот не инициализирован. Сообщение не отправлено.`);
     return false;
   }
 
   try {
-    await bot.telegram.sendMessage(chatId, message, {
-      parse_mode: 'HTML',
+    await runtime.bot.telegram.sendMessage(chatId, message, {
+      parse_mode: "HTML",
     });
     return true;
   } catch (error) {
@@ -331,9 +491,20 @@ export async function sendMessageToChatId(chatId: string, message: string, tenan
   }
 }
 
-/**
- * Получить экземпляр бота (для расширенного использования).
- */
 export function getTelegramBot(tenantId: string = DEFAULT_TENANT_ID): Telegraf | null {
-  return bots.get(tenantId) ?? null;
+  return bots.get(resolveTenantId(tenantId))?.bot ?? null;
+}
+
+export async function getTelegramConnectionLink(
+  userId: number,
+  tenantId: string = DEFAULT_TENANT_ID
+): Promise<string | null> {
+  const resolvedTenantId = resolveTenantId(tenantId);
+  const runtime = await ensureTelegramBot(resolvedTenantId);
+
+  if (!runtime?.username) {
+    return null;
+  }
+
+  return `https://t.me/${runtime.username}?start=${signTelegramLink(userId, resolvedTenantId)}`;
 }

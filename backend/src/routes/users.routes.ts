@@ -4,6 +4,7 @@ import { checkRole } from "../middleware/checkRole";
 import { validate } from "../middleware/validate";
 import { asyncHandler } from "../middleware/errorHandler";
 import { createUserSchema, updateUserSchema, userIdParamsSchema } from "../schemas/user.schema";
+import { getTelegramConnectionLink } from "../services/TelegramService";
 import { userService } from "../services/UserService";
 import type { Role } from "@prisma/client";
 
@@ -35,6 +36,31 @@ router.get(
     });
 
     return res.json(result);
+  })
+);
+
+// GET /api/users/:id/telegram-link - Безопасная ссылка подключения Telegram
+router.get(
+  "/:id/telegram-link",
+  validate(userIdParamsSchema),
+  asyncHandler(async (req, res) => {
+    const targetUserId = Number(req.params.id);
+    const currentUser = req.user!;
+    const canManageForeignUsers =
+      currentUser.role === "ADMIN" || currentUser.role === "DEVELOPER";
+
+    if (!canManageForeignUsers && currentUser.id !== targetUserId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    await userService.findById(targetUserId, false);
+
+    const url = await getTelegramConnectionLink(targetUserId, req.tenantId);
+    if (!url) {
+      return res.status(503).json({ message: "Telegram bot is not configured" });
+    }
+
+    return res.json({ url });
   })
 );
 

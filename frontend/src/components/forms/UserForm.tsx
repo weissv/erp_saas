@@ -10,9 +10,6 @@ import { FormError} from '../ui/FormError';
 import { User, AvailableEmployee} from '../../types/user';
 import { Eye, EyeOff, Loader2, MessageCircle, ExternalLink} from 'lucide-react';
 
-// Имя бота для Telegram Deep Link (из Vite env переменных)
-const TELEGRAM_BOT_NAME = import.meta.env.VITE_TELEGRAM_BOT_NAME || 'erp_bot';
-
 const ROLES = [
  { value: 'DEVELOPER', label: 'Разработчик'},
  { value: 'DIRECTOR', label: 'Директор'},
@@ -50,6 +47,9 @@ export function UserForm({ initialData, onSuccess, onCancel}: UserFormProps) {
  const [showPassword, setShowPassword] = useState(false);
  const [availableEmployees, setAvailableEmployees] = useState<AvailableEmployee[]>([]);
  const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
+ const [telegramConnectUrl, setTelegramConnectUrl] = useState<string | null>(null);
+ const [isLoadingTelegramLink, setIsLoadingTelegramLink] = useState(false);
+ const [telegramLinkError, setTelegramLinkError] = useState<string | null>(null);
 
  const {
  register,
@@ -75,8 +75,46 @@ export function UserForm({ initialData, onSuccess, onCancel}: UserFormProps) {
  useEffect(() => {
  if (!isEditing) {
  loadAvailableEmployees();
-}
+ }
 }, [isEditing]);
+
+ useEffect(() => {
+ if (!isEditing || !initialData?.id || initialData.telegramChatId) {
+ setTelegramConnectUrl(null);
+ setTelegramLinkError(null);
+ setIsLoadingTelegramLink(false);
+ return;
+ }
+
+ let cancelled = false;
+
+ const loadTelegramLink = async () => {
+ setIsLoadingTelegramLink(true);
+ setTelegramLinkError(null);
+
+ try {
+ const result = await api.get<{ url: string }>(`/api/users/${initialData.id}/telegram-link`);
+ if (!cancelled) {
+ setTelegramConnectUrl(result.url);
+ }
+ } catch (error: any) {
+ if (!cancelled) {
+ setTelegramConnectUrl(null);
+ setTelegramLinkError(error?.message || 'Не удалось получить ссылку для Telegram');
+ }
+ } finally {
+ if (!cancelled) {
+ setIsLoadingTelegramLink(false);
+ }
+ }
+ };
+
+ void loadTelegramLink();
+
+ return () => {
+ cancelled = true;
+ };
+ }, [initialData?.id, initialData?.telegramChatId, isEditing]);
 
  const loadAvailableEmployees = async () => {
  setIsLoadingEmployees(true);
@@ -213,24 +251,35 @@ export function UserForm({ initialData, onSuccess, onCancel}: UserFormProps) {
  <div className="flex items-center gap-2">
  <span className="text-sm text-macos-green font-medium">✓ Telegram подключён</span>
  </div>
- ) : (
- <div className="space-y-2">
- <p className="text-sm text-secondary">
- Подключите Telegram для получения уведомлений о заявках
- </p>
- <a
- href={`https://t.me/${TELEGRAM_BOT_NAME}?start=${initialData.id}`}
- target="_blank"
- rel="noopener noreferrer"
- className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-[11px] font-medium uppercase tracking-widest rounded-md macos-transition"
- >
- <MessageCircle className="w-4 h-4"/>
- Подключить Telegram
- <ExternalLink className="w-3 h-3"/>
- </a>
- </div>
- )}
- </div>
+  ) : (
+  <div className="space-y-2">
+  <p className="text-sm text-secondary">
+  Подключите Telegram для получения уведомлений о заявках
+  </p>
+  {isLoadingTelegramLink ? (
+  <div className="inline-flex items-center gap-2 text-sm text-secondary">
+  <Loader2 className="h-4 w-4 animate-spin" />
+  Готовим ссылку для подключения…
+  </div>
+  ) : telegramConnectUrl ? (
+  <a
+  href={telegramConnectUrl}
+  target="_blank"
+  rel="noopener noreferrer"
+  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-[11px] font-medium uppercase tracking-widest rounded-md macos-transition"
+  >
+  <MessageCircle className="w-4 h-4"/>
+  Подключить Telegram
+  <ExternalLink className="w-3 h-3"/>
+  </a>
+  ) : (
+  <div className="text-sm text-red-600">
+  {telegramLinkError || 'Telegram бот пока не настроен для этого пространства'}
+  </div>
+  )}
+  </div>
+  )}
+  </div>
  )}
 
  {/* Actions */}

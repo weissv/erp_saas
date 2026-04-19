@@ -114,6 +114,7 @@ app.use((req, _res, next) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/public/exams", publicExamsRoutes); // Публичный доступ к контрольным для студентов
 app.use("/api/tenant", tenantRoutes); // Public tenant branding (no auth)
+app.use("/api/feedback", feedbackRoutes); // Public waitlist + locally protected feedback actions
 
 // ── 1C Push API (Integration Key auth — not JWT) ────────────────────────
 // This endpoint is called by the 1C Extension using a per-tenant API key.
@@ -141,7 +142,6 @@ app.use("/api/groups", groupsRoutes);
 app.use("/api/notifications", notificationsRoutes);
 app.use("/api/documents", documentsRoutes);
 app.use("/api/calendar", calendarRoutes);
-app.use("/api/feedback", feedbackRoutes);
 app.use("/api/procurement", procurementRoutes);
 app.use("/api/recipes", recipesRoutes);
 app.use("/api/staffing", staffingRoutes);

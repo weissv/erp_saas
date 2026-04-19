@@ -1,6 +1,7 @@
 // src/routes/feedback.routes.ts
 import { Router } from "express";
 import { prisma } from "../prisma";
+import { authMiddleware } from "../middleware/auth";
 import { checkRole } from "../middleware/checkRole";
 import { notifyRole, sendMessageToChatId } from "../services/TelegramService";
 import { logger } from "../utils/logger";
@@ -124,7 +125,7 @@ function buildTelegramWaitlistMessage(payload: {
 }
 
 // GET /api/feedback - List all feedback (filter by status, type)
-router.get("/", checkRole(["DEPUTY", "ADMIN"]), async (req, res) => {
+router.get("/", authMiddleware, checkRole(["DEPUTY", "ADMIN"]), async (req, res) => {
   const { status, type } = req.query;
   
   const feedback = await prisma.feedback.findMany({
@@ -205,7 +206,7 @@ router.post("/", async (req, res) => {
 });
 
 // POST /api/feedback/bug-report - Create authenticated bug report and notify developers in Telegram
-router.post("/bug-report", async (req, res) => {
+router.post("/bug-report", authMiddleware, async (req, res) => {
   try {
     const currentUser = req.user;
 
@@ -293,7 +294,7 @@ router.post("/bug-report", async (req, res) => {
 });
 
 // PUT /api/feedback/:id - Update feedback status/response
-router.put("/:id", checkRole(["DEPUTY", "ADMIN"]), async (req, res) => {
+router.put("/:id", authMiddleware, checkRole(["DEPUTY", "ADMIN"]), async (req, res) => {
   const { id } = req.params;
   const { status, response } = req.body;
   
@@ -310,7 +311,7 @@ router.put("/:id", checkRole(["DEPUTY", "ADMIN"]), async (req, res) => {
 });
 
 // DELETE /api/feedback/:id - Delete feedback
-router.delete("/:id", checkRole(["ADMIN"]), async (req, res) => {
+router.delete("/:id", authMiddleware, checkRole(["ADMIN"]), async (req, res) => {
   const { id } = req.params;
   
   await prisma.feedback.delete({
