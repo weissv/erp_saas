@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, Check, ChevronRight, LogIn, PlayCircle } from "lucide-react";
+import { ArrowRight, Check, ChevronRight, LogIn, Menu, PlayCircle, X } from "lucide-react";
 import {
   MARKETING_LANGUAGE_OPTIONS,
   getMarketingContent,
@@ -51,6 +51,7 @@ export default function LandingPage() {
   const content = useMemo(() => getMarketingContent(language), [language]);
   const { copy } = content;
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [waitlistForm, setWaitlistForm] = useState({
     schoolName: "",
     contactInfo: "",
@@ -166,10 +167,20 @@ export default function LandingPage() {
       <div className="absolute left-1/2 top-24 -z-10 h-80 w-80 -translate-x-1/2 rounded-full bg-[rgba(52,199,89,0.14)] blur-3xl" />
 
       <header className="sticky top-0 z-50 border-b border-card bg-[rgba(246,247,251,0.86)] backdrop-blur-[20px]">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-4 md:flex-nowrap">
-          <div>
-            <p className="text-lg font-semibold tracking-[-0.03em] text-text-primary">Mirai Edu</p>
-            <p className="text-sm text-text-tertiary">{copy.brandTagline}</p>
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-6 sm:py-4 md:flex-nowrap">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-lg p-2 text-text-secondary transition hover:bg-fill-quaternary md:hidden"
+              onClick={() => setIsMobileNavOpen((v) => !v)}
+              aria-label="Toggle navigation"
+            >
+              {isMobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+            <div>
+              <p className="text-lg font-semibold tracking-[-0.03em] text-text-primary">Mirai Edu</p>
+              <p className="hidden text-sm text-text-tertiary sm:block">{copy.brandTagline}</p>
+            </div>
           </div>
 
           <nav
@@ -187,7 +198,7 @@ export default function LandingPage() {
             ))}
           </nav>
 
-          <div className="flex w-full flex-wrap items-center justify-between gap-3 sm:w-auto sm:justify-end">
+          <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:gap-3">
             <div
               className="inline-flex items-center gap-1 rounded-full border border-card bg-white/80 p-1 shadow-subtle"
               role="group"
@@ -202,7 +213,7 @@ export default function LandingPage() {
                     aria-pressed={isActive}
                     title={option.nativeLabel}
                     onClick={() => void setMarketingLanguage(option.code)}
-                    className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                    className={`rounded-full px-2.5 py-1 text-xs font-semibold transition sm:px-3 sm:py-1.5 ${
                       isActive
                         ? "bg-macos-blue text-white shadow-subtle"
                         : "text-text-tertiary hover:bg-surface-primary hover:text-text-primary"
@@ -225,28 +236,60 @@ export default function LandingPage() {
               type="button"
               onClick={openLoginModal}
               aria-haspopup="dialog"
-              className={`${secondaryActionClass} px-4 py-2`}
+              className={`${secondaryActionClass} hidden px-4 py-2 sm:inline-flex`}
             >
               <LogIn className="h-4 w-4" />
               {copy.loginCta}
             </button>
             <a
               href="#waitlist"
-              className="inline-flex items-center justify-center rounded-full bg-macos-blue px-4 py-2 text-sm font-medium text-white shadow-subtle transition hover:bg-macos-blue-hover"
+              className="inline-flex items-center justify-center rounded-full bg-macos-blue px-3 py-1.5 text-xs font-medium text-white shadow-subtle transition hover:bg-macos-blue-hover sm:px-4 sm:py-2 sm:text-sm"
             >
               {copy.waitlistCta}
             </a>
           </div>
         </div>
+
+        {/* Mobile navigation dropdown */}
+        {isMobileNavOpen && (
+          <div className="border-t border-card px-4 pb-4 pt-2 md:hidden">
+            <nav className="flex flex-col gap-1" aria-label={copy.navigationAriaLabel}>
+              {content.navItems.map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setIsMobileNavOpen(false)}
+                  className="rounded-xl px-4 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-fill-quaternary hover:text-text-primary"
+                >
+                  {item.label}
+                </a>
+              ))}
+              <div className="mt-2 flex flex-col gap-2 sm:hidden">
+                <button
+                  type="button"
+                  onClick={() => { openLoginModal(); setIsMobileNavOpen(false); }}
+                  aria-haspopup="dialog"
+                  className={`${secondaryActionClass} w-full justify-center px-4 py-2`}
+                >
+                  <LogIn className="h-4 w-4" />
+                  {copy.loginCta}
+                </button>
+                <a href={demoUrl} onClick={handleDemoClick} className={`${primaryActionClass} w-full justify-center px-4 py-2`}>
+                  {copy.headerDemoCta}
+                </a>
+              </div>
+            </nav>
+          </div>
+        )}
       </header>
 
       <main className="relative z-10">
-        <section className="mx-auto grid max-w-7xl gap-12 px-6 py-16 sm:py-20 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] lg:items-center lg:py-24">
+        <section className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:gap-12 sm:px-6 sm:py-16 md:py-20 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] lg:items-center lg:py-24">
           <div>
             <span className="mezon-chip text-[11px] font-semibold uppercase tracking-[0.2em] text-macos-blue">
               {copy.hero.badge}
             </span>
-            <h1 className="mt-6 max-w-3xl text-4xl font-semibold tracking-[-0.05em] text-text-primary sm:text-5xl lg:text-6xl">
+            <h1 className="mt-4 max-w-3xl text-3xl font-semibold tracking-[-0.05em] text-text-primary sm:mt-6 sm:text-4xl md:text-5xl lg:text-6xl">
               {copy.hero.title}
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-text-tertiary sm:text-xl">
@@ -310,7 +353,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section id="capabilities" className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
+        <section id="capabilities" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 md:py-20">
           <SectionHeading
             badge={copy.capabilities.badge}
             title={copy.capabilities.title}
@@ -405,7 +448,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section id="audiences" className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
+        <section id="audiences" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 md:py-20">
           <SectionHeading
             badge={copy.audiences.badge}
             title={copy.audiences.title}
@@ -435,7 +478,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section id="implementation" className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
+        <section id="implementation" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 md:py-20">
           <SectionHeading
             badge={copy.implementation.badge}
             title={copy.implementation.title}
@@ -492,7 +535,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section id="waitlist" className="mx-auto max-w-7xl px-6 pb-16 sm:pb-20">
+        <section id="waitlist" className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 sm:pb-16 md:pb-20">
           <div className="glass-panel overflow-hidden bg-[linear-gradient(135deg,rgba(0,122,255,0.08),rgba(52,199,89,0.08))] p-8 sm:p-10 lg:p-12">
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.95fr)] lg:items-start">
               <div>
@@ -593,7 +636,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-6 pb-16">
+        <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 sm:pb-16">
           <div className="glass-panel p-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>

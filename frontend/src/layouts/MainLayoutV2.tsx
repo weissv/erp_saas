@@ -325,11 +325,11 @@ function Topbar({
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-card-foreground shadow-sm hover:bg-accent transition-colors">
                 <Building2 className="h-4 w-4 text-muted-foreground" />
-                <span className="max-w-[140px] truncate">{currentTenant.name}</span>
+                <span className="max-w-[100px] sm:max-w-[140px] truncate">{currentTenant.name}</span>
                 <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
+            <DropdownMenuContent align="start" className="w-56 max-w-[calc(100vw-32px)]">
               <DropdownMenuLabel>Переключить школу</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {tenants.map((t) => (
@@ -457,7 +457,7 @@ function MobileNav({
             </div>
 
             {/* Module grid */}
-            <div className="grid grid-cols-4 gap-2 px-4 pb-4">
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 px-4 pb-4">
               {modules.map((mod) => {
                 const Icon = mod.icon;
                 const isActive = mod.id === activeModuleId;

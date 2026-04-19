@@ -431,7 +431,7 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel}: PurchaseO
  </div>
 
  {/* Row 2: Кол-во, Ед, Цена, Итого */}
- <div className="grid grid-cols-4 gap-2">
+ <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
  <div>
  <label className="block text-xs font-medium text-secondary mb-1">Кол-во *</label>
  <Input

@@ -511,7 +511,7 @@ export default function ClubsPage() {
 
  <div className="border-t border-[rgba(60,60,67,0.12)] pt-4">
  <h4 className="mb-3 font-semibold text-primary">Финансы</h4>
- <div className="grid grid-cols-3 gap-4">
+ <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
  <div className="rounded-lg bg-[rgba(52,199,89,0.14)] p-4">
  <p className="text-sm text-[var(--macos-green)]">Доходы</p>
  <p className="text-[24px] font-bold tracking-[-0.025em] leading-tight text-primary">{currency.format(report.finances.income)}</p>
