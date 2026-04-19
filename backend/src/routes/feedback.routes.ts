@@ -176,7 +176,9 @@ router.post("/", async (req, res) => {
       const chatIds = getWaitlistAdminChatIds();
 
       if (chatIds.length === 0) {
-        logger.warn("WAITLIST_TELEGRAM_ADMIN_CHAT_ID не задан. Telegram-уведомление по waitlist пропущено.");
+        logger.warn(
+          "WAITLIST_TELEGRAM_ADMIN_CHAT_ID и TELEGRAM_ADMIN_CHAT_ID не заданы. Telegram-уведомление по waitlist пропущено."
+        );
       } else {
         await Promise.allSettled(
           chatIds.map((chatId) =>

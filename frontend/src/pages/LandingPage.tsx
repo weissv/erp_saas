@@ -55,7 +55,7 @@ function SectionHeading({
 
 function BrandMark({ tagline, href = "/" }: { tagline: string; href?: string }) {
   return (
-    <a href={href} className="group inline-flex min-w-0 items-center gap-3">
+    <a href={href} aria-label="Mirai homepage" className="group inline-flex min-w-0 items-center gap-3">
       <span className="inline-flex h-11 min-w-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#007AFF,#34C759)] px-3 text-sm font-semibold tracking-[0.18em] text-white shadow-[0_14px_32px_rgba(0,122,255,0.26)]">
         ミライ
       </span>

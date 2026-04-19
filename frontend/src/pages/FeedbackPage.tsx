@@ -151,7 +151,7 @@ export default function FeedbackPage() {
         header: "Тип",
         render: (row) => getFeedbackTypeLabel(row.type),
       },
-      { key: "parentName", header: "Школа / автор" },
+      { key: "parentName", header: "Организация / контакт" },
       { key: "contactInfo", header: "Контакты" },
       {
         key: "message",
