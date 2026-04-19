@@ -11,7 +11,10 @@ export const MARKETING_LANGUAGE_STORAGE_KEY = "miraiEdu.language";
 function getSupportedLanguageFromCandidate(candidate: string | null | undefined): MarketingLanguage | null {
   const normalizedCandidate = candidate?.toLowerCase().split(/[-_]/)[0];
 
-  if (MARKETING_SUPPORTED_LANGUAGES.includes(normalizedCandidate as MarketingLanguage)) {
+  if (
+    normalizedCandidate &&
+    (MARKETING_SUPPORTED_LANGUAGES as readonly string[]).includes(normalizedCandidate)
+  ) {
     return normalizedCandidate as MarketingLanguage;
   }
 

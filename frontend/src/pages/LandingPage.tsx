@@ -172,7 +172,7 @@ export default function LandingPage() {
             ))}
           </nav>
 
-          <div className="flex flex-wrap items-center justify-end gap-3">
+          <div className="flex w-full flex-wrap items-center justify-between gap-3 sm:w-auto sm:justify-end">
             <div
               className="inline-flex items-center gap-1 rounded-full border border-card bg-white/80 p-1 shadow-subtle"
               role="group"
