@@ -57,8 +57,7 @@ function BrandMark({ href = "/" }: { href?: string }) {
   return (
     <a href={href} aria-label="Mirai homepage" className="group inline-flex min-w-0 items-center gap-3">
       <span
-        className="inline-flex h-11 items-center justify-center rounded-[1.15rem] border border-[rgba(29,29,31,0.12)] bg-transparent px-4 text-sm font-semibold uppercase tracking-[0.28em] text-text-primary transition group-hover:border-[rgba(0,122,255,0.32)] group-hover:text-macos-blue"
-        style={{ fontFamily: '"LINE Seed JP", "Inter", system-ui, sans-serif' }}
+        className="inline-flex h-11 items-center justify-center rounded-[1.15rem] border border-[rgba(29,29,31,0.12)] bg-transparent px-4 text-sm font-semibold uppercase tracking-[0.28em] text-text-primary transition [font-family:'LINE_Seed_JP','Inter',system-ui,sans-serif] group-hover:border-[rgba(0,122,255,0.32)] group-hover:text-macos-blue"
       >
         Mirai
       </span>

@@ -107,7 +107,7 @@ function signTelegramLink(userId: number, tenantId: string): string {
       userId,
     } satisfies TelegramLinkPayload,
     secret,
-    { expiresIn: "7d" }
+    { expiresIn: "48h" }
   );
 }
 

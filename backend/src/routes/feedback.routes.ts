@@ -49,7 +49,9 @@ function getWaitlistAdminChatIds(): string[] {
 
 function createFeedbackRateLimiter(namespace: string, maxRequests: number, windowMs: number) {
   return (req: Request, res: Response, next: NextFunction) => {
-    const actorKey = req.user?.id ? `user:${req.user.id}` : `ip:${req.ip ?? "unknown"}`;
+    const actorKey = req.user?.id
+      ? `user:${req.user.id}`
+      : `ip:${req.ip ?? "unknown"}:ua:${req.get("user-agent") ?? "unknown"}`;
     const key = `${namespace}:${actorKey}`;
     const now = Date.now();
     const current = feedbackRateLimitBuckets.get(key);
