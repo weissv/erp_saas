@@ -1,7 +1,14 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import LandingPage from "./LandingPage";
 import i18n, { syncMarketingLanguage } from "../i18n";
+import { api } from "../lib/api";
+
+vi.mock("../lib/api", () => ({
+  api: {
+    post: vi.fn(),
+  },
+}));
 
 function setBrowserLanguage(language: string, languages: string[] = [language]) {
   Object.defineProperty(window.navigator, "language", {
@@ -18,11 +25,15 @@ function setBrowserLanguage(language: string, languages: string[] = [language]) 
 describe("LandingPage", () => {
   beforeEach(async () => {
     window.localStorage.clear();
+    window.history.replaceState({}, "", "/");
+    window.scrollTo = vi.fn();
+    vi.mocked(api.post).mockReset();
     setBrowserLanguage("ru-RU", ["ru-RU", "en-US"]);
     await syncMarketingLanguage();
   });
 
   afterEach(async () => {
+    window.history.replaceState({}, "", "/");
     await i18n.changeLanguage("ru");
   });
 
@@ -44,6 +55,7 @@ describe("LandingPage", () => {
         name: /AI вшит в операционные сценарии, а не добавлен как отдельный виджет/i,
       })
     ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Mirai/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Как проходит запуск Mirai/i })).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: /Открыть демо/i })[0]).toHaveAttribute(
       "href",
@@ -90,5 +102,32 @@ describe("LandingPage", () => {
     expect(window.localStorage.getItem("miraiEdu.language")).toBe("ja");
     expect(document.title).toBe("Mirai — 学校運営のためのAIプラットフォーム");
     expect(document.documentElement.lang).toBe("ja");
+  });
+
+  it("redirects to the waitlist success page after a successful submit", async () => {
+    vi.mocked(api.post).mockResolvedValue({ id: 1 });
+
+    render(<LandingPage />);
+
+    fireEvent.change(screen.getByLabelText("Школа"), {
+      target: { value: "Mirai Academy" },
+    });
+    fireEvent.change(screen.getByLabelText("Канал связи"), {
+      target: { value: "@mirai_admin" },
+    });
+    fireEvent.change(screen.getByLabelText("Что резервируем в очереди"), {
+      target: { value: "Нужен запуск школы и demo для команды." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Встать в очередь" }));
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe("/waitlist/success");
+    });
+
+    expect(
+      screen.getByRole("heading", {
+        name: /Спасибо. Заявка на запуск Mirai уже в работе/i,
+      })
+    ).toBeInTheDocument();
   });
 });

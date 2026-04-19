@@ -8,23 +8,40 @@ import { TenantProvisioningService, ProvisioningInput } from '../services/Tenant
 import { STRIPE_PRICE_TO_TIER, PRICING_TIERS, PricingTier } from '../constants';
 
 const router = Router();
+type StripeClient = InstanceType<typeof Stripe>;
+type StripeEvent = ReturnType<StripeClient["webhooks"]["constructEvent"]>;
+
+type CheckoutSessionPayload = {
+  customer_details?: { email?: string | null } | null;
+  customer_email?: string | null;
+  customer?: string | { id?: string | null } | null;
+  subscription?: string | { id?: string | null } | null;
+  metadata?: Record<string, string | undefined> | null;
+  line_items?: {
+    data?: Array<{
+      price?: {
+        id?: string | null;
+      } | null;
+    }>;
+  } | null;
+};
 
 /** Lazily-initialized Stripe instance */
-let _stripe: Stripe | undefined;
+let _stripe: StripeClient | undefined;
 
-export function getStripe(): Stripe {
+export function getStripe(): StripeClient {
   if (!_stripe) {
     const key = process.env.STRIPE_SECRET_KEY;
     if (!key) {
       throw new Error('STRIPE_SECRET_KEY is not configured');
     }
-    _stripe = new Stripe(key, { apiVersion: '2025-04-30.basil' });
+    _stripe = new Stripe(key, { apiVersion: '2026-03-25.dahlia' });
   }
   return _stripe;
 }
 
 /** Allow tests to inject a mock Stripe instance */
-export function setStripe(instance: Stripe): void {
+export function setStripe(instance: StripeClient): void {
   _stripe = instance;
 }
 
@@ -64,7 +81,7 @@ router.post('/', async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Missing stripe-signature header' });
   }
 
-  let event: Stripe.Event;
+  let event: StripeEvent;
 
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
@@ -80,7 +97,7 @@ router.post('/', async (req: Request, res: Response) => {
     return res.status(200).json({ received: true });
   }
 
-  const session = event.data.object as Stripe.Checkout.Session;
+  const session = event.data.object as CheckoutSessionPayload;
 
   try {
     const email = session.customer_details?.email || session.customer_email;
@@ -127,7 +144,7 @@ router.post('/', async (req: Request, res: Response) => {
  * Determine the pricing tier from the checkout session.
  * Tries line_items first, then falls back to metadata, then defaults to STARTER.
  */
-function resolveTier(session: Stripe.Checkout.Session): PricingTier {
+function resolveTier(session: CheckoutSessionPayload): PricingTier {
   // Check line items (if expanded)
   const lineItems = (session as any).line_items?.data;
   if (Array.isArray(lineItems)) {

@@ -34,7 +34,7 @@ export const MODULE_LINKS: ModuleLink[] = [
   { path: "/security", label: "Безопасность", roles: [...FULL_ACCESS_ROLES, "ADMIN", "ZAVHOZ"] },
   { path: "/documents", label: "Документы", roles: [...FULL_ACCESS_ROLES, "ADMIN"] },
   { path: "/calendar", label: "Календарь", roles: [...FULL_ACCESS_ROLES, "ADMIN", "ZAVHOZ"] },
-  { path: "/feedback", label: "Баг-репорт", roles: ALL_ROLES },
+  { path: "/feedback", label: "Заявки и баг-репорты", roles: ALL_ROLES },
   { path: "/integration", label: "Импорт/Экспорт", roles: [...FULL_ACCESS_ROLES, "ADMIN", "ACCOUNTANT"] },
   { path: "/onec-data", label: "Данные 1С", roles: [...FULL_ACCESS_ROLES, "ADMIN", "ACCOUNTANT"] },
   { path: "/action-log", label: "Журнал действий", roles: [...FULL_ACCESS_ROLES, "ADMIN"] },

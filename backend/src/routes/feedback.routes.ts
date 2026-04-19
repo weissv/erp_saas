@@ -2,12 +2,13 @@
 import { Router } from "express";
 import { prisma } from "../prisma";
 import { checkRole } from "../middleware/checkRole";
-import { notifyRole } from "../services/TelegramService";
+import { notifyRole, sendMessageToChatId } from "../services/TelegramService";
 import { logger } from "../utils/logger";
 
 const router = Router();
 
 const BUG_REPORT_TYPE = "Баг-репорт";
+const WAITLIST_FEEDBACK_TYPE = "WAITLIST";
 
 const SEVERITY_LABELS: Record<string, string> = {
   LOW: "Низкий",
@@ -27,6 +28,21 @@ function escapeHtml(value: string): string {
 
 function normalizeMultilineText(value: unknown): string {
   return typeof value === "string" ? value.trim().replace(/\r\n/g, "\n") : "";
+}
+
+function normalizeSingleLineText(value: unknown): string {
+  return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
+}
+
+function getWaitlistAdminChatIds(): string[] {
+  return (
+    process.env.WAITLIST_TELEGRAM_ADMIN_CHAT_ID?.trim() ||
+    process.env.TELEGRAM_ADMIN_CHAT_ID?.trim() ||
+    ""
+  )
+    .split(",")
+    .map((chatId) => chatId.trim())
+    .filter(Boolean);
 }
 
 function buildStoredBugMessage(payload: {
@@ -88,6 +104,25 @@ function buildTelegramBugMessage(payload: {
   return parts.join("\n");
 }
 
+function buildTelegramWaitlistMessage(payload: {
+  id: number;
+  schoolName: string;
+  contactInfo: string;
+  message: string;
+  createdAt: Date;
+}): string {
+  return [
+    "🚀 <b>Новая заявка в waitlist Mirai</b>",
+    "",
+    `<b>ID:</b> #${payload.id}`,
+    `<b>Школа:</b> ${escapeHtml(payload.schoolName)}`,
+    `<b>Контакт:</b> ${escapeHtml(payload.contactInfo)}`,
+    `<b>Получено:</b> ${escapeHtml(payload.createdAt.toISOString())}`,
+    "",
+    `<b>Запрос:</b>\n${escapeHtml(payload.message)}`,
+  ].join("\n");
+}
+
 // GET /api/feedback - List all feedback (filter by status, type)
 router.get("/", checkRole(["DEPUTY", "ADMIN"]), async (req, res) => {
   const { status, type } = req.query;
@@ -103,21 +138,70 @@ router.get("/", checkRole(["DEPUTY", "ADMIN"]), async (req, res) => {
   return res.json(feedback);
 });
 
-// POST /api/feedback - Create new feedback (public endpoint for parents)
+// POST /api/feedback - Create new public feedback / waitlist request
 router.post("/", async (req, res) => {
-  const { parentName, contactInfo, type, message } = req.body;
-  
-  const feedback = await prisma.feedback.create({
-    data: {
-      parentName,
-      contactInfo,
-      type,
-      message,
-      status: "NEW",
-    },
-  });
-  
-  return res.status(201).json(feedback);
+  try {
+    const parentName = normalizeSingleLineText(req.body?.parentName);
+    const contactInfo = normalizeSingleLineText(req.body?.contactInfo);
+    const type = normalizeSingleLineText(req.body?.type);
+    const message = normalizeMultilineText(req.body?.message);
+
+    if (parentName.length < 2) {
+      return res.status(400).json({ message: "Укажите название школы или имя контактного лица" });
+    }
+
+    if (contactInfo.length < 3) {
+      return res.status(400).json({ message: "Укажите корректный канал связи" });
+    }
+
+    if (!type) {
+      return res.status(400).json({ message: "Укажите тип обращения" });
+    }
+
+    if (message.length < 10) {
+      return res.status(400).json({ message: "Опишите запрос подробнее" });
+    }
+
+    const feedback = await prisma.feedback.create({
+      data: {
+        parentName,
+        contactInfo,
+        type,
+        message,
+        status: "NEW",
+      },
+    });
+
+    if (type === WAITLIST_FEEDBACK_TYPE) {
+      const chatIds = getWaitlistAdminChatIds();
+
+      if (chatIds.length === 0) {
+        logger.warn(
+          "WAITLIST_TELEGRAM_ADMIN_CHAT_ID и TELEGRAM_ADMIN_CHAT_ID не заданы. Telegram-уведомление по waitlist пропущено."
+        );
+      } else {
+        await Promise.allSettled(
+          chatIds.map((chatId) =>
+            sendMessageToChatId(
+              chatId,
+              buildTelegramWaitlistMessage({
+                id: feedback.id,
+                schoolName: parentName,
+                contactInfo,
+                message,
+                createdAt: feedback.createdAt,
+              })
+            )
+          )
+        );
+      }
+    }
+
+    return res.status(201).json(feedback);
+  } catch (error: any) {
+    logger.error("Ошибка создания публичной заявки:", error);
+    return res.status(500).json({ message: error.message || "Ошибка отправки заявки" });
+  }
 });
 
 // POST /api/feedback/bug-report - Create authenticated bug report and notify developers in Telegram
@@ -217,7 +301,7 @@ router.put("/:id", checkRole(["DEPUTY", "ADMIN"]), async (req, res) => {
     where: { id: Number(id) },
     data: {
       status,
-      response: response || null,
+      response: normalizeMultilineText(response) || null,
       resolvedAt: status === "RESOLVED" ? new Date() : null,
     },
   });

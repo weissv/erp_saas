@@ -3,24 +3,51 @@ import { Prisma } from "@prisma/client";
 import { PAGINATION } from "../constants";
 
 export type ListQuery = {
-  page?: string;
-  pageSize?: string;
-  sortBy?: string;
+  page?: unknown;
+  pageSize?: unknown;
+  sortBy?: unknown;
   sortOrder?: "asc" | "desc";
-  [key: string]: string | undefined;
 };
 
-export const buildPagination = (q: ListQuery) => {
-  const page = Math.max(parseInt(q.page || String(PAGINATION.DEFAULT_PAGE), 10), 1);
-  const pageSize = Math.min(Math.max(parseInt(q.pageSize || String(PAGINATION.DEFAULT_PAGE_SIZE), 10), PAGINATION.MIN_PAGE_SIZE), PAGINATION.MAX_PAGE_SIZE);
+function unwrapQueryValue(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.length > 0 ? unwrapQueryValue(value[0]) : undefined;
+  }
+  return value;
+}
+
+function getQueryString(value: unknown): string | undefined {
+  const normalized = unwrapQueryValue(value);
+
+  if (normalized === undefined || normalized === null || typeof normalized === "object") {
+    return undefined;
+  }
+
+  return String(normalized);
+}
+
+function getPositiveInteger(value: unknown, fallback: number): number {
+  const parsed = Number.parseInt(getQueryString(value) ?? "", 10);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+type PaginationQuery = Pick<ListQuery, "page" | "pageSize">;
+type SortableQuery = Pick<ListQuery, "sortBy" | "sortOrder">;
+
+export const buildPagination = (q: PaginationQuery) => {
+  const page = Math.max(getPositiveInteger(q.page, PAGINATION.DEFAULT_PAGE), 1);
+  const pageSize = Math.min(
+    Math.max(getPositiveInteger(q.pageSize, PAGINATION.DEFAULT_PAGE_SIZE), PAGINATION.MIN_PAGE_SIZE),
+    PAGINATION.MAX_PAGE_SIZE
+  );
   const skip = (page - 1) * pageSize;
   const take = pageSize;
   return { page, pageSize, skip, take };
 };
 
-export const buildOrderBy = (q: ListQuery, allowed: string[] = ["id"]) => {
+export const buildOrderBy = (q: SortableQuery, allowed: string[] = ["id"]) => {
   const safeColumns = allowed.length ? allowed : ["id"];
-  const requestedColumn = typeof q.sortBy === "string" ? q.sortBy : "";
+  const requestedColumn = getQueryString(q.sortBy) ?? "";
   const sortBy = safeColumns.includes(requestedColumn) ? requestedColumn : safeColumns[0];
   const sortOrder: Prisma.SortOrder = q.sortOrder === "desc" ? "desc" : "asc";
   return { [sortBy]: sortOrder } as Prisma.Enumerable<Record<string, Prisma.SortOrder>>;
@@ -47,12 +74,19 @@ export function createPaginatedResponse<T>(
 }
 
 // Простой конструктор where из query: eq-поиск по полям
-export const buildWhere = <T extends Record<string, unknown>>(q: ListQuery, allowed: string[]): Partial<T> => {
+export const buildWhere = <T extends Record<string, unknown>>(q: object, allowed: string[]): Partial<T> => {
   const where: Record<string, unknown> = {};
+  const query = q as Record<string, unknown>;
   for (const key of allowed) {
-    const val = q[key];
+    const val = unwrapQueryValue(query[key]);
     if (val !== undefined && val !== "") {
-      where[key] = isNaN(Number(val)) ? val : Number(val);
+      if (val instanceof Date) {
+        where[key] = val;
+      } else if (typeof val === "number" || typeof val === "boolean") {
+        where[key] = val;
+      } else if (typeof val === "string") {
+        where[key] = Number.isNaN(Number(val)) ? val : Number(val);
+      }
     }
   }
   return where as Partial<T>;
