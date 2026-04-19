@@ -10,6 +10,7 @@ import { DemoBanner } from "./components/DemoBanner";
 import AppRouter from "./router";
 import LandingPage from "./pages/LandingPage";
 import { resolveHost } from "./lib/host";
+import "./i18n";
 import "../css/index.css"; // Tailwind
 
 const hostInfo = resolveHost();

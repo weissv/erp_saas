@@ -1,7 +1,13 @@
 import { FormEvent, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ArrowRight, Building2, Link2, Sparkles } from "lucide-react";
 import { Modal } from "../Modal";
+import {
+  getMarketingContent,
+  resolveMarketingLanguage,
+} from "../../features/marketing/content";
 import { getWorkspaceLoginUrl } from "../../features/marketing/url";
+import "../../i18n";
 
 interface LoginWorkspaceModalProps {
   isOpen: boolean;
@@ -9,6 +15,9 @@ interface LoginWorkspaceModalProps {
 }
 
 export function LoginWorkspaceModal({ isOpen, onClose }: LoginWorkspaceModalProps) {
+  const { i18n } = useTranslation();
+  const language = resolveMarketingLanguage(i18n.resolvedLanguage ?? i18n.language);
+  const { copy } = getMarketingContent(language);
   const [workspace, setWorkspace] = useState("");
 
   useEffect(() => {
@@ -32,10 +41,10 @@ export function LoginWorkspaceModal({ isOpen, onClose }: LoginWorkspaceModalProp
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Введите адрес вашего рабочего пространства"
-      description="Укажите свой субдомен или вставьте полный адрес школы. Мы сразу откроем страницу входа нужной организации."
+      title={copy.loginModal.title}
+      description={copy.loginModal.description}
       size="md"
-      eyebrow="Log in"
+      eyebrow={copy.loginModal.eyebrow}
       icon={<Building2 className="h-6 w-6 text-macos-blue" />}
       overlayClassName="bg-[rgba(238,244,255,0.74)] backdrop-blur-[18px]"
       frameClassName="px-4 py-6 sm:px-6"
@@ -46,10 +55,10 @@ export function LoginWorkspaceModal({ isOpen, onClose }: LoginWorkspaceModalProp
       <div className="rounded-[28px] border border-[rgba(0,122,255,0.14)] bg-[linear-gradient(135deg,rgba(0,122,255,0.08),rgba(52,199,89,0.05))] p-5">
         <div className="inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-macos-blue shadow-subtle">
           <Sparkles className="h-3.5 w-3.5" />
-          Workspace access
+          {copy.loginModal.highlightLabel}
         </div>
         <p className="mt-4 text-sm leading-6 text-text-tertiary">
-          Можно ввести короткий subdomain, полный адрес школы или просто вставить ссылку из браузера.
+          {copy.loginModal.highlightDescription}
         </p>
       </div>
 
@@ -60,14 +69,14 @@ export function LoginWorkspaceModal({ isOpen, onClose }: LoginWorkspaceModalProp
             className="mb-2 flex items-center gap-2 px-2 text-sm font-medium text-text-primary"
           >
             <Link2 className="h-4 w-4 text-macos-blue" />
-            Адрес пространства
+            {copy.loginModal.addressLabel}
           </label>
           <div className="flex items-center gap-3 rounded-[22px] border border-card bg-surface-primary px-4 py-3 focus-within:border-macos-blue focus-within:ring-2 focus-within:ring-[rgba(0,122,255,0.12)]">
             <input
               type="text"
               id="workspace-domain"
               className="min-w-0 flex-1 bg-transparent text-base text-text-primary outline-none placeholder:text-text-tertiary"
-              placeholder="school или school.mirai-edu.space"
+              placeholder={copy.loginModal.addressPlaceholder}
               value={workspace}
               onChange={(event) => setWorkspace(event.target.value)}
               autoFocus
@@ -79,14 +88,16 @@ export function LoginWorkspaceModal({ isOpen, onClose }: LoginWorkspaceModalProp
             </span>
           </div>
           <p className="mt-3 px-2 text-xs leading-5 text-text-tertiary">
-            Примеры: school, school.mirai-edu.space, https://school.mirai-edu.space
+            {copy.loginModal.examples}
           </p>
         </div>
 
         <div className="rounded-[24px] border border-card bg-[rgba(255,255,255,0.78)] p-4 backdrop-blur-[16px]">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-macos-blue">Переход</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-macos-blue">
+            {copy.loginModal.redirectLabel}
+          </p>
           <p className="mt-2 break-all text-sm font-semibold text-text-primary">
-            {targetUrl ?? "https://school.mirai-edu.space/auth/login"}
+            {targetUrl ?? copy.loginModal.defaultTarget}
           </p>
         </div>
 
@@ -96,14 +107,14 @@ export function LoginWorkspaceModal({ isOpen, onClose }: LoginWorkspaceModalProp
             className="inline-flex items-center justify-center rounded-full border border-card bg-surface-primary px-5 py-3 text-sm font-semibold text-text-primary shadow-subtle transition hover:bg-white"
             onClick={onClose}
           >
-            Отмена
+            {copy.loginModal.cancelCta}
           </button>
           <button
             type="submit"
             disabled={!targetUrl}
             className="inline-flex items-center justify-center gap-2 rounded-full bg-macos-blue px-5 py-3 text-sm font-semibold text-white shadow-subtle transition hover:bg-macos-blue-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Перейти к входу
+            {copy.loginModal.submitCta}
             <ArrowRight className="h-4 w-4" />
           </button>
         </div>
