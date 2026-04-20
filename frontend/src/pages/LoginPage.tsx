@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Check, Eye, EyeOff, ShieldCheck, Sparkles } from 'lucide-react';
+import { Check, Eye, EyeOff, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTenant } from '../contexts/TenantContext';
 import { Button } from '../components/ui/button';
@@ -143,10 +143,7 @@ export default function LoginPage() {
           </form>
           <div className="mt-5 flex items-center justify-center gap-2 text-[12px] text-muted-foreground">
             <span>Нужен демо-доступ или запуск школы?</span>
-            <span className="inline-flex items-center gap-1 font-semibold text-primary">
-              Откройте основной контур
-              <ArrowRight className="h-3.5 w-3.5" />
-            </span>
+            <span className="font-semibold text-primary">Откройте основной контур</span>
           </div>
         </div>
       </div>

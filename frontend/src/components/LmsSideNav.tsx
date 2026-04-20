@@ -135,7 +135,7 @@ export default function LmsSideNav() {
          </div>
         <div className="mezon-sidenav__brand-copy">
           <span className="mezon-chip mezon-chip--soft">
-            <Sparkles className="h-3.5 w-3.5" />
+            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
             LMS workspace
           </span>
           <strong>{tenant.name}</strong>

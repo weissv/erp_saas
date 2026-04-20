@@ -89,7 +89,7 @@ export default function SideNav() {
             </div>
             <div className="mezon-sidenav__brand-copy">
               <span className="mezon-chip mezon-chip--soft">
-                <Sparkles className="h-3.5 w-3.5" />
+                <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
                 ERP workspace
               </span>
               <strong>{tenant.name}</strong>
