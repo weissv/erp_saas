@@ -51,6 +51,7 @@ export default function MainLayout() {
     : user?.email;
   const userRoleLabel = user ? ROLE_LABELS[user.role] ?? user.role : "";
   const sectionLabel = getErpSectionLabel(location.pathname);
+  const supportItems = [tenant.supportPhone, tenant.supportEmail].filter(Boolean);
 
   useKonamiCode(() => {
     if (user) setShowDoom(true);
@@ -119,18 +120,17 @@ export default function MainLayout() {
           </button>
           <div className="mezon-top-bar__title">
             <span>{tenant.name}</span>
-            <strong>Единое рабочее пространство</strong>
+            <strong>{sectionLabel}</strong>
           </div>
         </div>
 
-        <div className="mezon-top-bar__cluster mezon-top-bar__cluster--compact">
-          {tenant.supportPhone && (
-            <span className="mezon-chip">{tenant.supportPhone}</span>
-          )}
-          {tenant.supportEmail && (
-            <span className="mezon-chip">{tenant.supportEmail}</span>
-          )}
-        </div>
+        {supportItems.length > 0 && (
+          <div className="mezon-top-bar__cluster mezon-top-bar__cluster--compact">
+            {supportItems.map((item) => (
+              <span key={item} className="mezon-chip mezon-chip--soft">{item}</span>
+            ))}
+          </div>
+        )}
 
         <div className="mezon-top-bar__cluster">
           {user && (
@@ -161,8 +161,8 @@ export default function MainLayout() {
               <section className="mezon-workspace-hero" aria-label="ERP workspace hero">
                 <div className="mezon-workspace-hero__top">
                   <div className="mezon-workspace-hero__headline">
-                    <span className="mezon-workspace-hero__eyebrow">{ERP_WORKSPACE_COPY.eyebrow}</span>
-                    <h1>{sectionLabel}</h1>
+                     <span className="mezon-workspace-hero__eyebrow">{ERP_WORKSPACE_COPY.eyebrow}</span>
+                     <h1>{sectionLabel}</h1>
                     <p>
                       {ERP_WORKSPACE_COPY.description} {tenant.name}.
                     </p>
@@ -170,7 +170,7 @@ export default function MainLayout() {
 
                   <div className="mezon-workspace-hero__actions">
                     <span className="mezon-chip">{isDemo ? "Demo contour" : "Live workspace"}</span>
-                    {userRoleLabel && <span className="mezon-chip">{userRoleLabel}</span>}
+                    {userRoleLabel && <span className="mezon-chip mezon-chip--soft">{userRoleLabel}</span>}
                     <Link
                       to="/lms"
                       className="mezon-btn mezon-btn--outline"

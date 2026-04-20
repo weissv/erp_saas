@@ -38,6 +38,12 @@ export type ModuleLink = {
   isExternal?: boolean; // Внешняя ссылка (открывается в новой вкладке/отдельном приложении)
 };
 
+export type ModuleGroup = {
+  id: string;
+  label: string;
+  paths: string[];
+};
+
 // Роли с полным доступом ко всем модулям (экспорт для использования в других местах)
 export const FULL_ACCESS_ROLES: UserRole[] = ["DEVELOPER", "DIRECTOR"];
 
@@ -71,6 +77,29 @@ export const MODULE_LINKS: ModuleLink[] = [
   { path: "/notifications", label: "Уведомления", icon: Bell, roles: [...FULL_ACCESS_ROLES, "ADMIN"] },
   { path: "/ai-assistant", label: "ИИ-Методист", icon: Bot, roles: [...FULL_ACCESS_ROLES, "ADMIN", "TEACHER"] },
   { path: "/knowledge-base", label: "База знаний", icon: BookOpen, roles: ALL_ROLES },
+];
+
+export const ERP_NAV_GROUPS: ModuleGroup[] = [
+  {
+    id: "overview",
+    label: "Обзор",
+    paths: ["/dashboard", "/schedule", "/calendar", "/notifications", "/feedback"],
+  },
+  {
+    id: "people",
+    label: "Люди и обучение",
+    paths: ["/children", "/employees", "/groups", "/clubs", "/attendance", "/exams", "/staffing"],
+  },
+  {
+    id: "operations",
+    label: "Операции",
+    paths: ["/finance", "/inventory", "/menu", "/recipes", "/procurement", "/maintenance", "/documents"],
+  },
+  {
+    id: "platform",
+    label: "Платформа",
+    paths: ["/users", "/security", "/integration", "/onec-data", "/action-log", "/ai-assistant", "/knowledge-base"],
+  },
 ];
 
 // Список всех модулей для управления правами
@@ -123,3 +152,13 @@ export const getLinksWithPermissions = (
     return true;
   });
 };
+
+export const groupModuleLinks = (links: ModuleLink[]) =>
+  ERP_NAV_GROUPS
+    .map((group) => ({
+      ...group,
+      links: group.paths
+        .map((path) => links.find((link) => link.path === path))
+        .filter((link): link is ModuleLink => Boolean(link)),
+    }))
+    .filter((group) => group.links.length > 0);

@@ -298,10 +298,8 @@ body {
 .mezon-top-bar__title {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  min-width: 0;
+  gap: 2px;
 }
 .mezon-top-bar__title span {
   font-size: 11px;
@@ -351,6 +349,15 @@ body {
 }
 .mezon-chip--teal:hover {
   background: rgba(0, 122, 255, 0.14);
+}
+.mezon-chip--soft {
+  background: rgba(255, 255, 255, 0.76);
+  border-color: rgba(255, 255, 255, 0.72);
+  color: var(--text-primary);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+.mezon-chip--soft:hover {
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .mezon-toolbar-pill {
@@ -408,9 +415,9 @@ body {
 }
 
 .mezon-sidenav {
-  width: var(--sidebar-w);
+  width: min(var(--sidebar-w), 288px);
   min-height: calc(100vh - var(--top-bar-height) - 92px);
-  background: rgba(255, 255, 255, 0.72);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(244, 247, 255, 0.72));
   border: 1px solid rgba(255, 255, 255, 0.76);
   box-shadow: 0 18px 48px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.74);
   position: sticky;
@@ -428,21 +435,31 @@ body {
 .mezon-sidenav__brand {
   position: relative;
   z-index: 1;
-  padding: 14px;
+  padding: 16px;
   border: 1px solid rgba(255, 255, 255, 0.72);
   border-radius: 24px;
-  background: linear-gradient(135deg, rgba(0, 122, 255, 0.09), rgba(52, 199, 89, 0.05));
+  background: linear-gradient(135deg, rgba(0, 122, 255, 0.14), rgba(52, 199, 89, 0.08));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.74);
 }
 .mezon-sidenav__brand img {
   width: 120px;
   object-fit: contain;
 }
+.mezon-sidenav__brand-copy {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+.mezon-sidenav__brand-copy strong {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
 .mezon-sidenav__brand p {
-  margin-top: var(--space-1);
-  color: var(--text-tertiary);
-  font-size: 11px;
-  line-height: 1.4;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .mezon-sidenav__user {
@@ -471,6 +488,18 @@ body {
   z-index: 1;
   overflow-y: auto;
   padding-right: 2px;
+  display: grid;
+  gap: 10px;
+}
+
+.mezon-nav-group {
+  display: grid;
+  gap: 6px;
+}
+
+.mezon-nav-group__list {
+  display: grid;
+  gap: 4px;
 }
 
 .mezon-nav-label {
@@ -518,6 +547,10 @@ body {
   opacity: 0.55;
   transition: opacity var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
 }
+.mezon-nav-link span:last-child {
+  flex: 1;
+  min-width: 0;
+}
 .mezon-nav-link:hover .mezon-nav-link__icon {
   opacity: 0.75;
 }
@@ -529,13 +562,54 @@ body {
 .mezon-sidenav__footer {
   position: relative;
   z-index: 1;
-  padding: 16px 12px 8px;
+  padding: 16px 8px 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.62);
 }
-.mezon-sidenav__footer p {
+.mezon-sidenav__support-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+.mezon-sidenav__support-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: var(--tint-blue);
+  color: var(--color-blue);
+}
+.mezon-sidenav__support-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.mezon-sidenav__support-copy strong {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+.mezon-sidenav__support-copy span {
   font-size: 11px;
+  line-height: 1.4;
   color: var(--text-tertiary);
-  margin-bottom: var(--space-1);
+}
+.mezon-sidenav__support-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-blue);
+  white-space: nowrap;
 }
 
 
@@ -551,7 +625,7 @@ body {
   min-height: calc(100vh - var(--top-bar-height) - 96px);
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 
 .mezon-workspace {
@@ -564,10 +638,10 @@ body {
   position: relative;
   overflow: hidden;
   display: grid;
-  gap: 14px;
-  padding: clamp(16px, 2.5vw, 24px);
+  gap: 12px;
+  padding: clamp(18px, 2vw, 24px);
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.74);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(244, 248, 255, 0.74));
   border: 1px solid rgba(255, 255, 255, 0.76);
   box-shadow: 0 12px 36px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.74);
   -webkit-backdrop-filter: blur(24px) saturate(150%);
@@ -615,13 +689,13 @@ body {
 }
 
 .mezon-workspace-hero__headline {
-  max-width: 760px;
+  max-width: 680px;
 }
 
 .mezon-workspace-hero__headline h1 {
   margin-top: 12px;
   font-family: var(--font-display);
-  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  font-size: clamp(1.5rem, 2.6vw, 2.15rem);
   font-weight: 600;
   line-height: 1.15;
   letter-spacing: -0.04em;
@@ -630,7 +704,7 @@ body {
 
 .mezon-workspace-hero__headline p {
   margin-top: 8px;
-  max-width: 720px;
+  max-width: 640px;
   font-size: 14px;
   line-height: 1.6;
   color: var(--text-tertiary);
@@ -646,14 +720,14 @@ body {
 .mezon-workspace-hero__meta {
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 }
 
 .mezon-workspace-hero__meta-card {
   min-height: 100%;
   padding: 14px 16px;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.74);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }

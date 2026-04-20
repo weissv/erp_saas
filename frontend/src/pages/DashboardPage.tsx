@@ -1,5 +1,5 @@
 import { useState, useCallback} from 'react';
-import { Settings, Pencil, X, RefreshCw} from 'lucide-react';
+import { AlertCircle, Settings, Pencil, X, RefreshCw} from 'lucide-react';
 import { Button} from '../components/ui/button';
 import { useDashboardPreferences} from '../hooks/useDashboardPreferences';
 import DashboardLayout from '../components/dashboard/DashboardLayout';
@@ -109,9 +109,21 @@ export default function DashboardPage() {
 
   if (error || !bootstrap || !preferences) {
     return (
-      <div className="rounded-xl border border-card bg-surface-primary shadow-subtle p-5 text-center py-12">
-        <p className="font-semibold text-[14px] tracking-[-0.01em] text-macos-red mb-4">{error ?? 'Не удалось загрузить дашборд'}</p>
-        <Button onClick={refetch}>Повторить</Button>
+      <div className="relative overflow-hidden rounded-[28px] border border-white/70 bg-white/85 px-6 py-12 text-center shadow-card backdrop-blur-xl">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-red-50 via-transparent to-transparent" />
+        <div className="relative mx-auto flex max-w-md flex-col items-center gap-4">
+          <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-500 shadow-subtle">
+            <AlertCircle className="h-6 w-6" />
+          </span>
+          <div className="space-y-2">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-red-500">Dashboard state</p>
+            <p className="font-semibold text-[20px] tracking-[-0.02em] text-foreground">{error ?? 'Не удалось загрузить дашборд'}</p>
+            <p className="text-[14px] leading-6 text-muted-foreground">
+              Попробуйте повторить загрузку. Если проблема останется, проверьте API или настройки окружения.
+            </p>
+          </div>
+          <Button onClick={refetch}>Повторить</Button>
+        </div>
       </div>
     );
   }
