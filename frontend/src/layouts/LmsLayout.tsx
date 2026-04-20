@@ -20,6 +20,7 @@ export default function LmsLayout() {
     : user?.email;
   const userRoleLabel = user ? ROLE_LABELS[user.role] ?? user.role : "";
   const sectionLabel = getLmsSectionLabel(location.pathname);
+  const supportItems = [tenant.supportPhone, tenant.supportEmail].filter(Boolean);
 
   if (isLoading) {
     return (
@@ -59,25 +60,37 @@ export default function LmsLayout() {
   return (
     <div className="mezon-app">
       <header className="mezon-top-bar" role="banner">
-        <button
-          className="mezon-mobile-menu-btn"
-          onClick={() => {
-            window.dispatchEvent(new CustomEvent("toggle-mobile-menu"));
-          }}
-          aria-label="Toggle menu"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-
-        <div className="mezon-top-bar__cluster mezon-top-bar__cluster--compact">
-        {tenant.supportPhone && (
-          <span className="mezon-chip">{tenant.supportPhone}</span>
-        )}
-        {tenant.supportEmail && (
-          <span className="mezon-chip">{tenant.supportEmail}</span>
-        )}
+        <div className="mezon-top-bar__leading">
+          <button
+            className="mezon-mobile-menu-btn"
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent("toggle-mobile-menu"));
+            }}
+            aria-label="Toggle menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <div className="mezon-top-bar__title">
+            <span>{tenant.name}</span>
+            <strong>{sectionLabel}</strong>
+          </div>
         </div>
+
+        {supportItems.length > 0 && (
+          <div className="mezon-top-bar__cluster mezon-top-bar__cluster--compact">
+            {supportItems.map((item) => (
+              <span key={item} className="mezon-chip mezon-chip--soft">{item}</span>
+            ))}
+          </div>
+        )}
         <div className="mezon-top-bar__cluster">
+          {user && (
+            <span className="mezon-toolbar-pill">
+              <span className="mezon-toolbar-pill__dot" />
+              <span className="truncate max-w-[100px] sm:max-w-[180px]">{userName}</span>
+              <span className="hidden text-[var(--text-tertiary)] sm:inline">· {userRoleLabel}</span>
+            </span>
+          )}
           <Link
             to="/dashboard"
             className="mezon-chip mezon-chip--teal flex items-center gap-2 cursor-pointer"
@@ -103,7 +116,7 @@ export default function LmsLayout() {
 
                   <div className="mezon-workspace-hero__actions">
                     <span className="mezon-chip">{isDemo ? "Demo school" : tenant.name}</span>
-                    {userRoleLabel && <span className="mezon-chip">{userRoleLabel}</span>}
+                    {userRoleLabel && <span className="mezon-chip mezon-chip--soft">{userRoleLabel}</span>}
                     <Link to="/dashboard" className="mezon-btn mezon-btn--outline">
                       <LayoutDashboard className="h-4 w-4" />
                       Вернуться в ERP
