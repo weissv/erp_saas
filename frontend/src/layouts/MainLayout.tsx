@@ -1,7 +1,7 @@
 // src/layouts/MainLayout.tsx
 import { useState, useEffect } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { Menu, GraduationCap, Lock } from "lucide-react";
+import { Menu, GraduationCap, Lock, ChevronRight, Home } from "lucide-react";
 import SideNav from "../components/SideNav";
 import DoomGame from "../components/DoomGame";
 import { Toaster } from "sonner";
@@ -14,6 +14,25 @@ import { Spinner } from "../components/ui/LoadingState";
 import { MissingOpenAiKeyDialog } from "../features/ai/components/MissingOpenAiKeyDialog";
 import { installOpenAiKeyErrorInterceptor } from "../features/ai/setup-openai-error-interceptor";
 import { ERP_WORKSPACE_COPY, getErpSectionLabel } from "./workspaceCopy";
+
+function Breadcrumb({ pathname }: { pathname: string }) {
+  const sectionLabel = getErpSectionLabel(pathname);
+  const isHome = pathname === "/" || pathname === "/dashboard";
+
+  if (isHome) return null;
+
+  return (
+    <nav className="mezon-breadcrumb" aria-label="Навигация">
+      <Link to="/dashboard">
+        <Home className="w-3.5 h-3.5" />
+      </Link>
+      <span className="mezon-breadcrumb__separator" aria-hidden>
+        <ChevronRight className="w-3 h-3" />
+      </span>
+      <span className="mezon-breadcrumb__current">{sectionLabel}</span>
+    </nav>
+  );
+}
 
 export default function MainLayout() {
   const { user, isLoading } = useAuth();
@@ -81,6 +100,11 @@ export default function MainLayout() {
     <div className="mezon-app">
       {showDoom && <DoomGame onClose={() => setShowDoom(false)} />}
 
+      {/* Skip to main content */}
+      <a href="#main-content" className="skip-to-content">
+        Перейти к содержимому
+      </a>
+
       {/* ── Top Bar ── */}
       <header className="mezon-top-bar" role="banner">
         <div className="mezon-top-bar__leading">
@@ -93,11 +117,6 @@ export default function MainLayout() {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <div className="mezon-window-controls" aria-hidden="true">
-            <span />
-            <span />
-            <span />
-          </div>
           <div className="mezon-top-bar__title">
             <span>{tenant.name}</span>
             <strong>Единое рабочее пространство</strong>
@@ -134,7 +153,7 @@ export default function MainLayout() {
       {/* ── Body ── */}
       <div className="mezon-shell">
         <SideNav />
-        <main className="mezon-main" role="main" aria-label="Основное содержимое">
+        <main id="main-content" className="mezon-main" role="main" aria-label="Основное содержимое">
           <Toaster position="top-right" richColors />
           <MissingOpenAiKeyDialog />
           <div className="mezon-main-inner macos-animate-fade-in">
@@ -177,6 +196,8 @@ export default function MainLayout() {
                   </div>
                 </div>
               </section>
+
+              <Breadcrumb pathname={location.pathname} />
 
               <div className="mezon-workspace-content">
                 <Outlet />
