@@ -36,8 +36,8 @@ describe("Button", () => {
       render(<Button>Default</Button>);
 
       const button = screen.getByRole("button");
-      expect(button).toHaveClass("bg-macos-blue");
-      expect(button).toHaveClass("text-white");
+      expect(button).toHaveClass("bg-primary");
+      expect(button).toHaveClass("text-primary-foreground");
     });
 
     it("применяет outline вариант", () => {
@@ -45,28 +45,28 @@ describe("Button", () => {
 
       const button = screen.getByRole("button");
       expect(button).toHaveClass("border");
-      expect(button).toHaveClass("border-white/80");
-      expect(button).toHaveClass("bg-white/95");
+      expect(button).toHaveClass("border-border");
+      expect(button).toHaveClass("bg-card");
     });
 
     it("применяет ghost вариант", () => {
       render(<Button variant="ghost">Ghost</Button>);
 
-      expect(screen.getByRole("button")).toHaveClass("text-macos-blue");
+      expect(screen.getByRole("button")).toHaveClass("text-primary");
     });
 
     it("применяет secondary вариант", () => {
       render(<Button variant="secondary">Secondary</Button>);
 
-      expect(screen.getByRole("button")).toHaveClass("bg-white/60");
+      expect(screen.getByRole("button")).toHaveClass("bg-secondary");
     });
 
     it("применяет destructive вариант", () => {
       render(<Button variant="destructive">Удалить</Button>);
 
       const button = screen.getByRole("button");
-      expect(button).toHaveClass("bg-macos-red");
-      expect(button).toHaveClass("text-white");
+      expect(button).toHaveClass("bg-destructive");
+      expect(button).toHaveClass("text-destructive-foreground");
     });
   });
 
