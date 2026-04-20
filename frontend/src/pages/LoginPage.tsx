@@ -46,26 +46,26 @@ export default function LoginPage() {
 
   return (
     <div className="relative mx-auto flex min-h-[85vh] max-w-5xl flex-col justify-center px-4 sm:px-6">
-      <div className="relative grid gap-8 rounded-[20px] bg-surface-primary border border-card shadow-floating p-5 sm:p-8 lg:gap-10 lg:p-10 lg:grid-cols-2">
+      <div className="relative grid gap-8 rounded-2xl bg-card border border-border/50 shadow-floating p-5 sm:p-8 lg:gap-10 lg:p-10 lg:grid-cols-2">
 
         {/* Left — Brand */}
         <div className="relative flex flex-col justify-between">
           <div>
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-[0.01em] uppercase bg-tint-blue text-macos-blue">{tenant.name}</span>
-            <h1 className="mt-4 text-[28px] lg:text-[34px] font-bold tracking-[-0.03em] text-primary leading-tight">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-[0.02em] uppercase bg-primary/10 text-primary">{tenant.name}</span>
+            <h1 className="mt-5 text-[28px] lg:text-[34px] font-bold tracking-[-0.03em] text-foreground leading-tight">
               Управляйте школой{' '}
-              <span className="bg-gradient-to-r from-macos-blue to-macos-purple bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary to-[hsl(280,68%,60%)] bg-clip-text text-transparent">
                 эффективно
               </span>
             </h1>
-            <p className="mt-3 text-[15px] text-tertiary max-w-md leading-relaxed">
+            <p className="mt-3 text-[15px] text-muted-foreground max-w-md leading-relaxed">
               Единая платформа управления: чистые поверхности, продуманная типографика и внимание к каждой детали.
             </p>
           </div>
-          <ul className="mt-8 space-y-3">
+          <ul className="mt-8 space-y-3.5">
             {sellingPoints.map((point) => (
-              <li key={point} className="flex items-center gap-3 text-primary">
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-tint-blue text-macos-blue">
+              <li key={point} className="flex items-center gap-3 text-foreground">
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
                 </span>
                 <span className="text-[14px] font-medium tracking-[-0.01em]">{point}</span>
@@ -75,28 +75,28 @@ export default function LoginPage() {
         </div>
 
         {/* Right — Login form */}
-        <div className="relative rounded-xl bg-inset border border-card shadow-subtle p-6">
+        <div className="relative rounded-xl bg-muted/50 border border-border/40 p-6 sm:p-8">
           <div className="mb-6 text-center">
-            <p className="text-[11px] uppercase tracking-[0.06em] font-bold text-tertiary">Вход в ERP</p>
-            <p className="text-[20px] font-semibold text-primary tracking-[-0.02em] mt-1">Авторизация</p>
+            <p className="text-[11px] uppercase tracking-[0.06em] font-bold text-muted-foreground">Вход в ERP</p>
+            <p className="text-[20px] font-semibold text-foreground tracking-[-0.02em] mt-1">Авторизация</p>
           </div>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" autoComplete="off">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" autoComplete="off">
             <div>
-              <label className="text-[12px] font-medium text-secondary mb-1.5 block" htmlFor="login">
+              <label className="text-[12px] font-medium text-muted-foreground mb-1.5 block" htmlFor="login">
                 Логин
               </label>
               <Input id="login" type="text" autoComplete="off" aria-describedby={errors.login?.message ? 'login-error' : undefined} {...register('login')} />
               <FormError message={errors.login?.message} id="login-error" />
             </div>
             <div>
-              <label className="text-[12px] font-medium text-secondary mb-1.5 block" htmlFor="password">
+              <label className="text-[12px] font-medium text-muted-foreground mb-1.5 block" htmlFor="password">
                 Пароль
               </label>
               <div className="relative">
                 <Input id="password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" aria-describedby={errors.password?.message ? 'password-error' : undefined} {...register('password')} />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-tertiary hover:text-secondary"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground transition-colors"
                   onClick={() => setShowPassword((v) => !v)}
                   aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
                 >

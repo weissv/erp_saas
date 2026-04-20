@@ -110,6 +110,7 @@ export default function SideNav() {
                     className="mezon-nav-link"
                     onClick={closeMobileMenu}
                   >
+                    {l.icon && <l.icon className="mezon-nav-link__icon" />}
                     {l.label}
                   </a>
                 );
@@ -122,6 +123,7 @@ export default function SideNav() {
                   className={clsx("mezon-nav-link", isActive && "mezon-nav-link--active")}
                   onClick={closeMobileMenu}
                 >
+                  {l.icon && <l.icon className="mezon-nav-link__icon" />}
                   {l.label}
                 </Link>
               );

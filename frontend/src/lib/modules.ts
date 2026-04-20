@@ -1,9 +1,39 @@
 import type { UserRole } from "../types/auth";
+import type { LucideIcon } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  UserCog,
+  CalendarDays,
+  ClipboardCheck,
+  ListOrdered,
+  UserPlus,
+  GraduationCap,
+  Palette,
+  CheckSquare,
+  Wallet,
+  Package,
+  UtensilsCrossed,
+  CookingPot,
+  ShoppingCart,
+  Wrench,
+  Shield,
+  FileText,
+  Calendar,
+  MessageSquare,
+  ArrowLeftRight,
+  Database,
+  ScrollText,
+  Bell,
+  Bot,
+  BookOpen,
+} from "lucide-react";
 
 export type ModuleLink = {
   path: string;
   label: string;
   roles: UserRole[];
+  icon?: LucideIcon;
   allowedUsers?: string[]; // Если указано, модуль доступен только этим пользователям (по email/login)
   isExternal?: boolean; // Внешняя ссылка (открывается в новой вкладке/отдельном приложении)
 };
@@ -15,32 +45,32 @@ export const FULL_ACCESS_ROLES: UserRole[] = ["DEVELOPER", "DIRECTOR"];
 const ALL_ROLES: UserRole[] = ["DEVELOPER", "DIRECTOR", "DEPUTY", "ADMIN", "ACCOUNTANT", "TEACHER", "ZAVHOZ"];
 
 export const MODULE_LINKS: ModuleLink[] = [
-  { path: "/dashboard", label: "Дашборд", roles: ALL_ROLES },
-  { path: "/children", label: "Дети", roles: [...FULL_ACCESS_ROLES, "ADMIN"] },
-  { path: "/employees", label: "Сотрудники", roles: [...FULL_ACCESS_ROLES, "ADMIN"] },
-  { path: "/schedule", label: "Расписание", roles: [...FULL_ACCESS_ROLES, "ADMIN", "TEACHER"] },
-  { path: "/exams", label: "Контрольные", roles: [...FULL_ACCESS_ROLES, "DEPUTY", "ADMIN", "TEACHER"] },
-  { path: "/staffing", label: "Штатное расписание", roles: FULL_ACCESS_ROLES },
-  { path: "/users", label: "Пользователи", roles: [...FULL_ACCESS_ROLES, "ADMIN"] },
-  { path: "/groups", label: "Классы", roles: [...FULL_ACCESS_ROLES, "ADMIN"] },
-  { path: "/clubs", label: "Кружки", roles: [...FULL_ACCESS_ROLES, "ADMIN", "ACCOUNTANT", "TEACHER"] },
-  { path: "/attendance", label: "Посещаемость", roles: [...FULL_ACCESS_ROLES, "ADMIN", "TEACHER"] },
-  { path: "/finance", label: "Финансы", roles: [...FULL_ACCESS_ROLES, "ADMIN", "ACCOUNTANT"] },
-  { path: "/inventory", label: "Склад", roles: [...FULL_ACCESS_ROLES, "ADMIN", "ZAVHOZ"] },
-  { path: "/menu", label: "Меню", roles: [...FULL_ACCESS_ROLES, "ADMIN", "ZAVHOZ"] },
-  { path: "/recipes", label: "Рецепты", roles: [...FULL_ACCESS_ROLES, "ADMIN", "ZAVHOZ"] },
-  { path: "/procurement", label: "Закупки", roles: [...FULL_ACCESS_ROLES, "ADMIN", "ACCOUNTANT", "ZAVHOZ"] },
-  { path: "/maintenance", label: "Заявки", roles: [...FULL_ACCESS_ROLES, "ADMIN", "ZAVHOZ"] },
-  { path: "/security", label: "Безопасность", roles: [...FULL_ACCESS_ROLES, "ADMIN", "ZAVHOZ"] },
-  { path: "/documents", label: "Документы", roles: [...FULL_ACCESS_ROLES, "ADMIN"] },
-  { path: "/calendar", label: "Календарь", roles: [...FULL_ACCESS_ROLES, "ADMIN", "ZAVHOZ"] },
-  { path: "/feedback", label: "Заявки и баг-репорты", roles: ALL_ROLES },
-  { path: "/integration", label: "Импорт/Экспорт", roles: [...FULL_ACCESS_ROLES, "ADMIN", "ACCOUNTANT"] },
-  { path: "/onec-data", label: "Данные 1С", roles: [...FULL_ACCESS_ROLES, "ADMIN", "ACCOUNTANT"] },
-  { path: "/action-log", label: "Журнал действий", roles: [...FULL_ACCESS_ROLES, "ADMIN"] },
-  { path: "/notifications", label: "Уведомления", roles: [...FULL_ACCESS_ROLES, "ADMIN"] },
-  { path: "/ai-assistant", label: "ИИ-Методист", roles: [...FULL_ACCESS_ROLES, "ADMIN", "TEACHER"] },
-  { path: "/knowledge-base", label: "База знаний", roles: ALL_ROLES },
+  { path: "/dashboard", label: "Дашборд", icon: LayoutDashboard, roles: ALL_ROLES },
+  { path: "/children", label: "Дети", icon: Users, roles: [...FULL_ACCESS_ROLES, "ADMIN"] },
+  { path: "/employees", label: "Сотрудники", icon: UserCog, roles: [...FULL_ACCESS_ROLES, "ADMIN"] },
+  { path: "/schedule", label: "Расписание", icon: CalendarDays, roles: [...FULL_ACCESS_ROLES, "ADMIN", "TEACHER"] },
+  { path: "/exams", label: "Контрольные", icon: ClipboardCheck, roles: [...FULL_ACCESS_ROLES, "DEPUTY", "ADMIN", "TEACHER"] },
+  { path: "/staffing", label: "Штатное расписание", icon: ListOrdered, roles: FULL_ACCESS_ROLES },
+  { path: "/users", label: "Пользователи", icon: UserPlus, roles: [...FULL_ACCESS_ROLES, "ADMIN"] },
+  { path: "/groups", label: "Классы", icon: GraduationCap, roles: [...FULL_ACCESS_ROLES, "ADMIN"] },
+  { path: "/clubs", label: "Кружки", icon: Palette, roles: [...FULL_ACCESS_ROLES, "ADMIN", "ACCOUNTANT", "TEACHER"] },
+  { path: "/attendance", label: "Посещаемость", icon: CheckSquare, roles: [...FULL_ACCESS_ROLES, "ADMIN", "TEACHER"] },
+  { path: "/finance", label: "Финансы", icon: Wallet, roles: [...FULL_ACCESS_ROLES, "ADMIN", "ACCOUNTANT"] },
+  { path: "/inventory", label: "Склад", icon: Package, roles: [...FULL_ACCESS_ROLES, "ADMIN", "ZAVHOZ"] },
+  { path: "/menu", label: "Меню", icon: UtensilsCrossed, roles: [...FULL_ACCESS_ROLES, "ADMIN", "ZAVHOZ"] },
+  { path: "/recipes", label: "Рецепты", icon: CookingPot, roles: [...FULL_ACCESS_ROLES, "ADMIN", "ZAVHOZ"] },
+  { path: "/procurement", label: "Закупки", icon: ShoppingCart, roles: [...FULL_ACCESS_ROLES, "ADMIN", "ACCOUNTANT", "ZAVHOZ"] },
+  { path: "/maintenance", label: "Заявки", icon: Wrench, roles: [...FULL_ACCESS_ROLES, "ADMIN", "ZAVHOZ"] },
+  { path: "/security", label: "Безопасность", icon: Shield, roles: [...FULL_ACCESS_ROLES, "ADMIN", "ZAVHOZ"] },
+  { path: "/documents", label: "Документы", icon: FileText, roles: [...FULL_ACCESS_ROLES, "ADMIN"] },
+  { path: "/calendar", label: "Календарь", icon: Calendar, roles: [...FULL_ACCESS_ROLES, "ADMIN", "ZAVHOZ"] },
+  { path: "/feedback", label: "Заявки и баг-репорты", icon: MessageSquare, roles: ALL_ROLES },
+  { path: "/integration", label: "Импорт/Экспорт", icon: ArrowLeftRight, roles: [...FULL_ACCESS_ROLES, "ADMIN", "ACCOUNTANT"] },
+  { path: "/onec-data", label: "Данные 1С", icon: Database, roles: [...FULL_ACCESS_ROLES, "ADMIN", "ACCOUNTANT"] },
+  { path: "/action-log", label: "Журнал действий", icon: ScrollText, roles: [...FULL_ACCESS_ROLES, "ADMIN"] },
+  { path: "/notifications", label: "Уведомления", icon: Bell, roles: [...FULL_ACCESS_ROLES, "ADMIN"] },
+  { path: "/ai-assistant", label: "ИИ-Методист", icon: Bot, roles: [...FULL_ACCESS_ROLES, "ADMIN", "TEACHER"] },
+  { path: "/knowledge-base", label: "База знаний", icon: BookOpen, roles: ALL_ROLES },
 ];
 
 // Список всех модулей для управления правами

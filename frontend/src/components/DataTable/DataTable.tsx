@@ -56,11 +56,11 @@ export function DataTable<T extends Record<string, any>>({
   };
 
   return (
-    <div className="overflow-hidden rounded-[1.75rem] border border-white/80 bg-white/80 shadow-[0_18px_42px_rgba(15,23,42,0.07)] backdrop-blur-xl">
+    <div className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-card">
       {/* Toolbar */}
-      <div className="flex justify-end border-b border-white/70 px-4 py-3">
+      <div className="flex justify-end border-b border-border/40 px-4 py-3">
         <button
-          className="rounded-full border border-white/80 bg-white/85 px-3.5 py-2 text-[12px] font-semibold text-secondary shadow-subtle backdrop-blur-xl macos-transition hover:-translate-y-0.5 hover:bg-white"
+          className="rounded-full border border-border bg-card px-3.5 py-2 text-[12px] font-semibold text-muted-foreground shadow-subtle transition-colors hover:bg-accent hover:text-foreground"
           onClick={downloadCsv}
           aria-label="Экспорт данных в CSV"
         >
@@ -69,10 +69,10 @@ export function DataTable<T extends Record<string, any>>({
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto -webkit-overflow-scrolling-touch">
         <table className={tableCls} role="table">
           <thead>
-            <tr className="border-b border-white/70 bg-fill-quaternary">
+            <tr className="border-b border-border/40 bg-muted/50">
               {columns.map((c) => (
                 <th key={c.key} className={headerCellCls}>
                   {c.header}
@@ -93,8 +93,8 @@ export function DataTable<T extends Record<string, any>>({
             ) : (
               data.map((row, i) => {
                 const rowClassName = [
-                  "border-b border-white/70 last:border-0 hover:bg-white/70 macos-transition",
-                  i % 2 === 1 ? "bg-fill-quaternary" : "",
+                  "border-b border-border/40 last:border-0 hover:bg-muted/40 transition-colors duration-100",
+                  i % 2 === 1 ? "bg-muted/20" : "",
                 ].join(" ");
 
                 return (
@@ -119,27 +119,27 @@ export function DataTable<T extends Record<string, any>>({
       </div>
 
       {/* Pagination */}
-      <div className="flex flex-col items-center justify-between gap-2 border-t border-white/70 px-4 py-4 text-[13px] sm:flex-row">
-        <div className="text-tertiary">
-          Всего: <span className="font-semibold text-primary">{total}</span>
+      <div className="flex flex-col items-center justify-between gap-2 border-t border-border/40 px-4 py-3 text-[13px] sm:flex-row">
+        <div className="text-muted-foreground">
+          Всего: <span className="font-semibold text-foreground">{total}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <button
             disabled={page <= 1}
             onClick={() => onPageChange(page - 1)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/85 px-3.5 py-2 font-semibold text-primary shadow-subtle backdrop-blur-xl macos-transition hover:-translate-y-0.5 hover:bg-white disabled:cursor-not-allowed disabled:opacity-30"
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 font-semibold text-foreground shadow-subtle transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
             aria-label="Предыдущая страница"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
             Назад
           </button>
-          <span className="px-3 text-secondary tabular-nums font-semibold">
+          <span className="px-3 text-muted-foreground tabular-nums font-semibold">
             {page} / {pages}
           </span>
           <button
             disabled={page >= pages}
             onClick={() => onPageChange(page + 1)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/85 px-3.5 py-2 font-semibold text-primary shadow-subtle backdrop-blur-xl macos-transition hover:-translate-y-0.5 hover:bg-white disabled:cursor-not-allowed disabled:opacity-30"
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 font-semibold text-foreground shadow-subtle transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
             aria-label="Следующая страница"
           >
             Вперёд
