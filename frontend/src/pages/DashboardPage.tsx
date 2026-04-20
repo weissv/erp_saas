@@ -116,7 +116,7 @@ export default function DashboardPage() {
             <AlertCircle className="h-6 w-6" />
           </span>
           <div className="space-y-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-red-500">Dashboard state</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-red-500">Состояние дашборда</p>
             <p className="font-semibold text-[20px] tracking-[-0.02em] text-foreground">{error ?? 'Не удалось загрузить дашборд'}</p>
             <p className="text-[14px] leading-6 text-muted-foreground">
               Попробуйте повторить загрузку. Если проблема останется, проверьте API или настройки окружения.

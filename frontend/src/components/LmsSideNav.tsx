@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   LifeBuoy,
   NotebookTabs,
+  ScrollText,
   Sparkles,
   Users,
   X,
@@ -88,7 +89,7 @@ export default function LmsSideNav() {
         { path: "/lms/school/homework", label: "Домашние задания", icon: BookOpen, roles: ["DEVELOPER", "ADMIN", "DIRECTOR", "DEPUTY", "TEACHER"] },
         { path: "/lms/school/attendance", label: "Посещаемость", icon: GraduationCap, roles: ["DEVELOPER", "ADMIN", "DIRECTOR", "DEPUTY", "TEACHER"] },
         { path: "/lms/ai-assistant", label: "ИИ-методист", icon: Bot, roles: ["DEVELOPER", "ADMIN", "DIRECTOR", "DEPUTY", "TEACHER"] },
-        { path: "/lms/diary", label: "Дневник", icon: BookOpen, roles: ["DEVELOPER", "ADMIN", "DIRECTOR", "DEPUTY", "TEACHER"] },
+        { path: "/lms/diary", label: "Дневник", icon: ScrollText, roles: ["DEVELOPER", "ADMIN", "DIRECTOR", "DEPUTY", "TEACHER"] },
       ],
     },
   ];
