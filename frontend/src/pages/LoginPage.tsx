@@ -143,7 +143,7 @@ export default function LoginPage() {
           </form>
           <div className="mt-5 flex items-center justify-center gap-2 text-[12px] text-muted-foreground">
             <span>Нужен демо-доступ или запуск школы?</span>
-            <span className="font-semibold text-primary">Откройте основной контур</span>
+            <span className="font-semibold text-primary">Подключим школу и откроем демо по запросу.</span>
           </div>
         </div>
       </div>
