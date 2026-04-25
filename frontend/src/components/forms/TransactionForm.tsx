@@ -97,7 +97,7 @@ export function TransactionForm({ onSuccess, onCancel, initialData }: Transactio
                     inputMode="decimal"
                     placeholder="0"
                     {...field}
-                    value={Number.isFinite(field.value) ? field.value : ""}
+                    value={field.value ?? ""}
                     onChange={(event) => field.onChange(event.target.value)}
                   />
                 </FormControl>
