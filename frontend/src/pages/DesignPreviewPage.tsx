@@ -10,6 +10,7 @@ import {
   Settings,
   Users,
 } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 import { DataTable, type Column } from "../components/DataTable/DataTable";
 import { Badge } from "../components/ui/Badge";
@@ -105,6 +106,10 @@ const navGroups = [
 ];
 
 export default function DesignPreviewPage() {
+  const location = useLocation();
+  const view = new URLSearchParams(location.search).get("view");
+  const showAll = !view;
+
   return (
     <div className="min-h-screen bg-[hsl(220,20%,98%)] px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1480px] space-y-6">
@@ -128,7 +133,7 @@ export default function DesignPreviewPage() {
           </div>
         </Card>
 
-        <section id="preview-dashboard">
+        {(showAll || view === "dashboard") && <section id="preview-dashboard">
           <Card className="border-border/70 p-6">
             <div className="mb-6 flex items-center justify-between">
               <div>
@@ -183,9 +188,9 @@ export default function DesignPreviewPage() {
               </div>
             </div>
           </Card>
-        </section>
+        </section>}
 
-        <section id="preview-finance">
+        {(showAll || view === "finance") && <section id="preview-finance">
           <Card className="border-border/70 p-6">
             <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
@@ -217,9 +222,9 @@ export default function DesignPreviewPage() {
               onPageChange={() => {}}
             />
           </Card>
-        </section>
+        </section>}
 
-        <section id="preview-child">
+        {(showAll || view === "child") && <section id="preview-child">
           <Card className="border-border/70 p-6">
             <div className="mb-6 flex items-start justify-between gap-4">
               <div>
@@ -284,9 +289,9 @@ export default function DesignPreviewPage() {
               </div>
             </div>
           </Card>
-        </section>
+        </section>}
 
-        <section id="preview-sidebar">
+        {(showAll || view === "sidebar") && <section id="preview-sidebar">
           <Card className="border-border/70 p-6">
             <div className="mb-6">
               <Badge variant="neutral">Sidebar and Navigation State</Badge>
@@ -352,7 +357,7 @@ export default function DesignPreviewPage() {
               </div>
             </div>
           </Card>
-        </section>
+        </section>}
       </div>
     </div>
   );
