@@ -2,21 +2,23 @@ import React, { useEffect, useMemo, useState} from"react";
 import { toast} from"sonner";
 import { DataTable, Column} from"../../../components/DataTable/DataTable";
 import { Card} from"../../../components/ui/Card";
+import { Badge } from "../../../components/ui/Badge";
 import { Button} from"../../../components/ui/button";
+import { Input, inputBaseClassName } from "../../../components/ui/input";
 import { useOneCContractors, useOneCTransactions} from"../../../features/onec";
 import type { FinanceTransaction} from"../../../types/finance";
 import { FINANCE_TYPES, FINANCE_CATEGORIES, TRANSACTION_CHANNELS} from"../../../lib/constants";
 import { api} from"../../../lib/api";
+import { cn } from "../../../lib/utils";
 import {
- Download,
- Search,
- Filter,
- X,
+  Download,
+  Search,
+  Filter,
+  X,
  ArrowUpRight,
  ArrowDownRight,
  Banknote,
  Building2,
- ChevronDown,
 } from"lucide-react";
 
 const currency = new Intl.NumberFormat("uz-UZ", {
@@ -188,132 +190,131 @@ export default function TransactionsView() {
 },
  ];
 
- return (
- <div className="space-y-4">
- {/* Toolbar */}
- <div className="flex flex-wrap gap-2 items-center">
- {/* Quick filters */}
- <select
- className="border rounded-lg px-3 py-2 text-sm bg-white"
- value={filters.channel}
- onChange={(e) => updateFilter("channel", e.target.value)}
- >
- <option value="">Все каналы</option>
- <option value="CASH">Касса</option>
- <option value="BANK">Банк</option>
- </select>
+  return (
+    <div className="space-y-4">
+      <Card className="border-border/70">
+        <div className="flex flex-col gap-4 p-6">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div className="space-y-3">
+              <Badge variant="neutral">Transactions</Badge>
+              <div>
+                <h2 className="text-xl font-semibold tracking-[-0.03em] text-foreground">Транзакции</h2>
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+                  Высокоплотная таблица операций с быстрыми фильтрами по каналу, типу, контрагенту и периоду.
+                </p>
+              </div>
+            </div>
 
- <select
- className="border rounded-lg px-3 py-2 text-sm bg-white"
- value={filters.type}
- onChange={(e) => updateFilter("type", e.target.value)}
- >
- <option value="">Все типы</option>
- <option value="INCOME">Доход</option>
- <option value="EXPENSE">Расход</option>
- </select>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => setShowFilters((value) => !value)} className="relative">
+                <Filter className="h-4 w-4" />
+                Фильтры
+                {activeFilterCount > 0 ? (
+                  <span className="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                    {activeFilterCount}
+                  </span>
+                ) : null}
+              </Button>
+              {activeFilterCount > 0 ? (
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  <X className="h-4 w-4" />
+                  Сбросить
+                </Button>
+              ) : null}
+              <Button variant="outline" size="sm" onClick={handleExport}>
+                <Download className="h-4 w-4" />
+                CSV
+              </Button>
+            </div>
+          </div>
 
- <div className="relative">
- <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-tertiary"/>
- <input
- type="text"
- placeholder="Поиск по описанию, контрагенту..."
- className="border rounded-lg pl-8 pr-3 py-2 text-sm w-64 bg-white"
- value={filters.search}
- onChange={(e) => updateFilter("search", e.target.value)}
- />
- </div>
+          <div className="grid gap-3 md:grid-cols-[180px_180px_minmax(0,1fr)]">
+            <select
+              className={cn(inputBaseClassName, "appearance-none")}
+              value={filters.channel}
+              onChange={(e) => updateFilter("channel", e.target.value)}
+            >
+              <option value="">Все каналы</option>
+              <option value="CASH">Касса</option>
+              <option value="BANK">Банк</option>
+            </select>
 
- {/* Toggle advanced filters */}
- <Button
- variant="outline"
- size="sm"
- onClick={() => setShowFilters(!showFilters)}
- className="relative"
- >
- <Filter className="h-4 w-4 mr-1"/>
- Фильтры
- {activeFilterCount > 0 && (
- <span className="absolute -top-1.5 -right-1.5 bg-tint-blue0 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
- {activeFilterCount}
- </span>
- )}
- </Button>
+            <select
+              className={cn(inputBaseClassName, "appearance-none")}
+              value={filters.type}
+              onChange={(e) => updateFilter("type", e.target.value)}
+            >
+              <option value="">Все типы</option>
+              <option value="INCOME">Доход</option>
+              <option value="EXPENSE">Расход</option>
+            </select>
 
- {activeFilterCount > 0 && (
- <button onClick={clearFilters} className="text-xs text-tertiary hover:text-secondary flex items-center gap-1">
- <X className="h-3 w-3"/> Сбросить
- </button>
- )}
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground"/>
+              <Input
+                placeholder="Поиск по описанию, контрагенту или номеру документа"
+                className="pl-9"
+                value={filters.search}
+                onChange={(e) => updateFilter("search", e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+      </Card>
 
- <div className="ml-auto">
- <Button variant="outline"size="sm"onClick={handleExport}>
- <Download className="mr-1 h-4 w-4"/> CSV
- </Button>
- </div>
- </div>
+      {showFilters && (
+        <Card className="border-border/70">
+          <div className="grid gap-4 p-6 md:grid-cols-2 xl:grid-cols-4">
+            <div className="space-y-2">
+              <label className="block text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">Категория</label>
+              <select
+                className={cn(inputBaseClassName, "appearance-none")}
+                value={filters.category}
+                onChange={(e) => updateFilter("category", e.target.value)}
+              >
+                <option value="">Все</option>
+                {Object.entries(FINANCE_CATEGORIES).map(([k, v]) => (
+                  <option key={k} value={k}>{v}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="block text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">Контрагент</label>
+              <select
+                className={cn(inputBaseClassName, "appearance-none")}
+                value={filters.contractorId}
+                onChange={(e) => updateFilter("contractorId", e.target.value)}
+              >
+                <option value="">Все</option>
+                {(contractors ?? []).map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="block text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">Дата от</label>
+              <Input type="date" value={filters.startDate} onChange={(e) => updateFilter("startDate", e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">Дата до</label>
+              <Input type="date" value={filters.endDate} onChange={(e) => updateFilter("endDate", e.target.value)} />
+            </div>
+          </div>
+        </Card>
+      )}
 
- {/* Advanced Filters Panel */}
- {showFilters && (
- <Card className="p-4">
- <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
- <div>
- <label className="text-xs text-secondary block mb-1">Категория</label>
- <select
- className="border rounded-lg px-3 py-2 text-sm w-full bg-white"
- value={filters.category}
- onChange={(e) => updateFilter("category", e.target.value)}
- >
- <option value="">Все</option>
- {Object.entries(FINANCE_CATEGORIES).map(([k, v]) => (
- <option key={k} value={k}>{v}</option>
- ))}
- </select>
- </div>
- <div>
- <label className="text-xs text-secondary block mb-1">Контрагент</label>
- <select
- className="border rounded-lg px-3 py-2 text-sm w-full bg-white"
- value={filters.contractorId}
- onChange={(e) => updateFilter("contractorId", e.target.value)}
- >
- <option value="">Все</option>
- {(contractors ?? []).map((c) => (
- <option key={c.id} value={c.id}>{c.name}</option>
- ))}
- </select>
- </div>
- <div>
- <label className="text-xs text-secondary block mb-1">Дата от</label>
- <input
- type="date"
- className="border rounded-lg px-3 py-2 text-sm w-full bg-white"
- value={filters.startDate}
- onChange={(e) => updateFilter("startDate", e.target.value)}
- />
- </div>
- <div>
- <label className="text-xs text-secondary block mb-1">Дата до</label>
- <input
- type="date"
- className="border rounded-lg px-3 py-2 text-sm w-full bg-white"
- value={filters.endDate}
- onChange={(e) => updateFilter("endDate", e.target.value)}
- />
- </div>
- </div>
- </Card>
- )}
-
- {/* Table */}
- <DataTable
- columns={columns}
- data={transactions}
- page={page}
- pageSize={20}
- total={total}
- onPageChange={setPage}
- />
- </div>
- );
+      <DataTable
+        title="Журнал операций"
+        description="Список синхронизированных финансовых операций с экспортом и постраничной навигацией."
+        columns={columns}
+        data={transactions}
+        page={page}
+        pageSize={20}
+        total={total}
+        onPageChange={setPage}
+        emptyTitle="Транзакции не найдены"
+        emptyDescription="Измените фильтры или загрузите операции из 1C."
+      />
+    </div>
+  );
 }

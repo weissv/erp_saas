@@ -11,19 +11,19 @@ export interface BadgeProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const sizeClasses: Record<BadgeSize, string> = {
-  sm: "px-1.5 py-px text-[10px]",
-  md: "px-2 py-0.5 text-[11px]",
+  sm: "px-2 py-0.5 text-[10px]",
+  md: "px-2.5 py-1 text-[11px]",
 };
 
-const base = "inline-flex items-center gap-1.5 rounded-pill font-semibold tracking-[0.01em] uppercase leading-relaxed";
+const base = "inline-flex items-center gap-1.5 rounded-md border font-medium uppercase tracking-[0.08em] leading-none";
 
 const variants: Record<BadgeVariant, string> = {
-  default: "bg-tint-blue text-macos-blue",
-  success: "bg-tint-green text-macos-green",
-  warning: "bg-tint-orange text-macos-orange",
-  danger:  "bg-tint-red text-macos-red",
-  neutral: "bg-fill-quaternary text-secondary",
-  outline: "border border-separator text-primary bg-surface-primary shadow-subtle",
+  default: "border-primary/20 bg-primary/10 text-primary",
+  success: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  warning: "border-amber-200 bg-amber-50 text-amber-700",
+  danger:  "border-red-200 bg-red-50 text-red-700",
+  neutral: "border-border bg-muted text-muted-foreground",
+  outline: "border-border bg-background text-foreground",
 };
 
 export const Badge = forwardRef<HTMLDivElement, BadgeProps>(

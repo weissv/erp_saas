@@ -11,6 +11,9 @@ import TransactionsView from"./views/TransactionsView";
 import InvoicesView from"./views/InvoicesView";
 import DebtorsView from"./views/DebtorsView";
 import FinanceRegistersView from"./views/FinanceRegistersView";
+import { Badge } from "../../components/ui/Badge";
+import { Card } from "../../components/ui/Card";
+import { cn } from "../../lib/utils";
 
 type TabId ="dashboard"|"transactions"|"invoices"|"debtors"|"registers";
 
@@ -25,47 +28,69 @@ const tabs: { id: TabId; label: string; icon: React.ReactNode}[] = [
 export default function FinancePage() {
  const [activeTab, setActiveTab] = useState<TabId>("dashboard");
 
- return (
- <div className="space-y-6">
- <div className="flex items-center gap-3">
- <div className="flex h-11 w-11 items-center justify-center rounded-[14px] bg-[rgba(10,132,255,0.12)] text-macos-blue shadow-[0_10px_24px_rgba(10,132,255,0.12)]">
- <LayoutDashboard className="h-5 w-5"/>
- </div>
- <div>
- <div className="mezon-badge mb-2">Finance · обзор</div>
- <h1 className="mezon-section-title mb-1">Финансы</h1>
- <p className="mezon-subtitle">Ключевые показатели, транзакции, накладные и дебиторская задолженность в едином рабочем пространстве.</p>
- </div>
- </div>
+  return (
+    <div className="space-y-6">
+      <Card className="border-border/70 bg-card/90">
+        <div className="flex flex-col gap-4 p-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-3">
+            <Badge variant="default">Finance workspace</Badge>
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <LayoutDashboard className="h-5 w-5" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-semibold tracking-[-0.03em] text-foreground">Финансы</h1>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                  Единый контур для контроля денежных потоков, накладных, дебиторки и регистров с высокой плотностью данных.
+                </p>
+              </div>
+            </div>
+          </div>
 
- {/* Tabs */}
- <div className="inline-flex w-fit max-w-full gap-1 overflow-x-auto rounded-[16px] border border-card bg-surface-primary p-1.5 shadow-[0_10px_24px_rgba(15,23,42,0.06)] backdrop-blur-[24px]">
- <nav className="flex gap-1"aria-label="Finance tabs">
- {tabs.map((tab) => (
- <button
- key={tab.id}
- onClick={() => setActiveTab(tab.id)}
- className={`${
- activeTab === tab.id
- ?"bg-[rgba(255,255,255,0.9)] text-primary shadow-[0_8px_20px_rgba(15,23,42,0.08)]"
- :"text-secondary hover:bg-[rgba(255,255,255,0.58)] hover:text-primary"
-} whitespace-nowrap rounded-xl px-4 py-2 text-[11px] font-medium uppercase tracking-widest flex items-center gap-2 macos-transition`}
- >
- {tab.icon}
- {tab.label}
- </button>
- ))}
- </nav>
- </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-border bg-background px-4 py-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Контур</p>
+              <p className="mt-2 text-sm font-medium text-foreground">ERP + 1C</p>
+            </div>
+            <div className="rounded-xl border border-border bg-background px-4 py-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Режим</p>
+              <p className="mt-2 text-sm font-medium text-foreground">Data-dense</p>
+            </div>
+            <div className="rounded-xl border border-border bg-background px-4 py-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Навигация</p>
+              <p className="mt-2 text-sm font-medium text-foreground">{tabs.find((tab) => tab.id === activeTab)?.label}</p>
+            </div>
+          </div>
+        </div>
+      </Card>
 
- {/* Tab Content */}
- <div>
- {activeTab ==="dashboard"&& <DashboardView />}
- {activeTab ==="transactions"&& <TransactionsView />}
- {activeTab ==="invoices"&& <InvoicesView />}
- {activeTab ==="debtors"&& <DebtorsView />}
- {activeTab ==="registers"&& <FinanceRegistersView />}
- </div>
- </div>
- );
+      <div className="overflow-x-auto">
+        <nav className="inline-flex min-w-full gap-2 rounded-xl border border-border bg-card p-2 shadow-sm sm:min-w-0" aria-label="Finance tabs">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] transition-colors",
+                activeTab === tab.id
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+              )}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      <div>
+        {activeTab ==="dashboard"&& <DashboardView />}
+        {activeTab ==="transactions"&& <TransactionsView />}
+        {activeTab ==="invoices"&& <InvoicesView />}
+        {activeTab ==="debtors"&& <DebtorsView />}
+        {activeTab ==="registers"&& <FinanceRegistersView />}
+      </div>
+    </div>
+  );
 }

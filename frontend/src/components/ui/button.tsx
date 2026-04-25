@@ -11,51 +11,46 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const base = [
-  "inline-flex items-center justify-center gap-2 font-semibold",
-  "transition-all duration-150 ease-out rounded-full outline-none",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium",
+  "transition-colors duration-150 ease-out outline-none",
   "disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none",
-  "active:scale-[0.98] touch-manipulation",
-  "tracking-[-0.01em] leading-none",
+  "active:scale-[0.99] touch-manipulation",
+  "leading-none",
 ].join(" ");
 
 const variants: Record<ButtonVariant, string> = {
   default: [
-    "border border-transparent bg-primary text-primary-foreground",
-    "shadow-[0_10px_24px_rgba(0,122,255,0.2)]",
-    "hover:brightness-110",
-    "active:brightness-95",
+    "bg-primary text-primary-foreground shadow-sm",
+    "hover:bg-primary/90",
     "focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
   ].join(" "),
   outline: [
-    "border border-border bg-card text-foreground",
-    "shadow-subtle",
-    "hover:bg-accent",
+    "border border-input bg-background text-foreground shadow-sm",
+    "hover:bg-accent hover:text-accent-foreground",
     "focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
   ].join(" "),
   ghost: [
-    "text-primary",
+    "bg-transparent text-foreground shadow-none",
     "hover:bg-accent hover:text-accent-foreground",
     "focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
   ].join(" "),
   secondary: [
-    "border border-transparent bg-secondary text-secondary-foreground",
+    "bg-secondary text-secondary-foreground shadow-sm",
     "hover:bg-secondary/80",
     "focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
   ].join(" "),
   destructive: [
-    "border border-transparent bg-destructive text-destructive-foreground",
-    "shadow-[0_10px_24px_rgba(255,59,48,0.18)]",
-    "hover:brightness-110",
-    "active:brightness-95",
+    "bg-destructive text-destructive-foreground shadow-sm",
+    "hover:bg-destructive/90",
     "focus-visible:ring-2 focus-visible:ring-destructive/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
   ].join(" "),
 };
 
 const sizes: Record<ButtonSize, string> = {
-  sm: "text-[12px] px-3.5 py-2 min-h-[36px]",
-  md: "text-[13px] px-4 py-2.5 min-h-[42px]",
-  lg: "text-[14px] px-6 py-3 min-h-[48px]",
-  icon: "h-9 w-9 p-0 min-h-[44px] min-w-[44px]",
+  sm: "h-9 px-3 text-xs",
+  md: "h-10 px-4 text-sm",
+  lg: "h-11 px-6 text-sm",
+  icon: "h-10 w-10 p-0",
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(

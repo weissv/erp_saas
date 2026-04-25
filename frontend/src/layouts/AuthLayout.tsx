@@ -4,14 +4,18 @@ import { Toaster } from "sonner";
 
 export default function AuthLayout() {
   return (
-    <div className="relative min-h-screen bg-background pb-16 pt-8">
-      {/* Subtle gradient orbs */}
-      <div className="fixed inset-0 pointer-events-none" aria-hidden="true">
-        <div className="absolute -top-24 left-1/4 w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,hsl(var(--primary)/0.05),transparent_70%)] blur-3xl" />
-        <div className="absolute top-1/3 right-1/5 w-[400px] h-[400px] rounded-full bg-[radial-gradient(circle,hsl(var(--chart-4)/0.04),transparent_70%)] blur-3xl" />
+    <div className="relative min-h-screen overflow-hidden bg-[hsl(220,20%,98%)] text-foreground">
+      <div className="pointer-events-none fixed inset-0" aria-hidden="true">
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom_right,rgba(255,255,255,0.7),rgba(241,245,249,0.85))]" />
+        <div className="absolute -top-32 left-[12%] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,hsl(var(--primary)/0.14),transparent_68%)] blur-3xl" />
+        <div className="absolute bottom-0 right-[8%] h-[360px] w-[360px] rounded-full bg-[radial-gradient(circle,rgba(15,23,42,0.08),transparent_72%)] blur-3xl" />
       </div>
       <Toaster position="top-right" richColors />
-      <Outlet />
+      <div className="relative">
+        <div className="mx-auto flex min-h-screen w-full max-w-[1600px] items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
+          <Outlet />
+        </div>
+      </div>
     </div>
   );
 }
