@@ -1,6 +1,9 @@
 import { useState, useCallback} from 'react';
 import { AlertCircle, Settings, Pencil, X, RefreshCw} from 'lucide-react';
 import { Button} from '../components/ui/button';
+import { Badge } from '../components/ui/Badge';
+import { Card } from '../components/ui/Card';
+import { Skeleton } from '../components/ui/LoadingState';
 import { useDashboardPreferences} from '../hooks/useDashboardPreferences';
 import DashboardLayout from '../components/dashboard/DashboardLayout';
 import DashboardOverview from '../components/dashboard/DashboardOverview';
@@ -94,16 +97,22 @@ export default function DashboardPage() {
 
  /* ---- Render states ---- */
 
- if (isLoading) {
- return (
- <div className="space-y-4 animate-pulse">
- <div className="h-10 rounded-lg w-1/3 dashboard-skeleton"/>
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
- {Array.from({ length: 8}).map((_, i) => (
- <div key={i} className="h-40 rounded-xl dashboard-skeleton"/>
- ))}
- </div>
- </div>
+  if (isLoading) {
+  return (
+  <div className="space-y-4">
+  <Card className="border-border/70 p-6">
+  <div className="space-y-3">
+  <Skeleton className="h-5 w-28" />
+  <Skeleton className="h-8 w-56" />
+  <Skeleton className="h-4 w-80 max-w-full" />
+  </div>
+  </Card>
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  {Array.from({ length: 8}).map((_, i) => (
+  <Skeleton key={i} className="h-40 rounded-xl" />
+  ))}
+  </div>
+  </div>
  );
 }
 
@@ -129,17 +138,20 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="dashboard-root space-y-5">
-      {/* ---- Header ---- */}
-      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-[22px] font-bold tracking-[-0.03em] text-primary leading-tight">Дашборд</h1>
-          <p className="text-[13px] text-secondary mt-0.5">
-            {activeView ? `Вид: ${activeView.name}` : 'Операционная рабочая поверхность'}
-          </p>
-        </div>
+     <div className="dashboard-root space-y-5">
+      <Card className="border-border/70 p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0 space-y-3">
+            <Badge variant="neutral">Dashboard overview</Badge>
+            <div>
+              <h1 className="text-[24px] font-semibold tracking-[-0.03em] text-foreground leading-tight">Дашборд</h1>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                {activeView ? `Текущий вид: ${activeView.name}` : 'Операционная рабочая поверхность для ключевых метрик и действий.'}
+              </p>
+            </div>
+          </div>
 
-        <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 flex-shrink-0">
           <Button variant="outline" size="sm" onClick={refetch} title="Обновить">
             <RefreshCw className="h-4 w-4" />
           </Button>
@@ -157,11 +169,12 @@ export default function DashboardPage() {
             <Settings className="h-4 w-4 mr-1" />
             Настроить
           </Button>
+          </div>
         </div>
-      </header>
+      </Card>
 
- {/* ---- Overview strip ---- */}
- {bootstrap.overview && (
+  {/* ---- Overview strip ---- */}
+  {bootstrap.overview && (
  <DashboardOverview overview={bootstrap.overview} />
  )}
 

@@ -1,39 +1,37 @@
-// src/layouts/MainLayoutV2.tsx
-// ──────────────────────────────────────────────────────────────────────────────
-// Enterprise Two-Tier Sidebar Layout with Command Palette & Tenant Switcher
-// ──────────────────────────────────────────────────────────────────────────────
-// Architecture:
-//   Tier 1 (Left Rail) — 60px, icons only: module selection
-//   Tier 2 (Collapsible Drawer) — 240px, contextual sub-navigation
-//   Topbar — Command Palette (Ctrl+K / Cmd+K), Tenant Switcher, User Menu
-//   Mobile — Hamburger → bottom-sheet navigation
-// ──────────────────────────────────────────────────────────────────────────────
-
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import type { LucideIcon } from "lucide-react";
 import {
-  BookOpen,
-  Building2,
+  Briefcase,
   ChevronLeft,
   ChevronsUpDown,
-  DollarSign,
+  Command,
   GraduationCap,
   LayoutDashboard,
+  LifeBuoy,
   LogOut,
   Menu,
-  Package,
   Search,
   Settings,
+  ShieldCheck,
+  Sparkles,
   Users,
   X,
 } from "lucide-react";
 import { Toaster } from "sonner";
 
 import { useAuth } from "../hooks/useAuth";
+import { useDemo } from "../contexts/DemoContext";
+import { useTenant } from "../contexts/TenantContext";
+import { usePermissions } from "../contexts/PermissionsContext";
 import { cn } from "../lib/utils";
-import { ROLE_LABELS } from "../types/auth";
+import { FULL_ACCESS_ROLES, getLinksWithPermissions, groupModuleLinks } from "../lib/modules";
+import { ROLE_LABELS, type UserRole } from "../types/auth";
 import { Spinner } from "../components/ui/LoadingState";
+import { Button } from "../components/ui/button";
+import { MissingOpenAiKeyDialog } from "../features/ai/components/MissingOpenAiKeyDialog";
+import { getErpSectionLabel } from "./workspaceCopy";
 import {
   Tooltip,
   TooltipContent,
@@ -47,7 +45,6 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
 } from "../components/ui/command";
 import {
   DropdownMenu,
@@ -58,157 +55,63 @@ import {
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
 
-// ─── Module Definitions ──────────────────────────────────────────────────────
+type NavGroup = ReturnType<typeof groupModuleLinks>[number];
 
-type SubLink = {
-  path: string;
-  label: string;
+const GROUP_ICONS: Record<string, LucideIcon> = {
+  overview: LayoutDashboard,
+  people: Users,
+  operations: Briefcase,
+  platform: Settings,
 };
 
-type ModuleDefinition = {
-  id: string;
-  label: string;
-  icon: React.ElementType;
-  basePath: string;
-  subLinks: SubLink[];
-};
+function resolveActiveGroupId(groups: NavGroup[], pathname: string) {
+  const matched = groups.find((group) =>
+    group.links.some((link) => pathname === link.path || pathname.startsWith(`${link.path}/`)),
+  );
 
-const MODULES: ModuleDefinition[] = [
-  {
-    id: "dashboard",
-    label: "Дашборд",
-    icon: LayoutDashboard,
-    basePath: "/dashboard",
-    subLinks: [{ path: "/dashboard", label: "Обзор" }],
-  },
-  {
-    id: "lms",
-    label: "LMS",
-    icon: GraduationCap,
-    basePath: "/lms",
-    subLinks: [
-      { path: "/lms/school", label: "Школа" },
-      { path: "/lms/school/classes", label: "Классы" },
-      { path: "/lms/school/gradebook", label: "Оценки" },
-      { path: "/lms/school/schedule", label: "Расписание" },
-      { path: "/lms/school/homework", label: "Домашние задания" },
-      { path: "/lms/diary", label: "Дневник" },
-    ],
-  },
-  {
-    id: "finance",
-    label: "Финансы",
-    icon: DollarSign,
-    basePath: "/finance",
-    subLinks: [
-      { path: "/finance", label: "Обзор" },
-      { path: "/integration", label: "Импорт/Экспорт" },
-      { path: "/onec-data", label: "Данные 1С" },
-    ],
-  },
-  {
-    id: "people",
-    label: "Люди",
-    icon: Users,
-    basePath: "/children",
-    subLinks: [
-      { path: "/children", label: "Дети" },
-      { path: "/employees", label: "Сотрудники" },
-      { path: "/groups", label: "Классы" },
-      { path: "/attendance", label: "Посещаемость" },
-      { path: "/staffing", label: "Штатное расписание" },
-    ],
-  },
-  {
-    id: "inventory",
-    label: "Склад",
-    icon: Package,
-    basePath: "/inventory",
-    subLinks: [
-      { path: "/inventory", label: "Склад" },
-      { path: "/menu", label: "Меню" },
-      { path: "/recipes", label: "Рецепты" },
-      { path: "/procurement", label: "Закупки" },
-    ],
-  },
-  {
-    id: "school",
-    label: "Школа",
-    icon: BookOpen,
-    basePath: "/exams",
-    subLinks: [
-      { path: "/exams", label: "Контрольные" },
-      { path: "/schedule", label: "Расписание" },
-      { path: "/calendar", label: "Календарь" },
-      { path: "/documents", label: "Документы" },
-      { path: "/knowledge-base", label: "База знаний" },
-    ],
-  },
-  {
-    id: "settings",
-    label: "Настройки",
-    icon: Settings,
-    basePath: "/users",
-    subLinks: [
-      { path: "/users", label: "Пользователи" },
-      { path: "/security", label: "Безопасность" },
-      { path: "/maintenance", label: "Заявки" },
-      { path: "/notifications", label: "Уведомления" },
-      { path: "/action-log", label: "Журнал действий" },
-      { path: "/feedback", label: "Заявки и баг-репорты" },
-      { path: "/ai-assistant", label: "ИИ-Методист" },
-    ],
-  },
-];
-
-// ─── Tenant Stub (replace with real context / API) ───────────────────────────
-
-type Tenant = {
-  id: string;
-  name: string;
-};
-
-const DEMO_TENANTS: Tenant[] = [
-  { id: "mezon", name: "Mezon School" },
-  { id: "greenhill", name: "Greenhill Academy" },
-];
-
-// ─── Sidebar Rail (Tier 1) ───────────────────────────────────────────────────
+  return matched?.id ?? groups[0]?.id ?? "overview";
+}
 
 function SidebarRail({
-  activeModuleId,
+  groups,
+  activeGroupId,
   onSelect,
 }: {
-  activeModuleId: string;
+  groups: NavGroup[];
+  activeGroupId: string;
   onSelect: (id: string) => void;
 }) {
   return (
     <TooltipProvider delayDuration={0}>
       <nav
-        className="flex h-full w-[60px] shrink-0 flex-col items-center gap-1 border-r border-sidebar-border bg-sidebar py-3"
-        aria-label="Module navigation"
+        className="flex h-full w-[72px] shrink-0 flex-col items-center gap-2 border-r border-sidebar-border bg-sidebar px-3 py-4"
+        aria-label="Основные группы навигации"
       >
-        {MODULES.map((mod) => {
-          const Icon = mod.icon;
-          const isActive = mod.id === activeModuleId;
+        <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+          <Sparkles className="h-4 w-4" />
+        </div>
+        {groups.map((group) => {
+          const Icon = GROUP_ICONS[group.id] ?? LayoutDashboard;
+          const isActive = group.id === activeGroupId;
+
           return (
-            <Tooltip key={mod.id}>
+            <Tooltip key={group.id}>
               <TooltipTrigger asChild>
                 <button
-                  onClick={() => onSelect(mod.id)}
+                  onClick={() => onSelect(group.id)}
                   className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
+                    "flex h-11 w-11 items-center justify-center rounded-xl border transition-colors",
                     isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                      ? "border-primary/20 bg-primary text-primary-foreground shadow-sm"
+                      : "border-transparent text-sidebar-foreground/70 hover:border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                   )}
                   aria-current={isActive ? "page" : undefined}
-                  aria-label={mod.label}
+                  aria-label={group.label}
                 >
                   <Icon className="h-5 w-5" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="right">{mod.label}</TooltipContent>
+              <TooltipContent side="right">{group.label}</TooltipContent>
             </Tooltip>
           );
         })}
@@ -217,14 +120,12 @@ function SidebarRail({
   );
 }
 
-// ─── Sidebar Drawer (Tier 2) ─────────────────────────────────────────────────
-
 function SidebarDrawer({
-  module,
+  group,
   collapsed,
   onCollapse,
 }: {
-  module: ModuleDefinition;
+  group: NavGroup | undefined;
   collapsed: boolean;
   onCollapse: () => void;
 }) {
@@ -232,356 +133,380 @@ function SidebarDrawer({
 
   return (
     <AnimatePresence initial={false}>
-      {!collapsed && (
+      {!collapsed && group ? (
         <motion.aside
           initial={{ width: 0, opacity: 0 }}
-          animate={{ width: 240, opacity: 1 }}
+          animate={{ width: 288, opacity: 1 }}
           exit={{ width: 0, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 500, damping: 40 }}
+          transition={{ type: "spring", stiffness: 420, damping: 34 }}
           className="flex h-full shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar"
-          aria-label={`${module.label} sub-navigation`}
+          aria-label={group.label}
         >
-          {/* Drawer header */}
-          <div className="flex items-center justify-between border-b border-sidebar-border px-4 py-3">
-            <span className="text-sm font-semibold text-sidebar-foreground truncate">
-              {module.label}
-            </span>
-            <button
-              onClick={onCollapse}
-              className="rounded-md p-1 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
-              aria-label="Свернуть панель"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
+          <div className="border-b border-sidebar-border px-5 py-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-sidebar-foreground/55">
+                  Навигация
+                </p>
+                <p className="text-sm font-semibold text-sidebar-foreground">{group.label}</p>
+                <p className="text-sm leading-6 text-sidebar-foreground/65">
+                  Быстрый доступ к ключевым разделам без лишнего шума.
+                </p>
+              </div>
+              <button
+                onClick={onCollapse}
+                className="rounded-md p-2 text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                aria-label="Свернуть навигацию"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
-          {/* Sub-links */}
-          <nav className="flex-1 overflow-y-auto px-2 py-2">
-            <ul className="flex flex-col gap-0.5">
-              {module.subLinks.map((link) => {
+          <div className="flex-1 overflow-y-auto px-3 py-3">
+            <div className="space-y-1">
+              {group.links.map((link) => {
                 const isActive =
-                  location.pathname === link.path ||
-                  location.pathname.startsWith(`${link.path}/`);
-                return (
-                  <li key={link.path}>
-                    <Link
-                      to={link.path}
-                      className={cn(
-                        "flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                        isActive
-                          ? "bg-primary/10 text-primary font-semibold"
-                          : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                      )}
+                  location.pathname === link.path || location.pathname.startsWith(`${link.path}/`);
+                const Icon = link.icon ?? ShieldCheck;
+
+                if (link.isExternal) {
+                  return (
+                    <a
+                      key={link.path}
+                      href={link.path}
+                      className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     >
-                      {link.label}
-                    </Link>
-                  </li>
+                      <Icon className="h-4 w-4" />
+                      <span>{link.label}</span>
+                    </a>
+                  );
+                }
+
+                return (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    className={cn(
+                      "flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span className="truncate">{link.label}</span>
+                  </Link>
                 );
               })}
-            </ul>
-          </nav>
+            </div>
+          </div>
         </motion.aside>
-      )}
+      ) : null}
     </AnimatePresence>
   );
 }
 
-// ─── Topbar ──────────────────────────────────────────────────────────────────
-
 function Topbar({
+  tenantName,
+  supportLabel,
+  sectionLabel,
   onOpenCommandPalette,
   onOpenMobileMenu,
-  currentTenant,
-  tenants,
-  onSwitchTenant,
 }: {
+  tenantName: string;
+  supportLabel?: string;
+  sectionLabel: string;
   onOpenCommandPalette: () => void;
   onOpenMobileMenu: () => void;
-  currentTenant: Tenant;
-  tenants: Tenant[];
-  onSwitchTenant: (t: Tenant) => void;
 }) {
   const { user, logout } = useAuth();
+  const { isDemo } = useDemo();
   const userName = user?.employee
     ? [user.employee.firstName, user.employee.lastName].filter(Boolean).join(" ")
     : user?.email;
   const userRoleLabel = user ? (ROLE_LABELS[user.role] ?? user.role) : "";
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-4 border-b border-border bg-background/80 px-4 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
-      {/* Left: Mobile hamburger + Tenant switcher */}
-      <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/95 backdrop-blur-xl">
+      <div className="flex h-16 items-center gap-3 px-4 sm:px-6 lg:px-8">
         <button
           onClick={onOpenMobileMenu}
-          className="rounded-md p-2 text-foreground/70 hover:bg-accent hover:text-accent-foreground lg:hidden"
-          aria-label="Меню"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-input bg-background text-foreground shadow-sm transition-colors hover:bg-accent lg:hidden"
+          aria-label="Открыть меню"
         >
           <Menu className="h-5 w-5" />
         </button>
 
-        {/* Tenant Switcher */}
-        {tenants.length > 1 && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-card-foreground shadow-sm hover:bg-accent transition-colors">
-                <Building2 className="h-4 w-4 text-muted-foreground" />
-                <span className="max-w-[100px] sm:max-w-[140px] truncate">{currentTenant.name}</span>
-                <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56 max-w-[calc(100vw-32px)]">
-              <DropdownMenuLabel>Переключить школу</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {tenants.map((t) => (
-                <DropdownMenuItem
-                  key={t.id}
-                  onSelect={() => onSwitchTenant(t)}
-                  className={cn(t.id === currentTenant.id && "bg-accent")}
-                >
-                  <Building2 className="mr-2 h-4 w-4" />
-                  {t.name}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-      </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <span className="truncate">{tenantName}</span>
+            <span className="hidden sm:inline">•</span>
+            <span className="hidden truncate sm:inline">{isDemo ? "Demo contour" : "Enterprise workspace"}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <h1 className="truncate text-base font-semibold tracking-[-0.02em] text-foreground">
+              {sectionLabel}
+            </h1>
+            {supportLabel ? (
+              <span className="hidden truncate rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-muted-foreground xl:inline-flex">
+                <LifeBuoy className="mr-1 h-3.5 w-3.5" />
+                {supportLabel}
+              </span>
+            ) : null}
+          </div>
+        </div>
 
-      {/* Center: Command Palette trigger */}
-      <button
-        onClick={onOpenCommandPalette}
-        className="hidden md:flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm text-muted-foreground shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors w-full max-w-sm"
-      >
-        <Search className="h-4 w-4" />
-        <span className="flex-1 text-left">Поиск учеников, счетов, классов…</span>
-        <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground sm:flex">
-          <span className="text-xs">⌘</span>K
-        </kbd>
-      </button>
-
-      {/* Right: User menu */}
-      <div className="flex items-center gap-2">
-        {/* Mobile search */}
         <button
           onClick={onOpenCommandPalette}
-          className="rounded-md p-2 text-foreground/70 hover:bg-accent hover:text-accent-foreground md:hidden"
-          aria-label="Поиск"
+          className="hidden w-full max-w-md items-center gap-3 rounded-md border border-input bg-background px-3 py-2 text-sm text-muted-foreground shadow-sm transition-colors hover:bg-accent md:flex"
         >
-          <Search className="h-5 w-5" />
+          <Search className="h-4 w-4" />
+          <span className="flex-1 text-left">Поиск учеников, документов, модулей…</span>
+          <span className="inline-flex items-center gap-1 rounded border bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
+            <Command className="h-3 w-3" />K
+          </span>
         </button>
 
-        {user && (
+        <Link
+          to="/lms"
+          className="hidden items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent lg:inline-flex"
+        >
+          <GraduationCap className="h-4 w-4 text-primary" />
+          LMS
+        </Link>
+
+        <button
+          onClick={onOpenCommandPalette}
+          className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-input bg-background text-foreground shadow-sm transition-colors hover:bg-accent md:hidden"
+          aria-label="Открыть поиск"
+        >
+          <Search className="h-4 w-4" />
+        </button>
+
+        {user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent transition-colors">
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+              <button className="inline-flex items-center gap-3 rounded-md border border-input bg-background px-2 py-1.5 shadow-sm transition-colors hover:bg-accent">
+                <span className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-sm font-semibold text-primary">
                   {(userName ?? "U").charAt(0).toUpperCase()}
-                </div>
-                <span className="hidden sm:block max-w-[120px] truncate text-foreground">
-                  {userName}
                 </span>
+                <span className="hidden min-w-0 text-left sm:block">
+                  <span className="block truncate text-sm font-medium text-foreground">{userName}</span>
+                  <span className="block truncate text-xs text-muted-foreground">{userRoleLabel}</span>
+                </span>
+                <ChevronsUpDown className="hidden h-4 w-4 text-muted-foreground sm:block" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent align="end" className="w-64">
               <DropdownMenuLabel>
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">{userName}</p>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">{userName}</p>
                   <p className="text-xs text-muted-foreground">{userRoleLabel}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to="/lms">
+                  <GraduationCap className="mr-2 h-4 w-4" />
+                  Перейти в LMS
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem onSelect={logout} className="text-destructive focus:text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />
                 Выйти
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        )}
+        ) : null}
       </div>
     </header>
   );
 }
 
-// ─── Mobile Bottom Sheet ─────────────────────────────────────────────────────
-
 function MobileNav({
   isOpen,
   onClose,
-  modules,
-  activeModuleId,
-  onSelectModule,
+  groups,
+  activeGroupId,
+  onSelectGroup,
 }: {
   isOpen: boolean;
   onClose: () => void;
-  modules: ModuleDefinition[];
-  activeModuleId: string;
-  onSelectModule: (id: string) => void;
+  groups: NavGroup[];
+  activeGroupId: string;
+  onSelectGroup: (id: string) => void;
 }) {
   const location = useLocation();
+  const activeGroup = groups.find((group) => group.id === activeGroupId) ?? groups[0];
 
   return (
     <AnimatePresence>
-      {isOpen && (
+      {isOpen ? (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/50 lg:hidden"
+            className="fixed inset-0 z-50 bg-black/40 lg:hidden"
             onClick={onClose}
           />
-
-          {/* Bottom sheet */}
           <motion.div
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
-            transition={{ type: "spring", stiffness: 400, damping: 35 }}
-            className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-hidden rounded-t-2xl border-t bg-background shadow-floating lg:hidden"
+            transition={{ type: "spring", stiffness: 360, damping: 30 }}
+            className="fixed inset-x-0 bottom-0 z-50 rounded-t-3xl border border-border bg-background p-4 shadow-2xl lg:hidden"
           >
-            {/* Drag handle */}
-            <div className="flex justify-center py-2">
-              <div className="h-1.5 w-12 rounded-full bg-muted" />
-            </div>
-
-            {/* Close button */}
-            <div className="flex justify-end px-4 pb-2">
+            <div className="mx-auto mb-4 h-1.5 w-14 rounded-full bg-muted" />
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Навигация</p>
+                <p className="text-base font-semibold text-foreground">Модули Mirai</p>
+              </div>
               <button
                 onClick={onClose}
-                className="rounded-md p-1 text-muted-foreground hover:bg-accent"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-input bg-background text-foreground shadow-sm"
                 aria-label="Закрыть"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
 
-            {/* Module grid */}
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 px-4 pb-4">
-              {modules.map((mod) => {
-                const Icon = mod.icon;
-                const isActive = mod.id === activeModuleId;
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {groups.map((group) => {
+                const Icon = GROUP_ICONS[group.id] ?? LayoutDashboard;
+                const isActive = group.id === activeGroupId;
                 return (
                   <button
-                    key={mod.id}
-                    onClick={() => {
-                      onSelectModule(mod.id);
-                      onClose();
-                    }}
+                    key={group.id}
+                    onClick={() => onSelectGroup(group.id)}
                     className={cn(
-                      "flex flex-col items-center gap-1.5 rounded-xl p-3 text-xs font-medium transition-colors min-h-[44px]",
+                      "rounded-2xl border px-3 py-4 text-left transition-colors",
                       isActive
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                        ? "border-primary/20 bg-primary/10 text-primary"
+                        : "border-border bg-card text-foreground hover:bg-accent",
                     )}
                   >
-                    <Icon className="h-6 w-6" />
-                    <span className="leading-tight">{mod.label}</span>
+                    <Icon className="mb-3 h-5 w-5" />
+                    <span className="block text-sm font-medium">{group.label}</span>
                   </button>
                 );
               })}
             </div>
 
-            {/* Active module sub-links */}
-            {modules
-              .filter((m) => m.id === activeModuleId)
-              .map((mod) => (
-                <div key={mod.id} className="border-t px-4 pb-6 pt-3">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    {mod.label}
-                  </p>
-                  <ul className="flex flex-col gap-0.5">
-                    {mod.subLinks.map((link) => {
-                      const isActive =
-                        location.pathname === link.path ||
-                        location.pathname.startsWith(`${link.path}/`);
-                      return (
-                        <li key={link.path}>
-                          <Link
-                            to={link.path}
-                            onClick={onClose}
-                            className={cn(
-                              "flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-colors min-h-[44px]",
-                              isActive
-                                ? "bg-primary/10 text-primary"
-                                : "text-foreground hover:bg-accent",
-                            )}
-                          >
-                            {link.label}
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
+            {activeGroup ? (
+              <div className="mt-4 rounded-2xl border border-border bg-card p-3">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  {activeGroup.label}
+                </p>
+                <div className="space-y-1">
+                  {activeGroup.links.map((link) => {
+                    const isActive =
+                      location.pathname === link.path || location.pathname.startsWith(`${link.path}/`);
+                    const Icon = link.icon ?? ShieldCheck;
+                    return link.isExternal ? (
+                      <a
+                        key={link.path}
+                        href={link.path}
+                        className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+                      >
+                        <Icon className="h-4 w-4" />
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link
+                        key={link.path}
+                        to={link.path}
+                        onClick={onClose}
+                        className={cn(
+                          "flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors",
+                          isActive ? "bg-primary/10 text-primary" : "text-foreground hover:bg-accent",
+                        )}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {link.label}
+                      </Link>
+                    );
+                  })}
                 </div>
-              ))}
+              </div>
+            ) : null}
           </motion.div>
         </>
-      )}
+      ) : null}
     </AnimatePresence>
   );
 }
 
-// ─── Main Layout ─────────────────────────────────────────────────────────────
-
 export default function MainLayoutV2() {
-  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
+  const { user, isLoading: authLoading } = useAuth();
+  const { tenant, isLoading: tenantLoading } = useTenant();
+  const { isDemo } = useDemo();
+  const { permissions, isLoading: permissionsLoading } = usePermissions();
 
-  // ── State ──
   const [drawerCollapsed, setDrawerCollapsed] = useState(false);
-  const [activeModuleId, setActiveModuleId] = useState("dashboard");
   const [commandOpen, setCommandOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [currentTenant, setCurrentTenant] = useState<Tenant>(DEMO_TENANTS[0]);
-  const navigate = useNavigate();
+  const role = (user?.role ?? "TEACHER") as UserRole;
 
-  // Derive active module from URL
-  useEffect(() => {
-    const found = MODULES.find(
-      (mod) =>
-        location.pathname === mod.basePath ||
-        location.pathname.startsWith(`${mod.basePath}/`) ||
-        mod.subLinks.some(
-          (sl) =>
-            location.pathname === sl.path || location.pathname.startsWith(`${sl.path}/`),
-        ),
+  const availableLinks = useMemo(() => {
+    return getLinksWithPermissions(
+      role,
+      permissions?.modules ?? [],
+      permissions?.isFullAccess || FULL_ACCESS_ROLES.includes(role),
+      user?.email,
     );
-    if (found) setActiveModuleId(found.id);
-  }, [location.pathname]);
+  }, [permissions?.isFullAccess, permissions?.modules, role, user?.email]);
 
-  // ── Command Palette keyboard shortcut (Ctrl+K / Cmd+K) ──
+  const groupedLinks = useMemo(() => groupModuleLinks(availableLinks), [availableLinks]);
+
+  const [activeGroupId, setActiveGroupId] = useState(() =>
+    resolveActiveGroupId(groupedLinks, location.pathname),
+  );
+
   useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setCommandOpen((prev) => !prev);
+    setActiveGroupId(resolveActiveGroupId(groupedLinks, location.pathname));
+  }, [groupedLinks, location.pathname]);
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setCommandOpen((value) => !value);
       }
     }
+
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  const activeModule = useMemo(
-    () => MODULES.find((m) => m.id === activeModuleId) ?? MODULES[0],
-    [activeModuleId],
-  );
+  const activeGroup = groupedLinks.find((group) => group.id === activeGroupId) ?? groupedLinks[0];
+  const supportLabel = [tenant.supportPhone, tenant.supportEmail].filter(Boolean).join(" · ");
+  const sectionLabel = getErpSectionLabel(location.pathname);
 
-  const handleModuleSelect = useCallback(
-    (id: string) => {
-      setActiveModuleId(id);
-      if (drawerCollapsed) setDrawerCollapsed(false);
+  const handleSelectGroup = useCallback(
+    (groupId: string) => {
+      setActiveGroupId(groupId);
+      setDrawerCollapsed(false);
+      const nextGroup = groupedLinks.find((group) => group.id === groupId);
+      const nextLink = nextGroup?.links[0];
+
+      if (nextLink && location.pathname !== nextLink.path) {
+        navigate(nextLink.path);
+      }
     },
-    [drawerCollapsed],
+    [groupedLinks, location.pathname, navigate],
   );
 
-  // ── Loading / Unauthenticated States ──
-  if (isLoading) {
+  if (authLoading || tenantLoading || permissionsLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
           <Spinner size="lg" />
-          <span className="text-sm text-muted-foreground">Загрузка…</span>
+          <p className="text-sm text-muted-foreground">Подготавливаем рабочее пространство…</p>
         </div>
       </div>
     );
@@ -589,101 +514,134 @@ export default function MainLayoutV2() {
 
   if (!user) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 text-center">
-        <div className="max-w-md space-y-4">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10">
-            <svg
-              className="h-7 w-7 text-primary"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
-              />
-            </svg>
+      <div className="flex min-h-screen items-center justify-center bg-background px-6">
+        <div className="max-w-md rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <ShieldCheck className="h-6 w-6" />
           </div>
-          <p className="text-lg font-semibold text-foreground">Сессия потеряна</p>
-          <p className="text-sm text-muted-foreground">
-            Вы не авторизованы или ваша сессия устарела.
+          <h1 className="text-xl font-semibold tracking-[-0.02em] text-foreground">
+            {isDemo ? "Демо готовится" : "Сессия потеряна"}
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+            {isDemo
+              ? "Откройте демо-контур повторно, чтобы продолжить просмотр интерфейса."
+              : "Авторизуйтесь снова, чтобы вернуться к рабочему пространству школы."}
           </p>
-          <Link
-            to="/auth/login"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
-          >
-            Перейти к входу
-          </Link>
+          <Button className="mt-6" onClick={() => navigate(isDemo ? "/dashboard" : "/auth/login")}>
+            {isDemo ? "Продолжить демо" : "Перейти ко входу"}
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      {/* ── Topbar ── */}
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.08),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(15,23,42,0.06),transparent_26%)]" />
+
       <Topbar
+        tenantName={tenant.name}
+        supportLabel={supportLabel}
+        sectionLabel={sectionLabel}
         onOpenCommandPalette={() => setCommandOpen(true)}
         onOpenMobileMenu={() => setMobileNavOpen(true)}
-        currentTenant={currentTenant}
-        tenants={DEMO_TENANTS}
-        onSwitchTenant={setCurrentTenant}
       />
 
-      {/* ── Body: Rail + Drawer + Content ── */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Desktop sidebar (hidden on mobile) */}
-        <div className="hidden lg:flex h-[calc(100vh-3.5rem)] sticky top-14">
-          <SidebarRail activeModuleId={activeModuleId} onSelect={handleModuleSelect} />
+      <div className="flex min-h-[calc(100vh-4rem)]">
+        <div className="sticky top-16 hidden h-[calc(100vh-4rem)] lg:flex">
+          <SidebarRail
+            groups={groupedLinks}
+            activeGroupId={activeGroupId}
+            onSelect={handleSelectGroup}
+          />
           <SidebarDrawer
-            module={activeModule}
+            group={activeGroup}
             collapsed={drawerCollapsed}
             onCollapse={() => setDrawerCollapsed(true)}
           />
         </div>
 
-        {/* Main content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="min-w-0 flex-1">
           <Toaster position="top-right" richColors />
-          <div className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+          <MissingOpenAiKeyDialog />
+          <div className="mx-auto flex max-w-[1440px] flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
+            <section className="rounded-2xl border border-border/60 bg-card/80 p-5 shadow-sm backdrop-blur sm:p-6">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex rounded-md border border-border bg-muted px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                      Mirai school ERP
+                    </span>
+                    <span className="inline-flex rounded-md border border-primary/20 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
+                      {isDemo ? "Demo contour" : "Enterprise shell"}
+                    </span>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-semibold tracking-[-0.03em] text-foreground">
+                      {sectionLabel}
+                    </h2>
+                    <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">
+                      Чистый двухуровневый интерфейс для управления детьми, финансами, персоналом и школьными сервисами.
+                    </p>
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-xl border border-border bg-background px-4 py-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Школа</p>
+                    <p className="mt-2 text-sm font-medium text-foreground">{tenant.name}</p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-background px-4 py-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Роль</p>
+                    <p className="mt-2 text-sm font-medium text-foreground">{ROLE_LABELS[role] ?? role}</p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-background px-4 py-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Навигация</p>
+                    <p className="mt-2 text-sm font-medium text-foreground">{activeGroup?.label ?? "Обзор"}</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
             <Outlet />
           </div>
         </main>
       </div>
 
-      {/* ── Mobile Navigation (Bottom Sheet) ── */}
       <MobileNav
         isOpen={mobileNavOpen}
         onClose={() => setMobileNavOpen(false)}
-        modules={MODULES}
-        activeModuleId={activeModuleId}
-        onSelectModule={handleModuleSelect}
+        groups={groupedLinks}
+        activeGroupId={activeGroupId}
+        onSelectGroup={handleSelectGroup}
       />
 
-      {/* ── Command Palette (Ctrl+K / Cmd+K) ── */}
       <CommandDialog open={commandOpen} onOpenChange={setCommandOpen}>
-        <CommandInput placeholder="Поиск учеников, счетов, классов…" />
+        <CommandInput placeholder="Поиск модулей и разделов…" />
         <CommandList>
           <CommandEmpty>Ничего не найдено.</CommandEmpty>
-          {MODULES.map((mod) => (
-            <CommandGroup key={mod.id} heading={mod.label}>
-              {mod.subLinks.map((link) => (
-                <CommandItem
-                  key={link.path}
-                  onSelect={() => {
-                    setCommandOpen(false);
-                    navigate(link.path);
-                  }}
-                >
-                  <mod.icon className="mr-2 h-4 w-4" />
-                  {link.label}
-                </CommandItem>
-              ))}
+          {groupedLinks.map((group) => (
+            <CommandGroup key={group.id} heading={group.label}>
+              {group.links.map((link) => {
+                const Icon = link.icon ?? ShieldCheck;
+                return (
+                  <CommandItem
+                    key={link.path}
+                    onSelect={() => {
+                      setCommandOpen(false);
+                      if (link.isExternal) {
+                        window.location.href = link.path;
+                        return;
+                      }
+                      navigate(link.path);
+                    }}
+                  >
+                    <Icon className="mr-2 h-4 w-4" />
+                    {link.label}
+                  </CommandItem>
+                );
+              })}
             </CommandGroup>
           ))}
-          <CommandSeparator />
         </CommandList>
       </CommandDialog>
     </div>

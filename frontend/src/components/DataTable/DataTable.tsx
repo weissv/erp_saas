@@ -1,8 +1,10 @@
 // src/components/DataTable/DataTable.tsx
 import Papa from "papaparse";
 import React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { EmptyListState } from "../ui/EmptyState";
+import { cn } from "../../lib/utils";
+import { Button } from "../ui/button";
 
 export type Column<T> = {
   key: string;
@@ -18,6 +20,13 @@ export function DataTable<T extends Record<string, any>>({
   total,
   onPageChange,
   wrapCells = false,
+  title,
+  description,
+  emptyTitle,
+  emptyDescription,
+  emptyAction,
+  className,
+  toolbar,
 }: {
   data: T[];
   columns: Column<T>[];
@@ -26,16 +35,23 @@ export function DataTable<T extends Record<string, any>>({
   total: number;
   onPageChange: (page: number) => void;
   wrapCells?: boolean;
+  title?: string;
+  description?: string;
+  emptyTitle?: string;
+  emptyDescription?: string;
+  emptyAction?: () => void;
+  className?: string;
+  toolbar?: React.ReactNode;
 }) {
   const pages = Math.max(1, Math.ceil(total / pageSize));
 
   const headerCellCls = wrapCells
-    ? "text-left p-3 whitespace-normal break-words align-top text-[11px] font-bold uppercase tracking-[0.06em] text-tertiary"
-    : "text-left p-3 whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.06em] text-tertiary";
+    ? "px-4 py-3 text-left whitespace-normal break-words align-top text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground"
+    : "px-4 py-3 text-left whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground";
 
   const bodyCellCls = wrapCells
-    ? "p-3 whitespace-normal break-words align-top text-[14px] text-primary"
-    : "p-3 whitespace-nowrap text-[14px] text-primary";
+    ? "px-4 py-3 whitespace-normal break-words align-top text-sm text-foreground"
+    : "px-4 py-3 whitespace-nowrap text-sm text-foreground";
 
   const tableCls = wrapCells ? "w-full table-fixed" : "w-full";
 
@@ -56,25 +72,42 @@ export function DataTable<T extends Record<string, any>>({
   };
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-card">
+    <section className={cn("overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm", className)}>
       {/* Toolbar */}
-      <div className="flex justify-end border-b border-border/40 px-4 py-3">
-        <button
-          className="rounded-full border border-border bg-card px-3.5 py-2 text-[12px] font-semibold text-muted-foreground shadow-subtle transition-colors hover:bg-accent hover:text-foreground"
-          onClick={downloadCsv}
-          aria-label="Экспорт данных в CSV"
-        >
-          Экспорт CSV
-        </button>
+      <div className="flex flex-col gap-4 border-b border-border/50 bg-muted/20 px-4 py-4 sm:px-6">
+        {(title || description || toolbar) && (
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-1">
+              {title ? <h3 className="text-sm font-semibold tracking-[-0.01em] text-foreground">{title}</h3> : null}
+              {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
+            </div>
+            {toolbar ? <div className="flex flex-wrap items-center gap-2">{toolbar}</div> : null}
+          </div>
+        )}
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-xs text-muted-foreground">
+            Показано <span className="font-semibold text-foreground">{data.length}</span> из{" "}
+            <span className="font-semibold text-foreground">{total}</span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={downloadCsv}
+            aria-label="Экспорт данных в CSV"
+          >
+            <Download className="h-4 w-4" />
+            Экспорт CSV
+          </Button>
+        </div>
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto -webkit-overflow-scrolling-touch">
+      <div className="overflow-x-auto [-webkit-overflow-scrolling:touch]">
         <table className={tableCls} role="table">
           <thead>
-            <tr className="border-b border-border/40 bg-muted/50">
+            <tr className="border-b border-border/50 bg-muted/50">
               {columns.map((c) => (
-                <th key={c.key} className={headerCellCls}>
+                <th key={c.key} className={cn(headerCellCls, "sticky top-0 z-10 bg-muted/80 backdrop-blur-sm")}>
                   {c.header}
                 </th>
               ))}
@@ -85,16 +118,17 @@ export function DataTable<T extends Record<string, any>>({
               <tr>
                 <td colSpan={columns.length}>
                   <EmptyListState
-                    title="Нет данных"
-                    description="Данные ещё не добавлены"
+                    title={emptyTitle ?? "Нет данных"}
+                    description={emptyDescription ?? "Данные ещё не добавлены"}
+                    onAction={emptyAction}
                   />
                 </td>
               </tr>
             ) : (
               data.map((row, i) => {
                 const rowClassName = [
-                  "border-b border-border/40 last:border-0 hover:bg-muted/40 transition-colors duration-100",
-                  i % 2 === 1 ? "bg-muted/20" : "",
+                  "border-b border-border/50 last:border-0 transition-colors duration-100 hover:bg-muted/30",
+                  i % 2 === 1 ? "bg-muted/[0.18]" : "",
                 ].join(" ");
 
                 return (
@@ -119,7 +153,7 @@ export function DataTable<T extends Record<string, any>>({
       </div>
 
       {/* Pagination */}
-      <div className="flex flex-col items-center justify-between gap-2 border-t border-border/40 px-4 py-3 text-[13px] sm:flex-row">
+      <div className="flex flex-col items-center justify-between gap-3 border-t border-border/50 px-4 py-4 text-sm sm:flex-row sm:px-6">
         <div className="text-muted-foreground">
           Всего: <span className="font-semibold text-foreground">{total}</span>
         </div>
@@ -127,7 +161,7 @@ export function DataTable<T extends Record<string, any>>({
           <button
             disabled={page <= 1}
             onClick={() => onPageChange(page - 1)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 font-semibold text-foreground shadow-subtle transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
+            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-input bg-background px-3 font-medium text-foreground shadow-sm transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
             aria-label="Предыдущая страница"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
@@ -139,7 +173,7 @@ export function DataTable<T extends Record<string, any>>({
           <button
             disabled={page >= pages}
             onClick={() => onPageChange(page + 1)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 font-semibold text-foreground shadow-subtle transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
+            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-input bg-background px-3 font-medium text-foreground shadow-sm transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
             aria-label="Следующая страница"
           >
             Вперёд
@@ -147,6 +181,6 @@ export function DataTable<T extends Record<string, any>>({
           </button>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
