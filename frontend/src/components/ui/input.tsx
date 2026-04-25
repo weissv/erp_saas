@@ -7,6 +7,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const inputBaseClassName = [
+  "mezon-field",
   "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm",
   "transition-colors duration-150",
   "placeholder:text-muted-foreground",

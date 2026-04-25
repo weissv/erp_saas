@@ -5,6 +5,7 @@ import MainLayout from "../layouts/MainLayout";
 import LmsLayout from "../layouts/LmsLayout";
 import LoginPage from "../pages/LoginPage";
 import DashboardPage from "../pages/DashboardPage";
+import DesignPreviewPage from "../pages/DesignPreviewPage";
 import ChildrenPage from "../pages/ChildrenPage";
 import ChildDetailPage from "../pages/ChildDetailPage";
 import EmployeesPage from "../pages/EmployeesPage";
@@ -146,6 +147,7 @@ export default function Router() {
     <Routes>
       {/* Публичный роут для прохождения контрольных (без авторизации) */}
       <Route path="/exam/:token" element={<ExamTakePage />} />
+      <Route path="/design-preview" element={<DesignPreviewPage />} />
 
       {isDemo ? (
         <Route path="/auth/*" element={<Navigate to="/dashboard" replace />} />
