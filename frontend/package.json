@@ -13,6 +13,7 @@
     "cypress:run": "start-server-and-test 'cross-env VITE_API_URL=http://localhost:4000 npm run dev -- --host 127.0.0.1 --port 5172' http://127.0.0.1:5172 'cross-env CYPRESS_BASE_URL=http://127.0.0.1:5172 cypress run'"
   },
   "dependencies": {
+    "@chenglou/pretext": "^0.0.6",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-checkbox": "^1.3.3",
     "@radix-ui/react-dialog": "^1.1.15",

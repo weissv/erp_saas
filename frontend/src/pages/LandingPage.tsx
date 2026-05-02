@@ -1,6 +1,7 @@
 import { FormEvent, MouseEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, Check, ChevronRight, LogIn, Menu, PlayCircle, X } from "lucide-react";
+import { motion } from "framer-motion";
 import {
   MARKETING_LANGUAGE_OPTIONS,
   getMarketingContent,
@@ -10,6 +11,7 @@ import { getDemoUrl } from "../features/marketing/url";
 import { api } from "../lib/api";
 import { LoginWorkspaceModal } from "../components/modals/LoginWorkspaceModal";
 import { trackMetrikaGoal, trackMetrikaHit } from "../lib/metrika";
+import { AiCoreCanvas } from "../components/marketing/AiCoreCanvas";
 import "../i18n";
 import { setMarketingLanguage } from "../i18n";
 
@@ -22,6 +24,27 @@ const secondaryActionClass =
   "inline-flex items-center justify-center gap-2 rounded-full border border-card bg-surface-primary px-6 py-3 text-sm font-semibold text-text-primary shadow-subtle transition hover:bg-white";
 const tertiaryActionClass =
   "inline-flex items-center justify-center gap-2 rounded-full px-2 py-3 text-sm font-semibold text-macos-blue transition hover:opacity-80";
+
+// Animation Variants
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-50px" },
+  transition: { duration: 0.5, ease: "easeOut" }
+};
+
+const staggerContainer = {
+  initial: { opacity: 0 },
+  whileInView: { opacity: 1 },
+  viewport: { once: true, margin: "-50px" },
+  transition: { staggerChildren: 0.1 }
+};
+
+const staggerItem = {
+  initial: { opacity: 0, y: 20 },
+  whileInView: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, ease: "easeOut" }
+};
 
 function getMarketingViewMode(): "landing" | "success" {
   if (typeof window === "undefined") {
@@ -41,7 +64,7 @@ function SectionHeading({
   description: string;
 }) {
   return (
-    <div className="mx-auto max-w-3xl text-center">
+    <motion.div className="mx-auto max-w-3xl text-center" variants={fadeInUp} initial="initial" whileInView="whileInView" viewport={{ once: true, margin: "-50px" }}>
       <span className="mezon-chip text-[11px] font-semibold uppercase tracking-[0.2em] text-macos-blue">
         {badge}
       </span>
@@ -49,7 +72,7 @@ function SectionHeading({
         {title}
       </h2>
       <p className="mt-4 text-base leading-7 text-text-tertiary sm:text-lg">{description}</p>
-    </div>
+    </motion.div>
   );
 }
 
@@ -304,7 +327,11 @@ export default function LandingPage() {
         </div>
 
         {isMobileNavOpen && (
-          <div className="border-t border-card px-4 pb-4 pt-2 lg:hidden">
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="border-t border-card px-4 pb-4 pt-2 lg:hidden"
+          >
             <nav className="flex flex-col gap-1" aria-label={copy.navigationAriaLabel}>
               {viewMode === "landing"
                 ? content.navItems.map((item) => (
@@ -341,14 +368,14 @@ export default function LandingPage() {
                 </button>
               </div>
             </nav>
-          </div>
+          </motion.div>
         )}
       </header>
 
       <main className="relative z-10">
         {viewMode === "success" ? (
           <section className="mx-auto flex min-h-[calc(100vh-10rem)] max-w-5xl items-center px-4 py-16 sm:px-6 sm:py-20">
-            <div className="glass-panel w-full p-8 sm:p-10 lg:p-14">
+            <motion.div variants={fadeInUp} initial="initial" animate="whileInView" className="glass-panel w-full p-8 sm:p-10 lg:p-14">
               <div className="mx-auto max-w-3xl text-center">
                 <span className="mezon-chip bg-white/90 text-[11px] font-semibold uppercase tracking-[0.2em] text-macos-blue">
                   {copy.successPage.eyebrow}
@@ -371,12 +398,12 @@ export default function LandingPage() {
                   </a>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </section>
         ) : (
           <>
         <section className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:gap-12 sm:px-6 sm:py-16 md:py-20 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] lg:items-center lg:py-24">
-          <div>
+          <motion.div variants={fadeInUp} initial="initial" whileInView="whileInView" viewport={{ once: true }}>
             <span className="mezon-chip text-[11px] font-semibold uppercase tracking-[0.2em] text-macos-blue">
               {copy.hero.badge}
             </span>
@@ -411,17 +438,17 @@ export default function LandingPage() {
               </a>
             </div>
 
-            <div className="mt-10 grid gap-4 sm:grid-cols-3">
+            <motion.div variants={staggerContainer} initial="initial" whileInView="whileInView" viewport={{ once: true }} className="mt-10 grid gap-4 sm:grid-cols-3">
               {content.heroHighlights.map((item) => (
-                <div key={item.title} className="glass-panel p-5">
+                <motion.div variants={staggerItem} key={item.title} className="glass-panel p-5">
                   <p className="text-sm font-semibold text-text-primary">{item.title}</p>
                   <p className="mt-2 text-sm leading-6 text-text-tertiary">{item.description}</p>
-                </div>
+                </motion.div>
               ))}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
-          <div className="glass-panel p-6 sm:p-8">
+          <motion.div variants={fadeInUp} initial="initial" whileInView="whileInView" viewport={{ once: true }} className="glass-panel p-6 sm:p-8">
             <div className="rounded-[1.75rem] border border-[rgba(0,122,255,0.14)] bg-[linear-gradient(135deg,rgba(0,122,255,0.08),rgba(52,199,89,0.05))] p-6">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-macos-blue">
                 {copy.heroPanel.eyebrow}
@@ -432,16 +459,16 @@ export default function LandingPage() {
               <p className="mt-4 text-sm leading-6 text-text-tertiary">{copy.heroPanel.description}</p>
             </div>
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <motion.div variants={staggerContainer} initial="initial" whileInView="whileInView" viewport={{ once: true }} className="mt-6 grid gap-4 sm:grid-cols-2">
               {content.metrics.map((metric) => (
-                <div key={metric.value} className="rounded-3xl border border-card bg-white/80 p-5 backdrop-blur-[18px]">
+                <motion.div variants={staggerItem} key={metric.value} className="rounded-3xl border border-card bg-white/80 p-5 backdrop-blur-[18px]">
                   <p className="text-2xl font-semibold tracking-[-0.03em] text-text-primary">{metric.value}</p>
                   <p className="mt-2 text-sm font-medium text-text-primary">{metric.label}</p>
                   <p className="mt-2 text-sm leading-6 text-text-tertiary">{metric.description}</p>
-                </div>
+                </motion.div>
               ))}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </section>
 
         <section id="capabilities" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 md:py-20">
@@ -451,9 +478,9 @@ export default function LandingPage() {
             description={copy.capabilities.description}
           />
 
-          <div className="mt-12 grid gap-6 lg:grid-cols-2">
+          <motion.div variants={staggerContainer} initial="initial" whileInView="whileInView" viewport={{ once: true, margin: "-50px" }} className="mt-12 grid gap-6 lg:grid-cols-2">
             {content.features.map(({ icon: Icon, title, description, bullets }) => (
-              <article key={title} className="glass-panel p-7">
+              <motion.article variants={staggerItem} key={title} className="glass-panel p-7">
                 <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgba(0,122,255,0.12)] text-macos-blue">
                   <Icon className="h-6 w-6" />
                 </div>
@@ -469,9 +496,9 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-              </article>
+              </motion.article>
             ))}
-          </div>
+          </motion.div>
         </section>
 
         <section id="ai" className="border-y border-card/80 bg-white/50 py-16 backdrop-blur-[18px] sm:py-20">
@@ -482,9 +509,15 @@ export default function LandingPage() {
               description={copy.aiSection.description}
             />
 
-            <div className="mt-12 grid gap-6 lg:grid-cols-3">
+            {/* PRETEXT WOW-FACTOR MODULE */}
+            <motion.div variants={fadeInUp} initial="initial" whileInView="whileInView" viewport={{ once: true }} className="mt-12 mb-12">
+               <AiCoreCanvas />
+            </motion.div>
+
+            <motion.div variants={staggerContainer} initial="initial" whileInView="whileInView" viewport={{ once: true, margin: "-50px" }} className="grid gap-6 lg:grid-cols-3">
               {content.aiScenarios.map(({ icon: Icon, title, description, bullets }) => (
-                <article
+                <motion.article
+                  variants={staggerItem}
                   key={title}
                   className="glass-panel flex h-full flex-col rounded-[2rem] border border-[rgba(0,122,255,0.12)] bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(241,246,255,0.88))] p-7"
                 >
@@ -503,9 +536,9 @@ export default function LandingPage() {
                       </li>
                     ))}
                   </ul>
-                </article>
+                </motion.article>
               ))}
-            </div>
+            </motion.div>
           </div>
         </section>
 
@@ -517,9 +550,9 @@ export default function LandingPage() {
               description={copy.operations.description}
             />
 
-            <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+            <motion.div variants={staggerContainer} initial="initial" whileInView="whileInView" viewport={{ once: true, margin: "-50px" }} className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
               {content.operations.map(({ icon: Icon, title, description, bullets }) => (
-                <article key={title} className="glass-panel p-6">
+                <motion.article variants={staggerItem} key={title} className="glass-panel p-6">
                   <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[rgba(0,122,255,0.12)] text-macos-blue">
                     <Icon className="h-5 w-5" />
                   </div>
@@ -533,9 +566,9 @@ export default function LandingPage() {
                       </li>
                     ))}
                   </ul>
-                </article>
+                </motion.article>
               ))}
-            </div>
+            </motion.div>
           </div>
         </section>
 
@@ -546,9 +579,9 @@ export default function LandingPage() {
             description={copy.audiences.description}
           />
 
-          <div className="mt-12 grid gap-6 lg:grid-cols-3">
+          <motion.div variants={staggerContainer} initial="initial" whileInView="whileInView" viewport={{ once: true, margin: "-50px" }} className="mt-12 grid gap-6 lg:grid-cols-3">
             {content.audiences.map(({ icon: Icon, title, description, bullets }) => (
-              <article key={title} className="glass-panel p-7">
+              <motion.article variants={staggerItem} key={title} className="glass-panel p-7">
                 <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgba(0,122,255,0.12)] text-macos-blue">
                   <Icon className="h-6 w-6" />
                 </div>
@@ -564,9 +597,9 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-              </article>
+              </motion.article>
             ))}
-          </div>
+          </motion.div>
         </section>
 
         <section id="implementation" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 md:py-20">
@@ -576,10 +609,10 @@ export default function LandingPage() {
             description={copy.implementation.description}
           />
 
-          <div className="mt-12 grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)]">
+          <motion.div variants={staggerContainer} initial="initial" whileInView="whileInView" viewport={{ once: true, margin: "-50px" }} className="mt-12 grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)]">
             <div className="grid gap-6">
               {content.implementationSteps.map((step, index) => (
-                <article key={step.title} className="glass-panel p-7">
+                <motion.article variants={staggerItem} key={step.title} className="glass-panel p-7">
                   <div className="flex items-center gap-4">
                     <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-macos-blue text-sm font-semibold text-white">
                       0{index + 1}
@@ -596,11 +629,11 @@ export default function LandingPage() {
                       </li>
                     ))}
                   </ul>
-                </article>
+                </motion.article>
               ))}
             </div>
 
-            <aside className="glass-panel p-7">
+            <motion.aside variants={fadeInUp} className="glass-panel p-7">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-macos-blue">
                 {copy.implementationAside.eyebrow}
               </p>
@@ -622,12 +655,12 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
-            </aside>
-          </div>
+            </motion.aside>
+          </motion.div>
         </section>
 
         <section id="waitlist" className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 sm:pb-16 md:pb-20">
-          <div className="glass-panel overflow-hidden bg-[linear-gradient(135deg,rgba(0,122,255,0.08),rgba(52,199,89,0.08))] p-8 sm:p-10 lg:p-12">
+          <motion.div variants={fadeInUp} initial="initial" whileInView="whileInView" viewport={{ once: true, margin: "-50px" }} className="glass-panel overflow-hidden bg-[linear-gradient(135deg,rgba(0,122,255,0.08),rgba(52,199,89,0.08))] p-8 sm:p-10 lg:p-12">
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.95fr)] lg:items-start">
               <div>
                 <span className="mezon-chip bg-white/90 text-[11px] font-semibold uppercase tracking-[0.2em] text-macos-blue">
@@ -724,7 +757,7 @@ export default function LandingPage() {
                 ) : null}
               </form>
             </div>
-          </div>
+          </motion.div>
         </section>
 
         </>
