@@ -100,7 +100,7 @@ export function AiCoreCanvas() {
       // Text rendering logic with pretext
       ctx.fillStyle = "rgba(29, 29, 31, 0.6)"; // text-tertiary color
       
-      let cursor: any = { index: 0, internalOffset: 0 };
+      let cursor: any = { segmentIndex: 0, graphemeIndex: 0 };
       let y = 20;
       const maxWidth = dimensions.width - 40; // 20px padding
 
@@ -149,7 +149,7 @@ export function AiCoreCanvas() {
         y += lineHeight;
         
         // If we finished the text, we could optionally loop it, but we'll just stop
-        if (cursor.index >= preparedText.segments.length) {
+        if (cursor.segmentIndex >= preparedText.segments.length) {
             break; 
         }
       }
