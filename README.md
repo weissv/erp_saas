@@ -1,121 +1,130 @@
 # Mirai ERP SaaS
 
-Многофункциональная мультитенантная ERP-платформа для школ и дошкольных учреждений с интегрированной LMS, AI-ассистентом, модулем контрольных работ и глубокой интеграцией с 1С:Предприятие.
+A multifunctional, multi-tenant ERP platform for schools and preschools with an integrated LMS, an AI assistant, an examination module, and deep integration with 1C:Enterprise.
 
 ---
 
-## Оглавление
+## Table of Contents
 
-- [Обзор](#обзор)
-- [Архитектура](#архитектура)
-- [Технологический стек](#технологический-стек)
-- [Структура проекта](#структура-проекта)
-- [Быстрый старт](#быстрый-старт)
-- [Переменные окружения](#переменные-окружения)
-- [Backend](#backend)
-  - [API маршруты](#api-маршруты)
-  - [Модули](#модули)
-  - [Сервисы](#сервисы)
-  - [Middleware](#middleware)
-  - [Аутентификация и авторизация](#аутентификация-и-авторизация)
-  - [Мультитенантность](#мультитенантность)
-  - [Очереди (BullMQ)](#очереди-bullmq)
-  - [AI / LLM интеграции](#ai--llm-интеграции)
-  - [Загрузка файлов](#загрузка-файлов)
-- [Frontend](#frontend)
-  - [Страницы и маршруты](#страницы-и-маршруты)
-  - [Компоненты](#компоненты)
-  - [Управление состоянием](#управление-состоянием)
-  - [API клиент](#api-клиент)
-  - [Интернационализация](#интернационализация)
-- [База данных](#база-данных)
-  - [Control Plane (Master DB)](#control-plane-master-db)
-  - [Tenant DB (Схема)](#tenant-db-схема)
-- [Интеграция с 1С](#интеграция-с-1с)
-- [LMS (Система управления обучением)](#lms-система-управления-обучением)
-- [Платформа контрольных работ](#платформа-контрольных-работ)
-- [Тестирование](#тестирование)
-- [Деплой](#деплой)
-  - [Docker Compose](#docker-compose)
-  - [Caddy (reverse proxy)](#caddy-reverse-proxy)
-  - [Cloudflare Tunnel](#cloudflare-tunnel)
-  - [Systemd сервисы](#systemd-сервисы)
-  - [Автодеплой](#автодеплой)
-- [Скрипты](#скрипты)
-- [Лицензия](#лицензия)
+* [Overview](https://www.google.com/search?q=%23overview)
+* [Architecture](https://www.google.com/search?q=%23architecture)
+* [Tech Stack](https://www.google.com/search?q=%23tech-stack)
+* [Project Structure](https://www.google.com/search?q=%23project-structure)
+* [Quick Start](https://www.google.com/search?q=%23quick-start)
+* [Environment Variables](https://www.google.com/search?q=%23environment-variables)
+* [Backend](https://www.google.com/search?q=%23backend)
+* [API Routes](https://www.google.com/search?q=%23api-routes)
+* [Modules](https://www.google.com/search?q=%23modules)
+* [Services](https://www.google.com/search?q=%23services)
+* [Middleware](https://www.google.com/search?q=%23middleware)
+* [Authentication & Authorization](https://www.google.com/search?q=%23authentication--authorization)
+* [Multi-tenancy](https://www.google.com/search?q=%23multi-tenancy)
+* [Queues (BullMQ)](https://www.google.com/search?q=%23queues-bullmq)
+* [AI / LLM Integrations](https://www.google.com/search?q=%23ai--llm-integrations)
+* [File Uploads](https://www.google.com/search?q=%23file-uploads)
 
----
 
-## Обзор
+* [Frontend](https://www.google.com/search?q=%23frontend)
+* [Pages & Routes](https://www.google.com/search?q=%23pages--routes)
+* [Components](https://www.google.com/search?q=%23components)
+* [State Management](https://www.google.com/search?q=%23state-management)
+* [API Client](https://www.google.com/search?q=%23api-client)
+* [Internationalization](https://www.google.com/search?q=%23internationalization)
 
-**Mirai ERP SaaS** — облачная платформа для управления образовательными учреждениями. Каждый клиент (школа/детский сад) получает изолированный поддомен и отдельную базу данных.
 
-### Ключевые возможности
+* [Database](https://www.google.com/search?q=%23database)
+* [Control Plane (Master DB)](https://www.google.com/search?q=%23control-plane-master-db)
+* [Tenant DB (Schema)](https://www.google.com/search?q=%23tenant-db-schema)
 
-| Модуль | Описание |
-|--------|----------|
-| **Управление контингентом** | Дети, родители, группы/классы, временные отсутствия |
-| **Кадры** | Сотрудники, посещаемость, штатное расписание |
-| **Финансы** | Транзакции (приход/расход), баланс, экспорт в Excel |
-| **Склад** | Товары, движения, списания, срок годности |
-| **Закупки** | Заявки с workflow одобрения (Создатель → Директор → Завхоз) |
-| **Кружки** | Запись, посещаемость, оценки |
-| **Питание** | Меню, блюда, ингредиенты, рецепты |
-| **Расписание** | Предметы, кабинеты, временные слоты |
-| **LMS** | Журнал оценок, домашние задания, посещаемость учеников |
-| **Контрольные работы** | Создание экзаменов с AI-проверкой, публичные ссылки |
-| **AI-ассистент** | RAG-чат на основе базы знаний (Gemini + Groq) |
-| **База знаний** | Markdown-статьи с семантическим поиском (pgvector) |
-| **Документооборот** | Шаблоны, привязка к сотрудникам/детям |
-| **Коммуникации** | Уведомления, события, обратная связь, Telegram |
-| **Безопасность** | Журнал происшествий, проверки ПБ, учёт посторонних |
-| **Интеграция 1С** | Двусторонняя синхронизация справочников, документов, регистров |
-| **Аудит** | Полный журнал действий пользователей |
-| **White-label** | Брендирование по тенанту (логотип, цвета, favicon) |
-| **Демо-режим** | Read-only демо-тенант для ознакомления |
+
+* [1C Integration](https://www.google.com/search?q=%231c-integration)
+* [LMS (Learning Management System)](https://www.google.com/search?q=%23lms-learning-management-system)
+* [Examination Platform](https://www.google.com/search?q=%23examination-platform)
+* [Testing](https://www.google.com/search?q=%23testing)
+* [Deployment](https://www.google.com/search?q=%23deployment)
+* [Docker Compose](https://www.google.com/search?q=%23docker-compose)
+* [Caddy (Reverse Proxy)](https://www.google.com/search?q=%23caddy-reverse-proxy)
+* [Cloudflare Tunnel](https://www.google.com/search?q=%23cloudflare-tunnel)
+* [Systemd Services](https://www.google.com/search?q=%23systemd-services)
+* [Auto-deploy](https://www.google.com/search?q=%23auto-deploy)
+
+
+* [Scripts](https://www.google.com/search?q=%23scripts)
+* [License](https://www.google.com/search?q=%23license)
 
 ---
 
-## Архитектура
+## Overview
+
+**Mirai ERP SaaS** is a cloud platform for managing educational institutions. Each client (school/kindergarten) receives an isolated subdomain and a separate database.
+
+### Key Features
+
+| Module | Description |
+| --- | --- |
+| **Student Management** | Children, parents, groups/classes, temporary absences |
+| **HR / Personnel** | Employees, attendance, staffing table |
+| **Finance** | Transactions (income/expense), balance, Excel export |
+| **Inventory** | Items, movements, write-offs, expiration dates |
+| **Procurement** | Purchase requests with approval workflow (Creator → Director → Facilities Manager) |
+| **Clubs** | Enrollment, attendance, grades |
+| **Catering** | Menus, dishes, ingredients, recipes |
+| **Schedule** | Subjects, classrooms, time slots |
+| **LMS** | Gradebook, homework, student attendance |
+| **Exams** | Exam creation with AI grading, public links |
+| **AI Assistant** | RAG chat based on the knowledge base (Gemini + Groq) |
+| **Knowledge Base** | Markdown articles with semantic search (pgvector) |
+| **Document Management** | Templates, linking to employees/students |
+| **Communications** | Notifications, events, feedback, Telegram |
+| **Security** | Incident log, fire safety checks, visitor tracking |
+| **1C Integration** | Two-way sync of catalogs, documents, and registers |
+| **Audit** | Comprehensive user action log |
+| **White-label** | Tenant branding (logo, colors, favicon) |
+| **Demo Mode** | Read-only demo tenant for exploration |
+
+---
+
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Cloudflare Tunnel                         │
+│                     Cloudflare Tunnel                       │
 │      *.mirai-edu.space → Tunnel → Caddy (localhost:80)      │
 └────────────────────────┬────────────────────────────────────┘
                          │
-              ┌──────────┴──────────┐
-              │     Caddy Server     │
-              │   (reverse proxy)    │
-              └───┬─────────────┬────┘
-                  │             │
-          /api, /ws          /*
-                  │             │
-     ┌────────────┴──┐   ┌─────┴──────────┐
-     │   Backend     │   │   Frontend      │
-     │ Express:4000  │   │   Nginx:3000    │
-     │  TypeScript   │   │  React SPA      │
-     └───┬───────┬───┘   └────────────────┘
-         │       │
-    ┌────┴──┐ ┌──┴────┐
-    │ Redis │ │ PG 16 │
-    │ 7     │ │pgvector│
-    └───────┘ └───┬───┘
+               ┌─────────┴──────────┐
+               │    Caddy Server    │
+               │  (reverse proxy)   │
+               └───┬─────────────┬──┘
+                   │             │
+           /api, /ws             /*
+                   │             │
+      ┌────────────┴──┐   ┌──────┴─────────┐
+      │   Backend     │   │   Frontend     │
+      │ Express:4000  │   │   Nginx:3000   │
+      │  TypeScript   │   │   React SPA    │
+      └───┬───────┬───┘   └────────────────┘
+          │       │
+    ┌─────┴─┐  ┌──┴────┐
+    │ Redis │  │ PG 16 │
+    │   7   │  │pgvector│
+    └───────┘  └──┬────┘
                   │
         ┌─────────┴──────────┐
         │                    │
-   ┌────┴─────┐   ┌─────────┴─────────┐
-   │ Master DB│   │  Tenant DBs       │
+   ┌────┴─────┐   ┌──────────┴────────┐
+   │ Master DB│   │    Tenant DBs     │
    │erp_master│   │ erp_db, erp_demo, │
    │(tenants, │   │ erp_test, ...     │
-   │ settings)│   │(вся бизнес-логика)│
+   │ settings)│   │(all business logic)│
    └──────────┘   └───────────────────┘
-```
-
-### Поток запроса
 
 ```
-Браузер → hogwarts.mirai-edu.space/api/children
+
+### Request Flow
+
+```
+Browser → hogwarts.mirai-edu.space/api/children
        ↓
   Cloudflare Tunnel → Caddy
        ↓
@@ -123,1083 +132,1144 @@
        ↓
   Master DB: SELECT * FROM tenants WHERE subdomain = 'hogwarts'
        ↓
-  Создание tenant-scoped Prisma клиента (dbUrl из тенанта)
+  Creation of tenant-scoped Prisma client (dbUrl from tenant)
        ↓
-  req.prisma = изолированный клиент → все запросы идут в БД hogwarts
+  req.prisma = isolated client → all queries go to the 'hogwarts' DB
+
 ```
 
 ---
 
-## Технологический стек
+## Tech Stack
 
 ### Backend
 
-| Технология | Версия | Назначение |
-|-----------|--------|------------|
+| Technology | Version | Purpose |
+| --- | --- | --- |
 | Node.js | 18+ | Runtime |
-| TypeScript | 5.3+ | Язык |
-| Express.js | 4.18 | HTTP-фреймворк |
-| Prisma | 6.19 | ORM + миграции |
-| PostgreSQL | 16 | СУБД (с расширением pgvector) |
-| Redis | 7 | Кэш и очереди |
-| BullMQ | 5.73 | Фоновые задачи |
-| Socket.IO | 4.8 | WebSocket (реал-тайм) |
-| JWT | HS256 | Аутентификация |
-| Zod | 3.23 | Валидация |
-| Stripe | 22.0 | Платежи / подписки |
-| Telegraf | 4.16 | Telegram-бот |
-| Multer | 2.1 | Загрузка файлов |
-| AWS S3 SDK | 3.x | Хранение файлов (S3/R2) |
-| OpenAI SDK | 4.77 | AI (Groq-совместимый) |
+| TypeScript | 5.3+ | Language |
+| Express.js | 4.18 | HTTP framework |
+| Prisma | 6.19 | ORM + migrations |
+| PostgreSQL | 16 | DBMS (with pgvector extension) |
+| Redis | 7 | Cache and queues |
+| BullMQ | 5.73 | Background jobs |
+| Socket.IO | 4.8 | WebSocket (real-time) |
+| JWT | HS256 | Authentication |
+| Zod | 3.23 | Validation |
+| Stripe | 22.0 | Payments / subscriptions |
+| Telegraf | 4.16 | Telegram bot |
+| Multer | 2.1 | File uploads |
+| AWS S3 SDK | 3.x | File storage (S3/R2) |
+| OpenAI SDK | 4.77 | AI (Groq-compatible) |
 | Google Generative AI | 0.24 | Embeddings (Gemini) |
-| Nodemailer | 8.0 | Отправка email |
-| ExcelJS | 4.4 | Генерация Excel |
-| Mammoth | 1.11 | Парсинг DOCX |
-| Archiver | 7.0 | Создание ZIP-архивов |
-| node-cron | 4.2 | Планировщик задач |
+| Nodemailer | 8.0 | Email sending |
+| ExcelJS | 4.4 | Excel generation |
+| Mammoth | 1.11 | DOCX parsing |
+| Archiver | 7.0 | ZIP archive creation |
+| node-cron | 4.2 | Task scheduler |
 
 ### Frontend
 
-| Технология | Версия | Назначение |
-|-----------|--------|------------|
-| React | 18.3 | UI-библиотека |
-| TypeScript | 5.9 | Язык |
-| Vite | 5.2 | Сборщик |
-| React Router | 6.24 | Клиентский роутинг |
-| Tailwind CSS | 3.4 | Утилитарные стили |
-| Radix UI | 1.x–2.x | Headless-компоненты (8 пакетов) |
-| Shadcn/ui | — | Design-система (CVA + Radix) |
-| React Hook Form | 7.52 | Управление формами |
-| Zod | 3.25 | Валидация форм |
-| TanStack Table | 8.21 | Headless таблицы |
-| Recharts | 3.8 | Графики и диаграммы |
-| Framer Motion | 12.38 | Анимации |
-| i18next | 25.6 | Интернационализация |
+| Technology | Version | Purpose |
+| --- | --- | --- |
+| React | 18.3 | UI library |
+| TypeScript | 5.9 | Language |
+| Vite | 5.2 | Bundler |
+| React Router | 6.24 | Client-side routing |
+| Tailwind CSS | 3.4 | Utility-first CSS |
+| Radix UI | 1.x–2.x | Headless components (8 packages) |
+| Shadcn/ui | — | Design system (CVA + Radix) |
+| React Hook Form | 7.52 | Form management |
+| Zod | 3.25 | Form validation |
+| TanStack Table | 8.21 | Headless tables |
+| Recharts | 3.8 | Charts and diagrams |
+| Framer Motion | 12.38 | Animations |
+| i18next | 25.6 | Internationalization |
 | Socket.IO Client | 4.8 | WebSocket |
-| Lucide React | 0.408 | Иконки (1000+) |
-| cmdk | 1.1 | Командная палитра |
-| Sonner | 1.5 | Toast-уведомления |
-| react-grid-layout | 2.2 | Drag&Drop дашборд |
-| react-markdown | 9.0 | Рендеринг Markdown |
-| html2canvas | 1.4 | Экспорт HTML в PNG |
-| papaparse | 5.4 | CSV парсинг |
-| date-fns | 4.1 | Работа с датами |
+| Lucide React | 0.408 | Icons (1000+) |
+| cmdk | 1.1 | Command palette |
+| Sonner | 1.5 | Toast notifications |
+| react-grid-layout | 2.2 | Drag & Drop dashboard |
+| react-markdown | 9.0 | Markdown rendering |
+| html2canvas | 1.4 | HTML to PNG export |
+| papaparse | 5.4 | CSV parsing |
+| date-fns | 4.1 | Date manipulation |
 
-### Инфраструктура
+### Infrastructure
 
-| Технология | Назначение |
-|-----------|------------|
-| Docker + Docker Compose | Контейнеризация |
-| Caddy | Reverse proxy с автоматическим TLS |
-| Cloudflare Tunnel | Безопасный туннель (без открытых портов) |
-| systemd | Управление сервисами (автозапуск, автодеплой) |
-| pgvector | Векторный поиск для RAG |
+| Technology | Purpose |
+| --- | --- |
+| Docker + Docker Compose | Containerization |
+| Caddy | Reverse proxy with automatic TLS |
+| Cloudflare Tunnel | Secure tunnel (no exposed ports) |
+| systemd | Service management (auto-start, auto-deploy) |
+| pgvector | Vector search for RAG |
 
 ---
 
-## Структура проекта
+## Project Structure
 
 ```
 erp_saas/
-├── README.md                    # Этот файл
-├── DEPLOYMENT.md                # Детальный гайд по деплою
-├── Caddyfile                    # Конфигурация reverse proxy
-├── docker-compose.yml           # Оркестрация контейнеров
-├── patch_demo_access.js         # Скрипт для демо-доступа
+├── README.md                    # This file
+├── DEPLOYMENT.md                # Detailed deployment guide
+├── Caddyfile                    # Reverse proxy configuration
+├── docker-compose.yml           # Container orchestration
+├── patch_demo_access.js         # Script for demo access setup
 │
-├── backend/                     # Серверная часть
+├── backend/                     # Server-side
 │   ├── package.json
 │   ├── tsconfig.json
-│   ├── Dockerfile               # Multi-stage Docker сборка
-│   ├── vitest.config.ts         # Конфиг тестов
-│   ├── AI_KEYS_SETUP.md         # Инструкция по API ключам AI
+│   ├── Dockerfile               # Multi-stage Docker build
+│   ├── vitest.config.ts         # Tests configuration
+│   ├── AI_KEYS_SETUP.md         # Instructions for AI API keys
 │   ├── prisma/
-│   │   ├── schema.prisma        # Tenant DB схема (60+ моделей)
+│   │   ├── schema.prisma        # Tenant DB schema (60+ models)
 │   │   ├── master/
-│   │   │   └── schema.prisma    # Control Plane схема (Tenant, GlobalSetting)
-│   │   ├── migrations/          # Prisma миграции
-│   │   ├── seed.ts              # Основной seed
-│   │   ├── seed_school.ts       # Seed школьных данных
-│   │   ├── seed_economics_exam.ts  # Seed контрольной по экономике
-│   │   ├── seed_inventory_items.ts # Seed складских товаров
-│   │   └── seed_knowledge_base.ts  # Seed базы знаний
+│   │   │   └── schema.prisma    # Control Plane schema (Tenant, GlobalSetting)
+│   │   ├── migrations/          # Prisma migrations
+│   │   ├── seed.ts              # Main seed script
+│   │   ├── seed_school.ts       # School data seed
+│   │   ├── seed_economics_exam.ts # Economics exam seed
+│   │   ├── seed_inventory_items.ts # Inventory items seed
+│   │   └── seed_knowledge_base.ts  # Knowledge base seed
 │   └── src/
-│       ├── index.ts             # Точка входа (порт 4000)
-│       ├── app.ts               # Express приложение
-│       ├── config.ts            # Конфигурация из env
-│       ├── prisma.ts            # Prisma клиенты
-│       ├── constants/           # Константы
-│       ├── lib/                 # Внутренние библиотеки
+│       ├── index.ts             # Entry point (port 4000)
+│       ├── app.ts               # Express application
+│       ├── config.ts            # Env configuration
+│       ├── prisma.ts            # Prisma clients
+│       ├── constants/           # Constants
+│       ├── lib/                 # Internal libraries
 │       ├── middleware/          # Express middleware
-│       ├── modules/             # Бизнес-модули (1С, SaaS)
-│       ├── queues/              # BullMQ очереди
-│       ├── routes/              # API маршруты
-│       ├── schemas/             # Zod-схемы валидации
-│       ├── scripts/             # CLI-скрипты (bootstrap, миграции)
-│       ├── services/            # Бизнес-логика
-│       ├── test/                # Тестовая инфраструктура
-│       └── utils/               # Утилиты
+│       ├── modules/             # Business modules (1C, SaaS)
+│       ├── queues/              # BullMQ queues
+│       ├── routes/              # API routes
+│       ├── schemas/             # Zod validation schemas
+│       ├── scripts/             # CLI scripts (bootstrap, migrations)
+│       ├── services/            # Business logic
+│       ├── test/                # Test infrastructure
+│       └── utils/               # Utilities
 │
-├── frontend/                    # Клиентская часть
+├── frontend/                    # Client-side
 │   ├── package.json
 │   ├── tsconfig.json
-│   ├── vite.config.js           # Vite с мульти-entry (ERP + LMS)
-│   ├── tailwind.config.js       # Design-токены
-│   ├── Dockerfile               # Multi-stage Docker сборка
-│   ├── nginx.conf               # Nginx для раздачи статики
-│   ├── index.html               # ERP SPA точка входа
-│   ├── lms.html                 # LMS SPA точка входа
-│   ├── cypress.config.ts        # E2E тесты
+│   ├── vite.config.js           # Vite with multi-entry (ERP + LMS)
+│   ├── tailwind.config.js       # Design tokens
+│   ├── Dockerfile               # Multi-stage Docker build
+│   ├── nginx.conf               # Nginx for static file serving
+│   ├── index.html               # ERP SPA entry point
+│   ├── lms.html                 # LMS SPA entry point (separate app)
+│   ├── cypress.config.ts        # E2E tests
 │   ├── scripts/
-│   │   ├── build.mjs            # Кастомный build-скрипт
-│   │   └── serve-dist.mjs       # Локальный сервер для dist/
+│   │   ├── build.mjs            # Custom build script
+│   │   └── serve-dist.mjs       # Local server for dist/
 │   └── src/
 │       ├── main.tsx             # ERP entry point
-│       ├── lms.tsx              # LMS entry point (отдельное приложение)
-│       ├── router/              # Маршруты (30+ страниц ERP, 7 LMS)
-│       ├── pages/               # Страницы
-│       ├── components/          # Переиспользуемые компоненты
-│       │   ├── ui/              # Атомарные UI-примитивы (Shadcn)
-│       │   ├── DataTable/       # Табличные компоненты (V1, V2)
-│       │   ├── DashboardWidgets/ # Виджеты дашборда
-│       │   ├── dashboard/       # Персонализация дашборда
-│       │   ├── forms/           # Доменные формы (15+)
-│       │   └── modals/          # Модальные окна
-│       ├── features/            # Фичи (AI, 1C, маркетинг)
+│       ├── lms.tsx              # LMS entry point
+│       ├── router/              # Routes (30+ ERP pages, 7 LMS pages)
+│       ├── pages/               # Pages
+│       ├── components/          # Reusable components
+│       │   ├── ui/              # Atomic UI primitives (Shadcn)
+│       │   ├── DataTable/       # Table components (V1, V2)
+│       │   ├── DashboardWidgets/# Dashboard widgets
+│       │   ├── dashboard/       # Dashboard personalization
+│       │   ├── forms/           # Domain forms (15+)
+│       │   └── modals/          # Modal windows
+│       ├── features/            # Features (AI, 1C, marketing)
 │       ├── contexts/            # React Context (Auth, Tenant, Permissions, Demo)
-│       ├── hooks/               # Кастомные хуки (15+)
-│       ├── lib/                 # API клиент, роли, утилиты
-│       ├── types/               # TypeScript типы
-│       ├── i18n/                # Локализация
-│       ├── layouts/             # Layoutы (Auth, Main, LMS)
-│       └── styles/              # Глобальные стили, CSS переменные
+│       ├── hooks/               # Custom hooks (15+)
+│       ├── lib/                 # API client, roles, utilities
+│       ├── types/               # TypeScript types
+│       ├── i18n/                # Localization
+│       ├── layouts/             # Layouts (Auth, Main, LMS)
+│       └── styles/              # Global styles, CSS variables
 │
 ├── cloudflared/
-│   └── config.yml.example       # Шаблон Cloudflare Tunnel
+│   └── config.yml.example       # Cloudflare Tunnel template
 │
 ├── scripts/
-│   ├── setup-ubuntu.sh          # Полный скрипт установки на Ubuntu
-│   ├── erp-saas-autodeploy.sh   # Автодеплой из GitHub
-│   └── erp-saas-stack-start.sh  # Запуск стека при старте системы
+│   ├── setup-ubuntu.sh          # Full setup script for Ubuntu
+│   ├── erp-saas-autodeploy.sh   # Auto-deploy from GitHub
+│   └── erp-saas-stack-start.sh  # Stack start on system boot
 │
 └── systemd/
-    ├── erp-saas-stack.service         # Автозапуск стека
-    ├── erp-saas-autodeploy.service    # Деплой unit
-    └── erp-saas-autodeploy.timer      # Поллинг GitHub каждые 1 мин
+    ├── erp-saas-stack.service         # Stack auto-start unit
+    ├── erp-saas-autodeploy.service    # Deploy unit
+    └── erp-saas-autodeploy.timer      # GitHub polling every 1 min
+
 ```
 
 ---
 
-## Быстрый старт
+## Quick Start
 
-### Требования
+### Requirements
 
-- **Node.js** ≥ 18
-- **PostgreSQL** 16 с расширением `pgvector`
-- **Redis** 7+
-- **Docker** + **Docker Compose** (для продакшена)
+* **Node.js** ≥ 18
+* **PostgreSQL** 16 with `pgvector` extension
+* **Redis** 7+
+* **Docker** + **Docker Compose** (for production)
 
-### Локальная разработка
+### Local Development
 
 ```bash
-# 1. Клонирование
+# 1. Clone
 git clone https://github.com/weissv/erp_saas.git
 cd erp_saas
 
 # 2. Backend
 cd backend
-cp .env.example .env          # Заполнить переменные окружения
+cp .env.example .env          # Fill in environment variables
 npm install
-npm run prisma:generate       # Генерация Prisma клиентов
-npm run prisma:master:push    # Создание Control Plane схемы
-npm run prisma:tenant:deploy  # Применение миграций Tenant DB
+npm run prisma:generate       # Generate Prisma clients
+npm run prisma:master:push    # Create Control Plane schema
+npm run prisma:tenant:deploy  # Apply Tenant DB migrations
 npm run dev                   # → http://localhost:4000
 
-# 3. Frontend (в отдельном терминале)
+# 3. Frontend (in a separate terminal)
 cd frontend
 npm install
 npm run dev                   # → http://localhost:5173
+
 ```
 
-### Запуск через Docker Compose
+### Run via Docker Compose
 
 ```bash
 cd erp_saas
 
-# Заполнить backend/.env и frontend/.env.production
+# Fill in backend/.env and frontend/.env.production
 docker compose up -d --build
 
-# Проверка
+# Verify
 docker compose ps
 curl http://localhost:4000/api/health
 curl http://localhost:3000/health
+
 ```
 
-### Установка на Ubuntu (полная автоматизация)
+### Ubuntu Installation (Fully Automated)
 
 ```bash
 sudo -E bash scripts/setup-ubuntu.sh
+
 ```
 
-Скрипт выполняет:
-1. Установку Docker, Caddy, cloudflared
-2. Клонирование/обновление репозитория
-3. Генерацию секретов (`POSTGRES_PASSWORD`, `JWT_SECRET`, `ENCRYPTION_KEY`)
-4. Настройку Caddyfile и перезагрузку Caddy
-5. Сборку Docker-образов
-6. Запуск PostgreSQL и Redis
-7. Создание БД `erp_master` и применение миграций
-8. Провижининг тенантов: `mirai` (основной), `demo` (только чтение), `test`
-9. Создание первого администратора
-10. Запуск backend и frontend контейнеров
+The script performs:
+
+1. Installation of Docker, Caddy, cloudflared
+2. Cloning/updating the repository
+3. Secret generation (`POSTGRES_PASSWORD`, `JWT_SECRET`, `ENCRYPTION_KEY`)
+4. Caddyfile configuration and Caddy reload
+5. Docker image building
+6. Starting PostgreSQL and Redis
+7. Creating the `erp_master` DB and applying migrations
+8. Provisioning tenants: `mirai` (primary), `demo` (read-only), `test`
+9. Creating the initial administrator
+10. Starting the backend and frontend containers
 
 ---
 
-## Переменные окружения
+## Environment Variables
 
 ### Backend (`backend/.env`)
 
-| Переменная | Обязательная | Описание |
-|-----------|:---:|--------|
-| `DATABASE_URL` | ✅ | URL базы данных тенанта по умолчанию |
-| `MASTER_DATABASE_URL` | ✅ | URL Control Plane базы данных |
-| `JWT_SECRET` | ✅ | Секрет для подписи JWT (обязателен в prod) |
-| `ENCRYPTION_KEY` | ✅ | 32-байтный hex ключ для AES-256-GCM шифрования |
-| `POSTGRES_USER` | ✅ | Пользователь PostgreSQL |
-| `POSTGRES_PASSWORD` | ✅ | Пароль PostgreSQL |
-| `POSTGRES_DB` | ✅ | Имя БД тенанта по умолчанию |
-| `REDIS_URL` | — | URL Redis (по умолчанию `redis://redis:6379`) |
-| `PORT` | — | Порт бэкенда (по умолчанию `4000`) |
+| Variable | Required | Description |
+| --- | --- | --- |
+| `DATABASE_URL` | ✅ | Default tenant database URL |
+| `MASTER_DATABASE_URL` | ✅ | Control Plane database URL |
+| `JWT_SECRET` | ✅ | Secret for signing JWT (required in prod) |
+| `ENCRYPTION_KEY` | ✅ | 32-byte hex key for AES-256-GCM encryption |
+| `POSTGRES_USER` | ✅ | PostgreSQL user |
+| `POSTGRES_PASSWORD` | ✅ | PostgreSQL password |
+| `POSTGRES_DB` | ✅ | Default tenant DB name |
+| `REDIS_URL` | — | Redis URL (default `redis://redis:6379`) |
+| `PORT` | — | Backend port (default `4000`) |
 | `NODE_ENV` | — | `development` / `production` |
-| `CORS_ORIGIN` | — | Разрешённые origins для CORS |
-| `GROQ_API_KEY` | — | API ключ Groq для AI-чата |
-| `GEMINI_API_KEY` | — | API ключ Google Gemini для embeddings |
-| `GOOGLE_DRIVE_API_KEY` | — | API ключ Google Drive для синхронизации документов |
-| `GOOGLE_DRIVE_FOLDER_ID` | — | ID папки Google Drive |
-| `STRIPE_SECRET_KEY` | — | Секретный ключ Stripe |
-| `STRIPE_WEBHOOK_SECRET` | — | Webhook секрет Stripe |
-| `TELEGRAM_BOT_TOKEN` | — | Токен Telegram-бота |
-| `WAITLIST_TELEGRAM_ADMIN_CHAT_ID` | — | Chat ID администратора для мгновенных waitlist-заявок |
-| `STORAGE_BUCKET` | — | Имя S3/R2 бакета |
-| `STORAGE_REGION` | — | Регион S3 |
-| `STORAGE_ENDPOINT` | — | Endpoint S3/R2 |
-| `STORAGE_ACCESS_KEY_ID` | — | Ключ доступа S3 |
-| `STORAGE_SECRET_ACCESS_KEY` | — | Секретный ключ S3 |
-| `SMTP_HOST` | — | SMTP сервер |
-| `SMTP_PORT` | — | SMTP порт |
-| `SMTP_USER` | — | SMTP пользователь |
-| `SMTP_PASS` | — | SMTP пароль |
-| `INITIAL_ADMIN_EMAIL` | — | Email первого администратора |
-| `INITIAL_ADMIN_PASSWORD` | — | Пароль первого администратора |
-| `INITIAL_TENANT_SUBDOMAIN` | — | Поддомен первого тенанта (по умолчанию `mirai`) |
+| `CORS_ORIGIN` | — | Allowed CORS origins |
+| `GROQ_API_KEY` | — | Groq API key for AI chat |
+| `GEMINI_API_KEY` | — | Google Gemini API key for embeddings |
+| `GOOGLE_DRIVE_API_KEY` | — | Google Drive API key for document sync |
+| `GOOGLE_DRIVE_FOLDER_ID` | — | Google Drive folder ID |
+| `STRIPE_SECRET_KEY` | — | Stripe secret key |
+| `STRIPE_WEBHOOK_SECRET` | — | Stripe webhook secret |
+| `TELEGRAM_BOT_TOKEN` | — | Telegram bot token |
+| `WAITLIST_TELEGRAM_ADMIN_CHAT_ID` | — | Admin Chat ID for instant waitlist notifications |
+| `STORAGE_BUCKET` | — | S3/R2 bucket name |
+| `STORAGE_REGION` | — | S3 region |
+| `STORAGE_ENDPOINT` | — | S3/R2 endpoint |
+| `STORAGE_ACCESS_KEY_ID` | — | S3 access key |
+| `STORAGE_SECRET_ACCESS_KEY` | — | S3 secret key |
+| `SMTP_HOST` | — | SMTP server |
+| `SMTP_PORT` | — | SMTP port |
+| `SMTP_USER` | — | SMTP user |
+| `SMTP_PASS` | — | SMTP password |
+| `INITIAL_ADMIN_EMAIL` | — | First admin's email |
+| `INITIAL_ADMIN_PASSWORD` | — | First admin's password |
+| `INITIAL_TENANT_SUBDOMAIN` | — | Subdomain for the first tenant (default `mirai`) |
 
 ### Frontend (`frontend/.env.production`)
 
-| Переменная | Описание |
-|-----------|---------|
-| `VITE_API_URL` | URL бэкенда (например, `https://api.mirai-edu.space`) |
-| `VITE_TELEGRAM_BOT_NAME` | Имя Telegram-бота для интеграции |
-| `VITE_MARKETING_HOSTNAME` | Хосты маркетинговой страницы (через запятую) |
+| Variable | Description |
+| --- | --- |
+| `VITE_API_URL` | Backend URL (e.g., `https://api.mirai-edu.space`) |
+| `VITE_TELEGRAM_BOT_NAME` | Telegram bot username for integration |
+| `VITE_MARKETING_HOSTNAME` | Marketing page hosts (comma-separated) |
 
 ---
 
 ## Backend
 
-### API маршруты
+### API Routes
 
-#### Публичные (без авторизации)
+#### Public (No Auth Required)
 
-| Метод | Путь | Описание |
-|-------|------|---------|
+| Method | Path | Description |
+| --- | --- | --- |
 | `GET` | `/api/health` | Health check |
-| `POST` | `/api/auth/login` | Вход в систему |
-| `POST` | `/api/auth/demo-access` | Быстрый доступ к демо-тенанту |
-| `GET` | `/api/public/exams/:id` | Публичный доступ к контрольной |
-| `GET` | `/api/tenant` | Информация о тенанте (брендинг) |
+| `POST` | `/api/auth/login` | Login |
+| `POST` | `/api/auth/demo-access` | Quick access to the demo tenant |
+| `GET` | `/api/public/exams/:id` | Public exam access |
+| `GET` | `/api/tenant` | Tenant info (branding) |
 
-#### Интеграция 1С (API Key)
+#### 1C Integration (API Key)
 
-| Метод | Путь | Описание |
-|-------|------|---------|
-| `POST` | `/api/v1/integration/*` | Приём данных из 1С (push) |
-| `GET` | `/api/v1/integration/sync-status` | Статус синхронизации |
+| Method | Path | Description |
+| --- | --- | --- |
+| `POST` | `/api/v1/integration/*` | Receive data from 1C (push) |
+| `GET` | `/api/v1/integration/sync-status` | Synchronization status |
 
-#### Защищённые маршруты (JWT)
+#### Protected Routes (JWT)
 
-| Модуль | Базовый путь | Операции |
-|--------|-------------|----------|
-| Дети | `/api/children` | CRUD, поиск, фильтрация, пагинация |
-| Родители | `/api/children/:id/parents` | CRUD |
-| Временные отсутствия | `/api/children/:id/absences` | CRUD |
-| Группы | `/api/groups` | CRUD |
-| Сотрудники | `/api/employees` | CRUD, посещаемость |
-| Пользователи | `/api/users` | CRUD, управление ролями |
-| Финансы | `/api/finance` | CRUD, баланс, экспорт |
-| Склад | `/api/inventory` | CRUD, движения, просрочки |
-| Закупки | `/api/procurement` | CRUD, workflow одобрения |
-| Кружки | `/api/clubs` | CRUD, записи, рейтинги |
-| Посещаемость | `/api/attendance` | Отметки, статистика |
-| Расписание | `/api/schedule` | Предметы, слоты, кабинеты |
-| Меню | `/api/menu` | Меню, блюда, ингредиенты |
-| Техобслуживание | `/api/maintenance` | Заявки с workflow |
-| Документы | `/api/documents` | Загрузка, шаблоны |
-| Безопасность | `/api/security` | Журнал инцидентов |
-| Уведомления | `/api/notifications` | CRUD |
-| События | `/api/events` | CRUD |
-| Обратная связь | `/api/feedback` | CRUD, ответы |
-| Журнал действий | `/api/action-log` | Чтение |
-| База знаний | `/api/knowledge-base` | CRUD, семантический поиск |
-| AI-ассистент | `/api/ai` | Чат, управление документами |
-| Контрольные | `/api/exams` | CRUD, AI-проверка, результаты |
-| LMS | `/api/lms/*` | Оценки, ДЗ, расписание, посещаемость |
-| Файлы | `/api/upload` | Загрузка в S3/R2 |
-| Telegram | `/api/telegram` | Настройка бота, привязка пользователей |
-| Настройки 1С | `/api/integrations/onec` | Конфигурация |
-| Роли и права | `/api/permissions` | CRUD прав доступа по ролям |
-| Дашборд | `/api/dashboard` | Персонализация |
-| Штатное расписание | `/api/staffing` | Позиции, ставки |
+| Module | Base Path | Operations |
+| --- | --- | --- |
+| Children | `/api/children` | CRUD, search, filter, pagination |
+| Parents | `/api/children/:id/parents` | CRUD |
+| Temporary Absences | `/api/children/:id/absences` | CRUD |
+| Groups | `/api/groups` | CRUD |
+| Employees | `/api/employees` | CRUD, attendance |
+| Users | `/api/users` | CRUD, role management |
+| Finance | `/api/finance` | CRUD, balances, exports |
+| Inventory | `/api/inventory` | CRUD, movements, expirations |
+| Procurement | `/api/procurement` | CRUD, approval workflow |
+| Clubs | `/api/clubs` | CRUD, enrollments, ratings |
+| Attendance | `/api/attendance` | Marks, statistics |
+| Schedule | `/api/schedule` | Subjects, slots, classrooms |
+| Catering Menu | `/api/menu` | Menus, dishes, ingredients |
+| Maintenance | `/api/maintenance` | Requests with workflow |
+| Documents | `/api/documents` | Uploads, templates |
+| Security | `/api/security` | Incident logs |
+| Notifications | `/api/notifications` | CRUD |
+| Events | `/api/events` | CRUD |
+| Feedback | `/api/feedback` | CRUD, responses |
+| Action Log | `/api/action-log` | Read access |
+| Knowledge Base | `/api/knowledge-base` | CRUD, semantic search |
+| AI Assistant | `/api/ai` | Chat, document management |
+| Exams | `/api/exams` | CRUD, AI grading, results |
+| LMS | `/api/lms/*` | Grades, homework, schedule, attendance |
+| Uploads | `/api/upload` | Upload to S3/R2 |
+| Telegram | `/api/telegram` | Bot config, user linking |
+| 1C Settings | `/api/integrations/onec` | Configuration |
+| Roles & Permissions | `/api/permissions` | CRUD access rights by role |
+| Dashboard | `/api/dashboard` | Personalization |
+| Staffing Table | `/api/staffing` | Positions, capacities |
 
-### Модули
+### Modules
 
-#### Интеграция с 1С (`src/modules/onec/`)
+#### 1C Integration (`src/modules/onec/`)
 
-Двусторонняя интеграция с «1С:Предприятие» через OData и Push API:
+Two-way integration with "1C:Enterprise" via OData and Push API:
 
-- **Pull (OData)**: Периодический опрос 1С сервера через OData API
-  - Финансовые документы (ПКО, РКО, банковские выписки)
-  - Контрагенты, физические лица, статьи ДДС
-  - Справочники (номенклатура, организации, сотрудники, должности, склады и т.д.)
-  - Кадровые документы (приём, увольнение, отпуск)
-  - Зарплатные документы
-  - Регистры накопления и сведений
-  - UTF-8 Basic Auth, настраиваемый таймаут
-- **Push (REST)**: 1С отправляет данные на наш endpoint
-  - Bearer-токен аутентификация (SHA-256 хэш)
-  - BullMQ очередь для обработки
-  - Audit log для каждого синк-задания
+* **Pull (OData)**: Periodic polling of the 1C server via OData API
+* Financial documents (cash receipts, payments, bank statements)
+* Counterparties, individuals, cash flow items
+* Catalogs (nomenclature, organizations, employees, positions, warehouses, etc.)
+* HR documents (hiring, firing, vacations)
+* Payroll documents
+* Accumulation and information registers
+* UTF-8 Basic Auth, configurable timeouts
 
-#### SaaS модуль (`src/modules/saas/`)
 
-Управление жизненным циклом подписок:
+* **Push (REST)**: 1C sends data to our endpoint
+* Bearer-token authentication (SHA-256 hash)
+* BullMQ queue for processing
+* Audit log for each sync task
+
+
+
+#### SaaS Module (`src/modules/saas/`)
+
+Subscription lifecycle management:
 
 ```
-ACTIVE → SOFT_LOCKED (1 день) → HARD_LOCKED (14 дней) → PURGING (60 дней) → PURGED
+ACTIVE → SOFT_LOCKED (1 day) → HARD_LOCKED (14 days) → PURGING (60 days) → PURGED
+
 ```
 
-- Обработка Stripe Webhooks
-- Провижининг тенанта при оплате подписки
-- Автоматическое создание БД и применение миграций
-- Grace-периоды при неоплате
+* Stripe Webhooks processing
+* Tenant provisioning upon payment
+* Automatic DB creation and migration application
+* Grace periods for unpaid states
 
-### Сервисы
+### Services
 
-| Сервис | Описание |
-|--------|---------|
-| `AiService` | Gemini embeddings (768-dim), Groq чат, синхронизация Google Drive |
-| `ChildService` | Управление детьми с поиском, фильтрацией, пагинацией |
-| `EmployeeService` | Управление персоналом + посещаемость сотрудников |
-| `KnowledgeBaseService` | Статьи + семантический векторный поиск (pgvector) |
-| `StorageService` | Загрузка в S3/R2 с tenant-scoped путями |
-| `PermissionService` | RBAC — ролевой контроль доступа |
-| `ProcurementService` | Workflow закупок (Создатель → Одобряющий → Принимающий) |
-| `InventorySyncService` | Синхронизация складских документов с 1С |
-| `SystemSettingsService` | Персистентное key-value хранилище настроек |
-| `TelegramService` | Telegram-бот + привязка к пользователям |
-| `TenantIntegrationsService` | Управление per-tenant учётными данными (с 1-мин кэшем) |
-| `EncryptionService` | AES-256-GCM для шифрования BYOK ключей |
-| `UserService` | Аутентификация и жизненный цикл пользователей |
-| `ExamAiService` | AI-проверка контрольных работ (открытые вопросы) |
-| `CronJitterService` | Рандомизация расписания cron для предотвращения thundering herd |
+| Service | Description |
+| --- | --- |
+| `AiService` | Gemini embeddings (768-dim), Groq chat, Google Drive sync |
+| `ChildService` | Children management with search, filter, pagination |
+| `EmployeeService` | Personnel management + employee attendance |
+| `KnowledgeBaseService` | Articles + semantic vector search (pgvector) |
+| `StorageService` | S3/R2 uploads with tenant-scoped paths |
+| `PermissionService` | RBAC — role-based access control |
+| `ProcurementService` | Procurement workflow (Creator → Approver → Receiver) |
+| `InventorySyncService` | Syncing inventory documents with 1C |
+| `SystemSettingsService` | Persistent key-value settings store |
+| `TelegramService` | Telegram bot + user linking |
+| `TenantIntegrationsService` | Per-tenant credentials management (1-min cache) |
+| `EncryptionService` | AES-256-GCM for BYOK key encryption |
+| `UserService` | Authentication and user lifecycle |
+| `ExamAiService` | AI grading for exams (open-ended questions) |
+| `CronJitterService` | Randomizes cron schedules to prevent thundering herd |
 
 ### Middleware
 
-| Middleware | Назначение |
-|-----------|-----------|
-| `tenantResolver` | Извлечение поддомена → поиск тенанта в Master DB → создание scoped Prisma клиента |
-| `auth` | JWT из cookie / Authorization header → `req.user` (id, role, employeeId) |
-| `checkRole` | Проверка доступа по ролям (массив разрешённых ролей) |
-| `validate` | Валидация request body/params/query через Zod-схемы |
-| `errorHandler` | Централизованная обработка ошибок (Zod, Prisma, JWT, операционные) |
-| `actionLogger` | Аудит действий пользователей (action + details → ActionLog) |
+| Middleware | Purpose |
+| --- | --- |
+| `tenantResolver` | Extracts subdomain → finds tenant in Master DB → creates scoped Prisma client |
+| `auth` | JWT from cookie / Auth header → `req.user` (id, role, employeeId) |
+| `checkRole` | Role-based access check (array of allowed roles) |
+| `validate` | Validates request body/params/query via Zod schemas |
+| `errorHandler` | Centralized error handling (Zod, Prisma, JWT, operational errors) |
+| `actionLogger` | User action audit (action + details → ActionLog) |
 | `cors` | Cross-Origin Resource Sharing |
 | `morgan` | HTTP request logging |
-| `cookie-parser` | Парсинг cookies |
+| `cookie-parser` | Cookie parsing |
 
-### Аутентификация и авторизация
+### Authentication & Authorization
 
-- **Метод**: JWT (HS256), время жизни — 12 часов
-- **Хранение токена**: HTTP-only cookie (prod: `secure` + `sameSite: none`)
-- **Fallback**: заголовок `Authorization: Bearer <token>`
-- **Роли** (7 типов):
+* **Method**: JWT (HS256), lifetime — 12 hours
+* **Token Storage**: HTTP-only cookie (prod: `secure` + `sameSite: none`)
+* **Fallback**: Header `Authorization: Bearer <token>`
+* **Roles** (7 types):
 
-| Роль | Описание | Полный доступ |
-|------|---------|:---:|
-| `DEVELOPER` | Разработчик | ✅ |
-| `DIRECTOR` | Директор | ✅ |
-| `DEPUTY` | Завуч | — |
-| `ADMIN` | Администратор | — |
-| `TEACHER` | Учитель | — |
-| `ACCOUNTANT` | Бухгалтер | — |
-| `ZAVHOZ` | Завхоз | — |
+| Role | Description | Full Access |
+| --- | --- | --- |
+| `DEVELOPER` | Developer | ✅ |
+| `DIRECTOR` | Director / Principal | ✅ |
+| `DEPUTY` | Deputy Principal | — |
+| `ADMIN` | Administrator | — |
+| `TEACHER` | Teacher | — |
+| `ACCOUNTANT` | Accountant | — |
+| `ZAVHOZ` | Facilities Manager | — |
 
-- **DEVELOPER** и **DIRECTOR** имеют полный доступ ко всем модулям
-- Для остальных ролей доступ контролируется через `RolePermission` (модули + CRUD флаги)
+* **DEVELOPER** and **DIRECTOR** have full access to all modules.
+* For other roles, access is controlled via `RolePermission` (modules + CRUD flags).
 
-### Мультитенантность
+### Multi-tenancy
 
-Архитектура **database-per-tenant** с полной изоляцией данных:
+**Database-per-tenant** architecture with full data isolation:
 
-1. **Поддомен-based роутинг**: `hogwarts.mirai-edu.space` → `subdomain = 'hogwarts'`
-2. **Control Plane (Master DB)**: хранит метаданные тенантов (`subdomain`, `dbUrl`, `status`)
-3. **Tenants**: каждый получает отдельную PostgreSQL БД
-4. **Prisma клиент**: создаётся per-request с подключением к БД тенанта
-5. **AsyncLocalStorage**: tenant context доступен в любом месте кода
+1. **Subdomain-based routing**: `hogwarts.mirai-edu.space` → `subdomain = 'hogwarts'`
+2. **Control Plane (Master DB)**: Stores tenant metadata (`subdomain`, `dbUrl`, `status`)
+3. **Tenants**: Each gets a separate PostgreSQL DB
+4. **Prisma Client**: Created per-request with a connection to the tenant's DB
+5. **AsyncLocalStorage**: Tenant context is available anywhere in the code
 
 ```
-Tenant "hogwarts" → erp_hogwarts (своя изолированная БД)
-Tenant "demo"     → erp_demo     (read-only демо)
-Tenant "mirai"    → erp_db       (основная школа)
+Tenant "hogwarts" → erp_hogwarts (its own isolated DB)
+Tenant "demo"     → erp_demo     (read-only demo)
+Tenant "mirai"    → erp_db       (main school)
+
 ```
 
-**Жизненный цикл тенанта:**
-- `TRIAL` → `ACTIVE` → `SUSPENDED` → `DEACTIVATED`
-- Stripe подписка управляет переходами
+**Tenant Lifecycle:**
 
-### Очереди (BullMQ)
+* `TRIAL` → `ACTIVE` → `SUSPENDED` → `DEACTIVATED`
+* Managed by Stripe subscriptions
 
-| Очередь | Назначение | Частота |
-|---------|-----------|---------|
-| `onec-sync` | Синхронизация с 1С через OData | Каждые 15 минут (настраивается) |
-| `onec-push` | Обработка входящих webhook от 1С | По событию |
+### Queues (BullMQ)
 
-- **Retry**: 3 попытки с экспоненциальной задержкой
-- **Автоочистка**: хранит последние 50 завершённых + 100 неудачных заданий
-- **Изоляция**: задания привязаны к конкретному тенанту
+| Queue | Purpose | Frequency |
+| --- | --- | --- |
+| `onec-sync` | Synchronization with 1C via OData | Every 15 mins (configurable) |
+| `onec-push` | Processing incoming webhooks from 1C | On event |
 
-### AI / LLM интеграции
+* **Retry**: 3 attempts with exponential backoff
+* **Auto-cleanup**: Keeps the last 50 completed + 100 failed jobs
+* **Isolation**: Jobs are tied to specific tenants
 
-| Провайдер | Назначение | Модель | Бесплатный лимит |
-|-----------|-----------|--------|-----------------|
-| **Google Gemini** | Embeddings (768-dim векторы) | `text-embedding-004` | 1,500 запросов/день |
-| **Groq** | AI-чат (основной / быстрый / мощный) | `qwen/qwen3-32b`, `llama-3.1-8b-instant`, `openai/gpt-oss-120b` | 14,400 запросов/день |
-| **OpenAI** | BYOK — пользовательский ключ (per-tenant) | Выбор пользователя | Аккаунт пользователя |
-| **Google Drive** | Автоматическая синхронизация учебных материалов | — | Google API |
+### AI / LLM Integrations
+
+| Provider | Purpose | Model | Free Tier |
+| --- | --- | --- | --- |
+| **Google Gemini** | Embeddings (768-dim vectors) | `text-embedding-004` | 1,500 req/day |
+| **Groq** | AI chat (basic / fast / powerful) | `qwen/qwen3-32b`, `llama-3.1-8b-instant`, `openai/gpt-oss-120b` | 14,400 req/day |
+| **OpenAI** | BYOK — custom key (per-tenant) | User's choice | User's account |
+| **Google Drive** | Auto-sync of educational materials | — | Google API |
 
 **RAG Pipeline:**
-1. Документы → разбиваются на чанки
-2. Чанки → Gemini `text-embedding-004` → 768-dim вектор
-3. Векторы → PostgreSQL + pgvector
-4. Запрос пользователя → embedding → cosine similarity search → top-K документов
-5. Top-K + запрос → Groq `qwen3-32b` → ответ с контекстом
+
+1. Documents → split into chunks
+2. Chunks → Gemini `text-embedding-004` → 768-dim vector
+3. Vectors → PostgreSQL + pgvector
+4. User Query → embedding → cosine similarity search → top-K docs
+5. Top-K + query → Groq `qwen3-32b` → response with context
 
 **BYOK (Bring Your Own Key):**
-- OpenAI ключ шифруется AES-256-GCM перед сохранением
-- В БД хранится только ciphertext + IV + auth tag
-- Plaintext ключ **никогда** не сохраняется
 
-### Загрузка файлов
+* OpenAI key is AES-256-GCM encrypted before saving
+* Only ciphertext + IV + auth tag are stored in the DB
+* Plaintext key is **never** saved
 
-- **Хранилище**: S3 или Cloudflare R2 (через AWS SDK)
-- **Путь**: `/{tenantId}/{userId}/{randomToken}_{filename}`
-- **Макс. размер**: 50 MB
-- **Безопасность**: валидация MIME-типа, санитизация имени файла
-- **Изоляция**: tenant-scoped пути, контроль владельца
+### File Uploads
+
+* **Storage**: S3 or Cloudflare R2 (via AWS SDK)
+* **Path**: `/{tenantId}/{userId}/{randomToken}_{filename}`
+* **Max size**: 50 MB
+* **Security**: MIME-type validation, filename sanitization
+* **Isolation**: Tenant-scoped paths, owner control
 
 ---
 
 ## Frontend
 
-### Страницы и маршруты
+### Pages & Routes
 
-#### ERP (30+ маршрутов)
+#### ERP (30+ routes)
 
-| Путь | Компонент | Роли | Описание |
-|------|-----------|------|---------|
-| `/dashboard` | DashboardPage | Все | Главный дашборд с виджетами |
-| `/children` | ChildrenPage | DIRECTOR, DEPUTY, ADMIN | Список детей |
-| `/children/:id` | ChildDetailPage | DIRECTOR, DEPUTY, ADMIN | Профиль ребёнка |
-| `/employees` | EmployeesPage | DIRECTOR, DEPUTY, ADMIN | Список сотрудников |
-| `/schedule` | SchedulePage | DIRECTOR, DEPUTY, ADMIN, TEACHER | Расписание уроков |
-| `/attendance` | AttendancePage | DIRECTOR, DEPUTY, ADMIN, TEACHER | Посещаемость |
-| `/clubs` | ClubsPage | DIRECTOR, DEPUTY, ADMIN, ACCOUNTANT, TEACHER | Кружки |
-| `/finance` | FinancePage | DIRECTOR, DEPUTY, ADMIN, ACCOUNTANT | Финансы |
-| `/inventory` | InventoryPage | DIRECTOR, DEPUTY, ADMIN, ZAVHOZ | Склад |
-| `/menu` | MenuPage | DIRECTOR, DEPUTY, ADMIN, ZAVHOZ | Меню питания |
-| `/recipes` | RecipesPage | DIRECTOR, DEPUTY, ADMIN, ZAVHOZ | Рецепты |
-| `/procurement` | ProcurementPage | DIRECTOR, DEPUTY, ADMIN, ACCOUNTANT, ZAVHOZ | Закупки |
-| `/maintenance` | MaintenancePage | DIRECTOR, DEPUTY, ADMIN, ZAVHOZ | Техобслуживание |
-| `/security` | SecurityPage | DIRECTOR, DEPUTY, ADMIN, ZAVHOZ | Безопасность |
-| `/documents` | DocumentsPage | DIRECTOR, DEPUTY, ADMIN | Документы |
-| `/calendar` | CalendarPage | DIRECTOR, DEPUTY, ADMIN, ZAVHOZ | Календарь |
-| `/feedback` | FeedbackPage | Все | Обратная связь |
-| `/integration` | IntegrationPage | DIRECTOR, DEPUTY, ADMIN, ACCOUNTANT | Импорт/экспорт |
-| `/onec-data` | OneCDataPage | DIRECTOR, DEPUTY, ADMIN, ACCOUNTANT | Просмотр данных 1С |
-| `/action-log` | ActionLogPage | DIRECTOR, DEPUTY, ADMIN | Журнал аудита |
-| `/notifications` | NotificationsPage | DIRECTOR, DEPUTY, ADMIN | Уведомления |
-| `/ai-assistant` | AiAssistantPage | DIRECTOR, DEPUTY, ADMIN, TEACHER | AI-ассистент |
-| `/users` | UsersPage | DIRECTOR, DEPUTY, ADMIN | Управление пользователями |
-| `/groups` | GroupsPage | DIRECTOR, DEPUTY, ADMIN | Группы/классы |
-| `/staffing` | StaffingPage | DIRECTOR | Штатное расписание |
-| `/exams` | ExamsPage | DIRECTOR, DEPUTY, ADMIN, TEACHER | Контрольные работы |
-| `/exams/:id/edit` | ExamEditorPage | DIRECTOR, DEPUTY, ADMIN, TEACHER | Редактор экзамена |
-| `/exams/:id/results` | ExamResultsPage | DIRECTOR, DEPUTY, ADMIN, TEACHER | Результаты |
-| `/exam/:token` | ExamTakePage | **Публичный** | Прохождение экзамена |
-| `/knowledge-base` | KnowledgeBase | Все | База знаний |
-| `/knowledge-base/:slug` | KnowledgeBase | Все | Статья |
-| `/auth/login` | LoginPage | Публичный | Авторизация |
-| `/` | LandingPage | Публичный (маркетинг host) | Маркетинговая страница |
+| Path | Component | Roles | Description |
+| --- | --- | --- | --- |
+| `/dashboard` | DashboardPage | All | Main dashboard with widgets |
+| `/children` | ChildrenPage | DIRECTOR, DEPUTY, ADMIN | Student list |
+| `/children/:id` | ChildDetailPage | DIRECTOR, DEPUTY, ADMIN | Student profile |
+| `/employees` | EmployeesPage | DIRECTOR, DEPUTY, ADMIN | Employee list |
+| `/schedule` | SchedulePage | DIRECTOR, DEPUTY, ADMIN, TEACHER | Lesson schedule |
+| `/attendance` | AttendancePage | DIRECTOR, DEPUTY, ADMIN, TEACHER | Attendance |
+| `/clubs` | ClubsPage | DIRECTOR, DEPUTY, ADMIN, ACCOUNTANT, TEACHER | Extracurricular clubs |
+| `/finance` | FinancePage | DIRECTOR, DEPUTY, ADMIN, ACCOUNTANT | Finances |
+| `/inventory` | InventoryPage | DIRECTOR, DEPUTY, ADMIN, ZAVHOZ | Inventory |
+| `/menu` | MenuPage | DIRECTOR, DEPUTY, ADMIN, ZAVHOZ | Catering menu |
+| `/recipes` | RecipesPage | DIRECTOR, DEPUTY, ADMIN, ZAVHOZ | Recipes |
+| `/procurement` | ProcurementPage | DIRECTOR, DEPUTY, ADMIN, ACCOUNTANT, ZAVHOZ | Procurement |
+| `/maintenance` | MaintenancePage | DIRECTOR, DEPUTY, ADMIN, ZAVHOZ | Maintenance |
+| `/security` | SecurityPage | DIRECTOR, DEPUTY, ADMIN, ZAVHOZ | Security |
+| `/documents` | DocumentsPage | DIRECTOR, DEPUTY, ADMIN | Documents |
+| `/calendar` | CalendarPage | DIRECTOR, DEPUTY, ADMIN, ZAVHOZ | Calendar |
+| `/feedback` | FeedbackPage | All | Feedback |
+| `/integration` | IntegrationPage | DIRECTOR, DEPUTY, ADMIN, ACCOUNTANT | Import/Export |
+| `/onec-data` | OneCDataPage | DIRECTOR, DEPUTY, ADMIN, ACCOUNTANT | 1C Data Viewer |
+| `/action-log` | ActionLogPage | DIRECTOR, DEPUTY, ADMIN | Audit log |
+| `/notifications` | NotificationsPage | DIRECTOR, DEPUTY, ADMIN | Notifications |
+| `/ai-assistant` | AiAssistantPage | DIRECTOR, DEPUTY, ADMIN, TEACHER | AI Assistant |
+| `/users` | UsersPage | DIRECTOR, DEPUTY, ADMIN | User management |
+| `/groups` | GroupsPage | DIRECTOR, DEPUTY, ADMIN | Groups/Classes |
+| `/staffing` | StaffingPage | DIRECTOR | Staffing table |
+| `/exams` | ExamsPage | DIRECTOR, DEPUTY, ADMIN, TEACHER | Exams |
+| `/exams/:id/edit` | ExamEditorPage | DIRECTOR, DEPUTY, ADMIN, TEACHER | Exam Editor |
+| `/exams/:id/results` | ExamResultsPage | DIRECTOR, DEPUTY, ADMIN, TEACHER | Results |
+| `/exam/:token` | ExamTakePage | **Public** | Taking an exam |
+| `/knowledge-base` | KnowledgeBase | All | Knowledge Base |
+| `/knowledge-base/:slug` | KnowledgeBase | All | Article |
+| `/auth/login` | LoginPage | Public | Authorization |
+| `/` | LandingPage | Public (marketing host) | Marketing landing page |
 
-#### LMS (7 маршрутов)
+#### LMS (7 routes)
 
-| Путь | Компонент | Описание |
-|------|-----------|---------|
-| `/school` | LmsSchoolDashboard | Дашборд школьной LMS |
-| `/school/classes` | LmsClassesPage | Управление классами |
-| `/school/classes/:classId` | LmsClassesPage | Детальная страница класса |
-| `/school/gradebook` | LmsGradebookPage | Журнал оценок учителя |
-| `/school/schedule` | LmsSchedulePage | Расписание уроков |
-| `/school/homework` | LmsAssignmentsPage | Домашние задания |
-| `/school/attendance` | LmsProgressPage | Посещаемость |
-| `/diary` | LmsDiaryPage | Дневник ученика/родителя |
+| Path | Component | Description |
+| --- | --- | --- |
+| `/school` | LmsSchoolDashboard | School LMS dashboard |
+| `/school/classes` | LmsClassesPage | Class management |
+| `/school/classes/:classId` | LmsClassesPage | Class details page |
+| `/school/gradebook` | LmsGradebookPage | Teacher's gradebook |
+| `/school/schedule` | LmsSchedulePage | Lesson schedule |
+| `/school/homework` | LmsAssignmentsPage | Homework assignments |
+| `/school/attendance` | LmsProgressPage | Attendance |
+| `/diary` | LmsDiaryPage | Student/Parent diary |
 
-### Компоненты
+### Components
 
-#### UI-примитивы (`components/ui/`)
-Построены на базе Radix UI + CVA (class-variance-authority):
-- `Button`, `Input`, `Card`, `Badge`, `Checkbox`
-- `Dialog`, `DropdownMenu`, `Popover`, `Sheet`, `Tooltip`
-- `Command` (командная палитра)
-- `FormError`, `ErrorBoundary`
-- `EmptyState`, `LoadingState`
-- `InventoryAutocomplete`
+#### UI Primitives (`components/ui/`)
 
-#### Таблицы (`components/DataTable/`)
-- `DataTable` — V1 (базовая)
-- `DataTableV2` — V2 (рекомендуемая, с пагинацией и сортировкой)
+Built on Radix UI + CVA (class-variance-authority):
 
-#### Дашборд (`components/dashboard/` + `components/DashboardWidgets/`)
-- `DashboardLayout` — контейнер дашборда
-- `WidgetRenderer` — динамический рендеринг виджетов
-- `WidgetChrome` — обёртка виджета
-- `PersonalizationPanel` — UI настройки виджетов
-- `FinanceChart` — графики на Recharts
-- `KpiCard` — карточки KPI
-- Drag&Drop раскладка через `react-grid-layout`
+* `Button`, `Input`, `Card`, `Badge`, `Checkbox`
+* `Dialog`, `DropdownMenu`, `Popover`, `Sheet`, `Tooltip`
+* `Command` (command palette)
+* `FormError`, `ErrorBoundary`
+* `EmptyState`, `LoadingState`
+* `InventoryAutocomplete`
 
-#### Формы (`components/forms/`)
-15+ доменных форм:
-- `ChildForm`, `EmployeeForm`, `UserForm`
-- `TransactionForm`, `SupplierForm`, `PurchaseOrderForm`
-- `DocumentForm`, `DocumentTemplateForm`
-- `IngredientForm`, `DishForm`
-- `MaintenanceForm`, `FeedbackForm`, `FeedbackResponseForm`
-- `EventForm`, `BugReportForm`
+#### Tables (`components/DataTable/`)
 
-#### Навигация
-- `SideNav` — основная боковая панель ERP
-- `LmsSideNav` — боковая панель LMS
-- `DemoBanner` — баннер read-only демо-режима
-- `CalendarGrid` — компонент календаря
+* `DataTable` — V1 (basic)
+* `DataTableV2` — V2 (recommended, with pagination and sorting)
+
+#### Dashboard (`components/dashboard/` + `components/DashboardWidgets/`)
+
+* `DashboardLayout` — dashboard container
+* `WidgetRenderer` — dynamic widget rendering
+* `WidgetChrome` — widget wrapper
+* `PersonalizationPanel` — widget settings UI
+* `FinanceChart` — Recharts diagrams
+* `KpiCard` — KPI cards
+* Drag & Drop layout via `react-grid-layout`
+
+#### Forms (`components/forms/`)
+
+15+ domain forms:
+
+* `ChildForm`, `EmployeeForm`, `UserForm`
+* `TransactionForm`, `SupplierForm`, `PurchaseOrderForm`
+* `DocumentForm`, `DocumentTemplateForm`
+* `IngredientForm`, `DishForm`
+* `MaintenanceForm`, `FeedbackForm`, `FeedbackResponseForm`
+* `EventForm`, `BugReportForm`
+
+#### Navigation
+
+* `SideNav` — main ERP sidebar
+* `LmsSideNav` — LMS sidebar
+* `DemoBanner` — read-only demo mode banner
+* `CalendarGrid` — calendar component
 
 #### Easter Egg
-- `DoomGame` — игра, активируемая через Konami Code (↑↑↓↓←→←→BA)
 
-### Управление состоянием
+* `DoomGame` — game activated via Konami Code (↑↑↓↓←→←→BA)
+
+### State Management
 
 #### AuthContext
-- Состояние аутентификации (`user`, `token`, `isAuthenticated`)
-- 12-часовой auto-expiry
-- HttpOnly cookie + localStorage fallback
-- Методы: `hasRole()`, `hasPermission()`
+
+* Auth state (`user`, `token`, `isAuthenticated`)
+* 12-hour auto-expiry
+* HttpOnly cookie + localStorage fallback
+* Methods: `hasRole()`, `hasPermission()`
 
 #### TenantContext
-- White-label брендирование (`name`, `logoUrl`, `faviconUrl`, `primaryColor`)
-- Динамические CSS-переменные (`--primary-color`, `--primary-tint`)
-- Обновление title и favicon документа
+
+* White-label branding (`name`, `logoUrl`, `faviconUrl`, `primaryColor`)
+* Dynamic CSS variables (`--primary-color`, `--primary-tint`)
+* Document title and favicon update
 
 #### PermissionsContext
-- Ролевые разрешения (`role`, `isFullAccess`, `modules`, `canCreate/Edit/Delete/Export`)
-- Проверка доступа к модулям: `hasModuleAccess(modulePath)`
+
+* Role permissions (`role`, `isFullAccess`, `modules`, `canCreate/Edit/Delete/Export`)
+* Module access check: `hasModuleAccess(modulePath)`
 
 #### DemoContext
-- Флаг `isDemo` для read-only режима
-- Блокировка операций записи
 
-### API клиент
+* `isDemo` flag for read-only mode
+* Write operation blocking
 
-Централизованный HTTP-клиент (`lib/api.ts`, 400+ строк):
+### API Client
+
+Centralized HTTP client (`lib/api.ts`, 400+ lines):
 
 ```typescript
 class API {
-  get<T>(path, params)    // GET с query параметрами
+  get<T>(path, params)    // GET with query params
   post<T>(path, data)     // POST
   put<T>(path, data)      // PUT
   patch<T>(path, data)    // PATCH
   delete<T>(path)         // DELETE
 
-  setToken(token)                  // Управление JWT
-  setOnUnauthorized(callback)      // Обработка 401
-  addRequestInterceptor(fn)        // Interceptor запросов
-  addResponseInterceptor(fn)       // Interceptor ответов
-  addErrorInterceptor(fn)          // Interceptor ошибок
+  setToken(token)                  // JWT management
+  setOnUnauthorized(callback)      // 401 handling
+  addRequestInterceptor(fn)        // Request interceptor
+  addResponseInterceptor(fn)       // Response interceptor
+  addErrorInterceptor(fn)          // Error interceptor
 }
+
 ```
 
-- Автоматическая инъекция Bearer токена
-- `credentials: 'include'` для cookies
-- Типизированный `ApiRequestError` с `statusCode`, `code`, `details`
+* Automatic Bearer token injection
+* `credentials: 'include'` for cookies
+* Typed `ApiRequestError` with `statusCode`, `code`, `details`
 
-**Специализированные API:**
-- `lib/exams-api.ts` — API экзаменов (публичные + защищённые)
-- `lib/lms-api.ts` — API LMS (70+ методов)
+**Specialized APIs:**
 
-### Интернационализация
+* `lib/exams-api.ts` — Exams API (public + protected)
+* `lib/lms-api.ts` — LMS API (70+ methods)
 
-- Фреймворк: **i18next** + **react-i18next**
-- Автодетекция языка браузера: `i18next-browser-languagedetector`
-- Настройка через `src/i18n/`
+### Internationalization
+
+* Framework: **i18next** + **react-i18next**
+* Browser language auto-detection: `i18next-browser-languagedetector`
+* Configured in `src/i18n/`
 
 ---
 
-## База данных
+## Database
 
 ### Control Plane (Master DB)
 
-Файл: `backend/prisma/master/schema.prisma`
+File: `backend/prisma/master/schema.prisma`
 
-| Модель | Описание |
-|--------|---------|
+| Model | Description |
+| --- | --- |
 | `Tenant` | `id`, `subdomain` (unique), `dbUrl`, `stripeId`, `status`, `name` |
-| `GlobalSetting` | Key-value хранилище платформенных настроек |
+| `GlobalSetting` | Key-value store for platform settings |
 
-**Статусы тенанта:** `ACTIVE`, `TRIAL`, `SUSPENDED`, `DEACTIVATED`
+**Tenant statuses:** `ACTIVE`, `TRIAL`, `SUSPENDED`, `DEACTIVATED`
 
-### Tenant DB (Схема)
+### Tenant DB (Schema)
 
-Файл: `backend/prisma/schema.prisma` — **60+ моделей**, PostgreSQL 16 с расширением pgvector.
+File: `backend/prisma/schema.prisma` — **60+ models**, PostgreSQL 16 with pgvector extension.
 
-#### Пользователи и авторизация
-| Модель | Описание |
-|--------|---------|
-| `User` | Пользователь системы (email, role, связь с Employee, Telegram) |
-| `Employee` | Сотрудник (ФИО, должность, ставка, даты) |
-| `RolePermission` | Права доступа по ролям (модули, CRUD флаги) |
+#### Users & Authorization
 
-#### Контингент
-| Модель | Описание |
-|--------|---------|
-| `Child` | Ребёнок (ФИО, дата рождения, группа, здоровье, документы) |
-| `Parent` | Родитель (ФИО, телефон, email, место работы) |
-| `Group` | Класс/группа (название, учитель, вместимость) |
-| `TemporaryAbsence` | Временное отсутствие ребёнка |
+| Model | Description |
+| --- | --- |
+| `User` | System user (email, role, Employee relation, Telegram) |
+| `Employee` | Employee (full name, position, rate, dates) |
+| `RolePermission` | Role access rights (modules, CRUD flags) |
 
-#### Кружки
-| Модель | Описание |
-|--------|---------|
-| `Club` | Кружок (название, учитель, расписание, стоимость) |
-| `ClubEnrollment` | Запись ребёнка в кружок |
-| `Attendance` | Посещаемость (группа / кружок) |
-| `ClubRating` | Оценка ребёнка в кружке (1-5) |
+#### Students / Contingent
 
-#### Финансы
-| Модель | Описание |
-|--------|---------|
-| `FinanceTransaction` | Финансовая транзакция (сумма, тип, категория, 1С поля) |
-| `Contractor` | Контрагент из 1С |
-| `Person` | Физическое лицо из 1С |
-| `CashFlowArticle` | Статья движения денежных средств из 1С |
-| `Invoice` | Товарный документ (поступление / реализация) |
-| `BalanceSnapshot` | Агрегированный остаток (касса, банк, контрагент) |
+| Model | Description |
+| --- | --- |
+| `Child` | Child/Student (name, DOB, group, health info, docs) |
+| `Parent` | Parent (name, phone, email, workplace) |
+| `Group` | Class/Group (name, teacher, capacity) |
+| `TemporaryAbsence` | Temporary absence of a student |
 
-#### Склад и закупки
-| Модель | Описание |
-|--------|---------|
-| `InventoryItem` | Складской товар (количество, единица, срок годности) |
-| `InventoryTransaction` | Движение товара (приход, расход, списание, корректировка) |
-| `PurchaseOrder` | Заявка на закупку с workflow |
-| `PurchaseOrderItem` | Позиция заказа |
-| `Supplier` | Поставщик |
+#### Clubs / Extracurriculars
 
-#### Питание
-| Модель | Описание |
-|--------|---------|
-| `Ingredient` | Ингредиент (КБЖУ) |
-| `Dish` | Блюдо |
-| `DishIngredient` | Связь блюдо-ингредиент |
-| `Menu` | Меню на дату (по возрастной группе) |
-| `MenuDish` | Связь меню-блюдо (тип приёма пищи) |
+| Model | Description |
+| --- | --- |
+| `Club` | Club (name, teacher, schedule, cost) |
+| `ClubEnrollment` | Student club enrollment |
+| `Attendance` | Attendance (group / club) |
+| `ClubRating` | Student's grade in a club (1-5) |
 
-#### Расписание
-| Модель | Описание |
-|--------|---------|
-| `Subject` | Учебный предмет |
-| `Room` | Учебный кабинет |
-| `TimeSlot` | Временной слот (звонок) |
-| `TeacherSubject` | Связь учитель-предмет |
-| `ScheduleSlot` | Слот расписания (урок) |
+#### Finances
 
-#### Хозяйство и безопасность
-| Модель | Описание |
-|--------|---------|
-| `MaintenanceRequest` | Заявка на техобслуживание (workflow) |
-| `MaintenanceItem` | Позиция заявки |
-| `CleaningSchedule` | Графики уборки |
-| `CleaningLog` | Журнал уборки |
-| `Equipment` | Оборудование (дата следующего осмотра) |
-| `SecurityLog` | Журнал безопасности |
-| `StaffingTable` | Штатное расписание |
-| `EmployeeAttendance` | Посещаемость сотрудников |
+| Model | Description |
+| --- | --- |
+| `FinanceTransaction` | Financial transaction (amount, type, category, 1C fields) |
+| `Contractor` | Counterparty from 1C |
+| `Person` | Individual from 1C |
+| `CashFlowArticle` | Cash flow item from 1C |
+| `Invoice` | Commodity document (receipt / realization) |
+| `BalanceSnapshot` | Aggregated balance (cash desk, bank, counterparty) |
 
-#### Документооборот и коммуникации
-| Модель | Описание |
-|--------|---------|
-| `DocumentTemplate` | Шаблон документа |
-| `Document` | Документ (привязка к сотруднику/ребёнку) |
-| `Notification` | Уведомление (по роли/группе) |
-| `Event` | Событие/мероприятие |
-| `Feedback` | Обратная связь (жалобы, предложения) |
+#### Inventory & Procurement
 
-#### AI / RAG / База знаний
-| Модель | Описание |
-|--------|---------|
-| `KnowledgeBaseDocument` | Документ для RAG (embedding 768-dim) |
-| `KnowledgeBaseArticle` | Статья базы знаний (Markdown + embedding + теги) |
-| `SystemSetting` | Персистентное key-value хранилище (промпты, флаги) |
+| Model | Description |
+| --- | --- |
+| `InventoryItem` | Inventory item (quantity, unit, expiration date) |
+| `InventoryTransaction` | Item movement (receipt, expense, write-off, adjustment) |
+| `PurchaseOrder` | Purchase request with workflow |
+| `PurchaseOrderItem` | Order item |
+| `Supplier` | Supplier |
+
+#### Catering
+
+| Model | Description |
+| --- | --- |
+| `Ingredient` | Ingredient (Calories/Macros) |
+| `Dish` | Dish |
+| `DishIngredient` | Dish-ingredient relation |
+| `Menu` | Menu for a date (by age group) |
+| `MenuDish` | Menu-dish relation (meal type) |
+
+#### Schedule
+
+| Model | Description |
+| --- | --- |
+| `Subject` | Academic subject |
+| `Room` | Classroom |
+| `TimeSlot` | Time slot (bell) |
+| `TeacherSubject` | Teacher-subject relation |
+| `ScheduleSlot` | Schedule slot (lesson) |
+
+#### Facilities & Security
+
+| Model | Description |
+| --- | --- |
+| `MaintenanceRequest` | Maintenance request (workflow) |
+| `MaintenanceItem` | Request item |
+| `CleaningSchedule` | Cleaning schedules |
+| `CleaningLog` | Cleaning log |
+| `Equipment` | Equipment (next inspection date) |
+| `SecurityLog` | Security log |
+| `StaffingTable` | Staffing table |
+| `EmployeeAttendance` | Employee attendance |
+
+#### Document Management & Communications
+
+| Model | Description |
+| --- | --- |
+| `DocumentTemplate` | Document template |
+| `Document` | Document (linked to employee/student) |
+| `Notification` | Notification (by role/group) |
+| `Event` | Event / Activity |
+| `Feedback` | Feedback (complaints, suggestions) |
+
+#### AI / RAG / Knowledge Base
+
+| Model | Description |
+| --- | --- |
+| `KnowledgeBaseDocument` | Document for RAG (768-dim embedding) |
+| `KnowledgeBaseArticle` | KB article (Markdown + embedding + tags) |
+| `SystemSetting` | Persistent key-value store (prompts, flags) |
 
 #### LMS
-| Модель | Описание |
-|--------|---------|
-| `LmsSchoolStudent` | Связь ребёнок-класс для LMS |
-| `LmsSubject` | Школьный предмет LMS |
-| `LmsScheduleItem` | Элемент расписания LMS |
-| `LmsGrade` | Оценка (1-5, типы: обычная/тест/экзамен/четвертная) |
-| `LmsHomework` | Домашнее задание |
-| `LmsHomeworkSubmission` | Сдача ДЗ |
-| `LmsStudentAttendance` | Посещаемость ученика |
-| `LmsClassAnnouncement` | Объявление для класса |
 
-#### Контрольные работы
-| Модель | Описание |
-|--------|---------|
-| `Exam` | Контрольная работа (настройки, публичный токен) |
-| `ExamQuestion` | Вопрос (6 типов: выбор, текст, задача, верно/неверно) |
-| `ExamTargetGroup` | Привязка к классам |
-| `ExamSubmission` | Прохождение студентом |
-| `ExamAnswer` | Ответ (авто + AI + ручная проверка) |
+| Model | Description |
+| --- | --- |
+| `LmsSchoolStudent` | Student-class relation for LMS |
+| `LmsSubject` | LMS school subject |
+| `LmsScheduleItem` | LMS schedule item |
+| `LmsGrade` | Grade (1-5, types: normal/test/exam/term) |
+| `LmsHomework` | Homework assignment |
+| `LmsHomeworkSubmission` | Homework submission |
+| `LmsStudentAttendance` | Student attendance |
+| `LmsClassAnnouncement` | Class announcement |
 
-#### Персонализация
-| Модель | Описание |
-|--------|---------|
-| `DashboardPreference` | Настройки дашборда (layout, виджеты, фильтры, пресеты) |
-| `ActionLog` | Журнал действий пользователей |
+#### Exams
 
-#### Интеграции
-| Модель | Описание |
-|--------|---------|
-| `TenantIntegrations` | Per-tenant API ключи (Telegram, Gemini, Groq, OpenAI, Google Drive, 1C) |
-| `OneCPushSyncLog` | Audit log для push-синхронизации с 1С |
+| Model | Description |
+| --- | --- |
+| `Exam` | Exam (settings, public token) |
+| `ExamQuestion` | Question (6 types: choice, text, problem, true/false) |
+| `ExamTargetGroup` | Link to classes |
+| `ExamSubmission` | Student attempt |
+| `ExamAnswer` | Answer (auto + AI + manual grading) |
 
-#### 1С: Справочники
-| Модель | Описание |
-|--------|---------|
-| `OneCOrganization` | Catalog_Организации |
-| `OneCNomenclature` | Catalog_Номенклатура |
-| `OneCBankAccount` | Catalog_БанковскиеСчета |
-| `OneCContract` | Catalog_ДоговорыКонтрагентов |
-| `OneCEmployee` | Catalog_Сотрудники |
-| `OneCPosition` | Catalog_Должности |
-| `OneCFixedAsset` | Catalog_ОсновныеСредства |
-| `OneCWarehouse` | Catalog_Склады |
-| `OneCCurrency` | Catalog_Валюты |
-| `OneCDepartment` | Catalog_ПодразделенияОрганизаций |
-| `OneCCatalog` | Универсальный справочник (для всех остальных каталогов) |
+#### Personalization
 
-#### 1С: Документы
-| Модель | Описание |
-|--------|---------|
-| `OneCDocument` | Универсальная модель документов (счета-фактуры, авансы, и т.д.) |
-| `OneCHRDocument` | Кадровые документы (приём, увольнение, отпуск, больничный) |
-| `OneCPayrollDocument` | Зарплатные документы (начисление, ведомости) |
-| `OneCRegister` | Регистры 1С (накопления и сведений) |
+| Model | Description |
+| --- | --- |
+| `DashboardPreference` | Dashboard settings (layout, widgets, filters, presets) |
+| `ActionLog` | User action log |
 
----
+#### Integrations
 
-## Интеграция с 1С
+| Model | Description |
+| --- | --- |
+| `TenantIntegrations` | Per-tenant API keys (Telegram, Gemini, Groq, OpenAI, Google Drive, 1C) |
+| `OneCPushSyncLog` | Audit log for 1C push sync |
 
-Платформа поддерживает два режима синхронизации с «1С:Предприятие»:
+#### 1C: Catalogs
 
-### Pull (OData) — ERP забирает данные из 1С
+| Model | Description |
+| --- | --- |
+| `OneCOrganization` | Catalog_Organizations |
+| `OneCNomenclature` | Catalog_Nomenclature |
+| `OneCBankAccount` | Catalog_BankAccounts |
+| `OneCContract` | Catalog_CounterpartyContracts |
+| `OneCEmployee` | Catalog_Employees |
+| `OneCPosition` | Catalog_Positions |
+| `OneCFixedAsset` | Catalog_FixedAssets |
+| `OneCWarehouse` | Catalog_Warehouses |
+| `OneCCurrency` | Catalog_Currencies |
+| `OneCDepartment` | Catalog_OrganizationDepartments |
+| `OneCCatalog` | Universal catalog (for all other directories) |
 
-```
-1С:Предприятие → OData API → BullMQ очередь (onec-sync) → Обработка → Tenant DB
-```
+#### 1C: Documents
 
-- Интервал: настраивается через `oneCCronSchedule` (по умолчанию `*/15 * * * *`)
-- Данные: финансовые документы, справочники, кадровые документы, зарплата, регистры
-- Аутентификация: UTF-8 Basic Auth
-- Per-tenant учётные данные из `TenantIntegrations`
-
-### Push (REST) — 1С отправляет данные к нам
-
-```
-1С:Предприятие → POST /api/v1/integration/* → BullMQ очередь (onec-push) → Обработка → Tenant DB
-```
-
-- Аутентификация: Bearer-токен (SHA-256 хэш хранится в БД)
-- Подтверждение каждого задания через `OneCPushSyncLog`
-- Поддержка батчевой отправки
-
-### Синхронизируемые сущности
-
-**Справочники:** Организации, Номенклатура, Банковские счета, Контрагенты, Договоры, Сотрудники, Должности, Основные средства, Склады, Валюты, Подразделения, и ещё ~10 через универсальный `OneCCatalog`.
-
-**Документы:** ПКО, РКО, Банковские выписки, Поступления товаров, Реализации, Счета-фактуры, Авансовые отчёты, Инвентаризации, и ещё ~15 через универсальный `OneCDocument`.
-
-**Кадры:** Приём на работу, Увольнение, Перевод, Отпуск, Больничный.
-
-**Зарплата:** Начисление, Ведомости, Удержания.
-
-**Регистры:** Регистры накопления и сведений (графики работы, НДС, и т.д.).
+| Model | Description |
+| --- | --- |
+| `OneCDocument` | Universal document model (invoices, advances, etc.) |
+| `OneCHRDocument` | HR documents (hiring, firing, vacation, sick leave) |
+| `OneCPayrollDocument` | Payroll documents (accruals, payslips) |
+| `OneCRegister` | 1C registers (accumulation and information) |
 
 ---
 
-## LMS (Система управления обучением)
+## 1C Integration
 
-Отдельное React-приложение со своей точкой входа (`lms.html` → `lms.tsx`):
+The platform supports two synchronization modes with "1C:Enterprise":
 
-- **Журнал оценок**: Оценки 1-5, типы (обычная, тест, экзамен, четвертная), комментарии
-- **Домашние задания**: Создание, сдача, проверка с баллами и обратной связью
-- **Расписание**: Привязка к классам, предметам, учителям, кабинетам
-- **Посещаемость**: Статусы (присутствует, отсутствует, опоздал, по уважительной причине)
-- **Объявления**: Для класса или всей школы, с закреплением и датой истечения
-- **Дневник**: Интерфейс для учеников/родителей
+### Pull (OData) — ERP pulls data from 1C
 
-Интеграция с основным ERP через общие модели (`Group`, `Employee`, `Child`).
+```
+1C:Enterprise → OData API → BullMQ queue (onec-sync) → Processing → Tenant DB
+
+```
+
+* Interval: configurable via `oneCCronSchedule` (default `*/15 * * * *`)
+* Data: financial docs, catalogs, HR docs, payroll, registers
+* Authentication: UTF-8 Basic Auth
+* Per-tenant credentials from `TenantIntegrations`
+
+### Push (REST) — 1C pushes data to us
+
+```
+1C:Enterprise → POST /api/v1/integration/* → BullMQ queue (onec-push) → Processing → Tenant DB
+
+```
+
+* Authentication: Bearer token (SHA-256 hash stored in DB)
+* Acknowledgment of each job via `OneCPushSyncLog`
+* Batch dispatch support
+
+### Synchronized Entities
+
+**Catalogs:** Organizations, Nomenclature, Bank accounts, Counterparties, Contracts, Employees, Positions, Fixed Assets, Warehouses, Currencies, Departments, and ~10 more via universal `OneCCatalog`.
+
+**Documents:** Cash Inflow/Outflow Warrants, Bank statements, Goods receipts, Sales, Invoices, Expense reports, Inventories, and ~15 more via universal `OneCDocument`.
+
+**HR:** Hiring, Dismissal, Transfer, Vacation, Sick leave.
+
+**Payroll:** Accrual, Payslips, Deductions.
+
+**Registers:** Accumulation and information registers (work schedules, VAT, etc.).
 
 ---
 
-## Платформа контрольных работ
+## LMS (Learning Management System)
 
-Полнофункциональная система для проведения экзаменов с AI-проверкой:
+A separate React application with its own entry point (`lms.html` → `lms.tsx`):
 
-### Типы вопросов
-| Тип | Описание | Проверка |
-|-----|---------|----------|
-| `MULTIPLE_CHOICE` | Выбор нескольких вариантов | Авто |
-| `SINGLE_CHOICE` | Выбор одного варианта | Авто |
-| `TEXT_SHORT` | Короткий текстовый ответ | Авто |
-| `TEXT_LONG` | Развёрнутый ответ | AI + ручная |
-| `PROBLEM` | Задача с решением | AI + ручная |
-| `TRUE_FALSE` | Верно/Неверно | Авто |
+* **Gradebook**: Grades 1-5, types (normal, test, exam, term), comments
+* **Homework**: Creation, submission, grading with points and feedback
+* **Schedule**: Tied to classes, subjects, teachers, classrooms
+* **Attendance**: Statuses (present, absent, late, excused)
+* **Announcements**: For the class or entire school, with pinning and expiration dates
+* **Diary**: Interface for students/parents
 
-### Возможности
-- Публичная ссылка для прохождения (без авторизации) по уникальному токену
-- Лимит времени, перемешивание вопросов и вариантов
-- AI-проверка открытых ответов (Groq) с обратной связью
-- Частичный зачёт баллов
-- Ручная проверка учителем поверх AI
-- Привязка к классам/группам
-- Экспорт результатов
+Integrates with the main ERP via shared models (`Group`, `Employee`, `Child`).
 
 ---
 
-## Тестирование
+## Examination Platform
+
+A fully-featured system for conducting exams with AI grading:
+
+### Question Types
+
+| Type | Description | Grading |
+| --- | --- | --- |
+| `MULTIPLE_CHOICE` | Multiple correct options | Auto |
+| `SINGLE_CHOICE` | Single correct option | Auto |
+| `TEXT_SHORT` | Short text answer | Auto |
+| `TEXT_LONG` | Detailed response | AI + manual |
+| `PROBLEM` | Problem solving | AI + manual |
+| `TRUE_FALSE` | True/False | Auto |
+
+### Features
+
+* Public link for taking the exam (no auth needed) via a unique token
+* Time limits, shuffling questions and options
+* AI grading for open-ended answers (Groq) with feedback
+* Partial credit scoring
+* Manual teacher review overriding AI
+* Linking to classes/groups
+* Results export
+
+---
+
+## Testing
 
 ### Backend (Vitest)
 
 ```bash
 cd backend
-npm test                 # Запуск тестов
-npm run test:watch       # Watch-режим
-npm run test:coverage    # Покрытие кода
-npm run test:ui          # UI-дашборд
+npm test                 # Run tests
+npm run test:watch       # Watch mode
+npm run test:coverage    # Code coverage
+npm run test:ui          # UI dashboard
+
 ```
 
-- **Framework**: Vitest 2.1.4
-- **Pool**: single fork (стабильность)
-- **Coverage**: порог 60%
-- **Моки**: Prisma клиент, переменные окружения
-- **Supertest**: для E2E тестирования API
+* **Framework**: Vitest 2.1.4
+* **Pool**: single fork (stability)
+* **Coverage**: 60% threshold
+* **Mocks**: Prisma client, environment variables
+* **Supertest**: for API E2E testing
 
 ### Frontend (Vitest + Cypress)
 
-#### Unit-тесты (Vitest)
+#### Unit Tests (Vitest)
+
 ```bash
 cd frontend
 npm test                 # Vitest
+
 ```
 
-- **Testing Library**: `@testing-library/react`, `jest-dom`
-- **Среда**: jsdom
+* **Testing Library**: `@testing-library/react`, `jest-dom`
+* **Environment**: jsdom
 
-#### E2E-тесты (Cypress)
+#### E2E Tests (Cypress)
+
 ```bash
 cd frontend
-npm run cypress:open     # Открыть UI Cypress
-npm run cypress:run      # Запуск в CI-режиме
+npm run cypress:open     # Open Cypress UI
+npm run cypress:run      # Run in CI mode
+
 ```
 
-- **Framework**: Cypress 13.13
-- 10+ тестовых сценариев
-- Автоматический запуск dev-сервера (порт 5172)
+* **Framework**: Cypress 13.13
+* 10+ test scenarios
+* Automatic dev server startup (port 5172)
 
 ---
 
-## Деплой
+## Deployment
 
 ### Docker Compose
 
-Файл: `docker-compose.yml`
+File: `docker-compose.yml`
 
-| Сервис | Образ | Порт | Описание |
-|--------|-------|------|---------|
-| `postgres` | `pgvector/pgvector:pg16` | (внутренний) | PostgreSQL 16 + pgvector |
-| `redis` | `redis:7-alpine` | (внутренний) | Redis с AOF-персистенцией |
+| Service | Image | Port | Description |
+| --- | --- | --- | --- |
+| `postgres` | `pgvector/pgvector:pg16` | (internal) | PostgreSQL 16 + pgvector |
+| `redis` | `redis:7-alpine` | (internal) | Redis with AOF persistence |
 | `backend` | Custom (multi-stage) | `127.0.0.1:4000` | Express API |
 | `frontend` | Custom (multi-stage + Nginx) | `127.0.0.1:3000` | React SPA |
 
-Все сервисы в единой Docker-сети `erp_network`. Порты привязаны к `127.0.0.1` (не доступны извне).
+All services are in a single Docker network `erp_network`. Ports are bound to `127.0.0.1` (not exposed externally).
 
 #### Backend Dockerfile (multi-stage)
-1. `deps` — установка node_modules (кэшируемый слой)
-2. `builder` — генерация Prisma, компиляция TypeScript, prune
-3. `runner` — минимальный production образ
+
+1. `deps` — node_modules installation (cached layer)
+2. `builder` — Prisma generation, TypeScript compilation, prune
+3. `runner` — minimal production image
 
 #### Frontend Dockerfile (multi-stage)
-1. Установка зависимостей
-2. Сборка Vite (TypeScript + production build)
-3. Nginx для раздачи статики + SPA fallback
 
-### Caddy (reverse proxy)
+1. Dependencies installation
+2. Vite build (TypeScript check + production build)
+3. Nginx to serve statics + SPA fallback
 
-Файл: `Caddyfile`
+### Caddy (Reverse Proxy)
 
-Caddy выступает единым входом:
+File: `Caddyfile`
+
+Caddy acts as the single entry point:
 
 ```
 http://mirai-edu.space         → /api*, /ws* → backend:4000
-                               → /*          → frontend:3000
+                               → /* → frontend:3000
 
 http://*.mirai-edu.space       → /api*, /ws* → backend:4000
-                               → /*          → frontend:3000
+                               → /* → frontend:3000
 
-http://api.mirai-edu.space     → всё         → backend:4000
+http://api.mirai-edu.space     → all         → backend:4000
+
 ```
 
-- Инъекция `X-Tenant-Subdomain: mirai` для root-домена
-- Сжатие gzip/zstd
-- HTTPS через Cloudflare Tunnel (auto_https off)
+* Injection of `X-Tenant-Subdomain: mirai` for the root domain
+* Gzip/zstd compression
+* HTTPS via Cloudflare Tunnel (auto_https off)
 
 ### Cloudflare Tunnel
 
-Обеспечивает безопасное подключение без открытых портов:
+Ensures a secure connection without exposed ports:
 
 ```
-Интернет → Cloudflare Edge → Tunnel → localhost:80 (Caddy)
+Internet → Cloudflare Edge → Tunnel → localhost:80 (Caddy)
+
 ```
 
-- Wildcard DNS `*.mirai-edu.space` — новые тенанты работают автоматически
-- Конфигурация: `cloudflared/config.yml.example`
-- Автоматическая настройка через `setup-ubuntu.sh` при наличии `CLOUDFLARE_TUNNEL_TOKEN`
+* Wildcard DNS `*.mirai-edu.space` — new tenants work automatically
+* Configuration: `cloudflared/config.yml.example`
+* Automatic setup via `setup-ubuntu.sh` when `CLOUDFLARE_TUNNEL_TOKEN` is present
 
-### Systemd сервисы
+### Systemd Services
 
-| Файл | Тип | Описание |
-|------|-----|---------|
-| `erp-saas-stack.service` | oneshot + RemainAfterExit | Запуск стека при старте системы |
-| `erp-saas-autodeploy.service` | oneshot | Проверка и деплой обновлений из Git |
-| `erp-saas-autodeploy.timer` | timer | Поллинг GitHub каждые 1 минуту |
+| File | Type | Description |
+| --- | --- | --- |
+| `erp-saas-stack.service` | oneshot + RemainAfterExit | Stack launch on system boot |
+| `erp-saas-autodeploy.service` | oneshot | Checks and deploys updates from Git |
+| `erp-saas-autodeploy.timer` | timer | Polling GitHub every 1 minute |
 
 ```bash
-# Установка
+# Installation
 sudo cp systemd/*.service systemd/*.timer /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable erp-saas-stack.service
 sudo systemctl enable --now erp-saas-autodeploy.timer
+
 ```
 
-### Автодеплой
+### Auto-deploy
 
-Скрипт `scripts/erp-saas-autodeploy.sh`:
+Script `scripts/erp-saas-autodeploy.sh`:
+
 1. `git fetch origin main`
-2. Сравнение `HEAD` с `origin/main`
-3. Если есть новые коммиты — `git pull`
-4. Копирование env-файла, обновление Caddyfile
+2. Compare `HEAD` with `origin/main`
+3. If new commits exist — `git pull`
+4. Copy env file, update Caddyfile
 5. `docker compose build backend frontend`
-6. Применение миграций (master + tenant)
-7. `bootstrap:mirai` — обновление тенанта
+6. Apply migrations (master + tenant)
+7. `bootstrap:mirai` — update tenant
 8. `docker compose up -d backend frontend`
 
 ---
 
-## Скрипты
+## Scripts
 
 ### Backend (`npm run ...`)
 
-| Команда | Описание |
-|---------|---------|
-| `dev` | Запуск dev-сервера с авторестартом (`ts-node-dev`) |
-| `build` | Компиляция TypeScript (`tsc`) |
-| `start` | Запуск скомпилированного JS |
-| `start:runtime` | Запуск через tsx (без компиляции) |
-| `prisma:generate` | Генерация Prisma клиентов (tenant + master) |
-| `prisma:migrate:deploy` | Применение миграций |
-| `prisma:tenant:deploy` | Применение миграций тенанта (с fallback на `db push`) |
-| `prisma:master:push` | Push схемы Control Plane |
-| `bootstrap:mirai` | Создание/обновление тенанта mirai + первого администратора |
-| `test` | Запуск тестов (vitest run) |
-| `test:watch` | Watch-режим тестов |
-| `test:coverage` | Отчёт о покрытии |
-| `test:ui` | UI-дашборд тестов |
+| Command | Description |
+| --- | --- |
+| `dev` | Run dev server with auto-restart (`ts-node-dev`) |
+| `build` | Compile TypeScript (`tsc`) |
+| `start` | Run compiled JS |
+| `start:runtime` | Run via tsx (without compilation) |
+| `prisma:generate` | Generate Prisma clients (tenant + master) |
+| `prisma:migrate:deploy` | Apply migrations |
+| `prisma:tenant:deploy` | Apply tenant migrations (with fallback to `db push`) |
+| `prisma:master:push` | Push Control Plane schema |
+| `bootstrap:mirai` | Create/update mirai tenant + first administrator |
+| `test` | Run tests (vitest run) |
+| `test:watch` | Watch mode for tests |
+| `test:coverage` | Coverage report |
+| `test:ui` | Tests UI dashboard |
 
 ### Frontend (`npm run ...`)
 
-| Команда | Описание |
-|---------|---------|
-| `dev` | Vite dev-сервер (порт 5173) |
-| `build` | Production-сборка (TypeScript check + Vite) |
-| `lint` | ESLint (строгий режим, 0 warnings) |
-| `test` | Vitest unit-тесты |
-| `preview` | Превью production-сборки |
-| `cypress:open` | E2E тесты (UI) |
-| `cypress:run` | E2E тесты (CI) |
+| Command | Description |
+| --- | --- |
+| `dev` | Vite dev server (port 5173) |
+| `build` | Production build (TypeScript check + Vite) |
+| `lint` | ESLint (strict mode, 0 warnings) |
+| `test` | Vitest unit tests |
+| `preview` | Preview production build |
+| `cypress:open` | E2E tests (UI) |
+| `cypress:run` | E2E tests (CI) |
 
-### Инфраструктурные
+### Infrastructure
 
-| Скрипт | Описание |
-|--------|---------|
-| `scripts/setup-ubuntu.sh` | Полная установка на Ubuntu (Docker, Caddy, cloudflared, всё) |
-| `scripts/erp-saas-autodeploy.sh` | Автодеплой из GitHub |
-| `scripts/erp-saas-stack-start.sh` | Запуск стека (для systemd) |
-
----
-
-## Настройка AI ключей
-
-Подробная инструкция: [`backend/AI_KEYS_SETUP.md`](backend/AI_KEYS_SETUP.md)
-
-| Ключ | Провайдер | Как получить | Стоимость |
-|------|-----------|-------------|-----------|
-| `GEMINI_API_KEY` | [Google AI Studio](https://aistudio.google.com/app/apikey) | Create API Key | Бесплатно (1,500 req/day) |
-| `GROQ_API_KEY` | [Groq Console](https://console.groq.com/keys) | Create API Key | Бесплатно (14,400 req/day) |
-| `GOOGLE_DRIVE_API_KEY` | [Google Cloud Console](https://console.developers.google.com/) | Credentials → API Key | Бесплатно |
+| Script | Description |
+| --- | --- |
+| `scripts/setup-ubuntu.sh` | Full Ubuntu installation (Docker, Caddy, cloudflared, everything) |
+| `scripts/erp-saas-autodeploy.sh` | Auto-deploy from GitHub |
+| `scripts/erp-saas-stack-start.sh` | Start stack (for systemd) |
 
 ---
 
-## DNS и маршрутизация
+## AI Keys Setup
+
+Detailed instructions: [`backend/AI_KEYS_SETUP.md`](https://www.google.com/search?q=backend/AI_KEYS_SETUP.md)
+
+| Key | Provider | How to obtain | Cost |
+| --- | --- | --- | --- |
+| `GEMINI_API_KEY` | [Google AI Studio](https://aistudio.google.com/app/apikey) | Create API Key | Free (1,500 req/day) |
+| `GROQ_API_KEY` | [Groq Console](https://console.groq.com/keys) | Create API Key | Free (14,400 req/day) |
+| `GOOGLE_DRIVE_API_KEY` | [Google Cloud Console](https://console.developers.google.com/) | Credentials → API Key | Free |
+
+---
+
+## DNS and Routing
 
 ```
 mirai-edu.space         → Cloudflare Tunnel → Caddy → frontend / backend
 *.mirai-edu.space       → wildcard DNS → Tunnel catch-all → Caddy → tenant resolution
-api.mirai-edu.space     → Tunnel → Caddy → backend (напрямую)
+api.mirai-edu.space     → Tunnel → Caddy → backend (direct)
+
 ```
 
-Wildcard DNS запись означает, что новые тенанты (`hogwarts.mirai-edu.space`, `demo.mirai-edu.space`) начинают работать **без ручного добавления DNS записей**.
+The wildcard DNS record means that new tenants (`hogwarts.mirai-edu.space`, `demo.mirai-edu.space`) begin working **without any manual DNS record additions**.
 
 ---
 
-## Лицензия
+## License
 
-**Автор:** Izumi Amano
+**Author:** Izumi Amano
 
 ISC License
